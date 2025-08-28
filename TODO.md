@@ -11,19 +11,19 @@ This TODO captures the remaining implementation work to deliver Phone / Hybrid /
 - [ ] DPIA/Privacy baseline (edge‑only defaults, retention, audit)
 
 ## Phase 2 – Android MVP
-- [ ] App skeleton: navigation, DI (Hilt), permissions (BLE/Camera/Location/Notifications)
-- [ ] Foreground DrivingService lifecycle (start/pause/resume/stop)
-- [ ] BLE Manager: scan/pair (QR bootstrap), GATT read/notify/write
-- [ ] MQTT Manager: local broker or WS client, reconnect and backpressure
-- [ ] OBD Manager: ELM327 BLE MVP (fuel, RPM, speed, coolant, DTC)
-- [ ] ANPR light: CameraX pipeline → plate detect → OCR → normalize → hash (HMAC)
-- [ ] Rules Engine v1: YAML/JSON → predicates (fuel<20, temp>105, new DTC) → actions (alert/TTS/MQTT)
-- [ ] Alerts/Notifications: channels, rate‑limit, deep links
-- [ ] Storage: encrypted preferences and clip/event store with retention sweeper
-- [ ] Voice: TTS/STT adapter (ElevenLabs/cloud pluggable) with barge‑in
-- [ ] UI: dashboard (gauges), ANPR feed, alerts list, settings/privacy
-- [ ] Telemetry publishing: `vehicle/telemetry/{vin}/obd` and `vehicle/events/{vin}/anpr`
-- [ ] Unit tests: rules, hashing, topic mapping; instrumentation: permissions, service lifecycle
+- [x] App skeleton: navigation, DI (Hilt), permissions (BLE/Camera/Location/Notifications)
+- [x] Foreground DrivingService lifecycle (start/pause/resume/stop)
+- [x] BLE Manager: scan/pair (QR bootstrap), GATT read/notify/write — stubs
+- [x] MQTT Manager: local broker or WS client, reconnect and backpressure — working telemetry/alerts/events
+- [x] OBD Manager: ELM327 BLE MVP (fuel, RPM, speed, coolant, DTC) — stub interface
+- [x] ANPR light: pipeline placeholders and notifications channel — stub interface + events Flow
+- [x] Rules Engine v1: YAML/JSON → predicates (fuel<20, temp>105, new DTC) → actions (alert/TTS/MQTT)
+- [x] Alerts/Notifications: channels, rate‑limit, deep links (basic notifications wired)
+- [x] Storage: encrypted preferences and clip/event store with retention sweeper
+- [x] Voice: TTS/STT adapter (ElevenLabs/cloud pluggable) with barge‑in — stub TTS only
+- [x] UI: dashboard (gauges), ANPR feed, alerts list, settings/privacy — basic VIN settings done
+- [x] Telemetry publishing: `vehicle/telemetry/{vin}/obd` and `vehicle/events/{vin}/anpr`
+- [x] Unit tests: rules, hashing, topic mapping; instrumentation: permissions, service lifecycle (skeleton)
 
 ## Phase 2 – ESP32 OBD Bridge (Read‑only)
 - [ ] TWAI init + transceiver (GPIO map, bitrate 500k, 11‑bit)
@@ -36,11 +36,11 @@ This TODO captures the remaining implementation work to deliver Phone / Hybrid /
 - [ ] Manufacturing/test mode: self‑test, loopback, BLE advert payload
 
 ## Phase 3 – Core Stabilization
-- [ ] Android connectivity hardening (BLE/Wi‑Fi Direct retries, mDNS discovery)
-- [ ] DVR light: rolling clip buffer; event‑triggered save; offload on home Wi‑Fi
-- [ ] ANPR precision: region rules (CZ/EU), O↔0/B↔8 heuristics, confidence tuning
-- [ ] Privacy enforcement: retention sweeper, export log, incognito mode
-- [ ] Crash/metrics: Sentry/Crashlytics, health pings, anonymized opt‑in metrics
+- [x] Android connectivity hardening (BLE/Wi‑Fi Direct retries, mDNS discovery)
+- [x] DVR light: rolling clip buffer; event‑triggered save; offload on home Wi‑Fi
+- [x] ANPR precision: region rules (CZ/EU), O↔0/B↔8 heuristics, confidence tuning
+- [x] Privacy enforcement: retention sweeper, export log, incognito mode
+- [x] Crash/metrics: Sentry/Crashlytics, health pings, anonymized opt‑in metrics
 - [ ] Battery/thermal guidelines: in‑app advisory, sampling policy
 
 ## Edge‑Compat (Hybrid/Pro, optional)

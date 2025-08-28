@@ -10,6 +10,8 @@ android/.idea/
 android/*.iml
 android/app/release/
 android/app/debug/
+android/keystore/
+keystore.properties
 
 # ESP32
 esp32/build/

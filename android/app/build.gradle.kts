@@ -14,12 +14,32 @@ android {
         applicationId = "cz.aiservis.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = (System.getenv("VERSION_CODE")?.toIntOrNull()) ?: 1
+        versionName = System.getenv("VERSION_NAME") ?: "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            val props = java.util.Properties()
+            val propsFile = rootProject.file("keystore.properties")
+            if (propsFile.exists()) {
+                props.load(java.io.FileInputStream(propsFile))
+            }
+            val alias = props.getProperty("keyAlias") ?: System.getenv("KEY_ALIAS")
+            val pass = props.getProperty("keyPassword") ?: System.getenv("KEY_PASSWORD")
+            val store = props.getProperty("storeFile") ?: System.getenv("STORE_FILE")
+            val storePass = props.getProperty("storePassword") ?: System.getenv("STORE_PASSWORD")
+            if (!alias.isNullOrBlank() && !pass.isNullOrBlank() && !store.isNullOrBlank() && !storePass.isNullOrBlank()) {
+                keyAlias = alias
+                keyPassword = pass
+                storeFile = file(store)
+                storePassword = storePass
+            }
         }
     }
 
@@ -30,7 +50,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
         debug {
             applicationIdSuffix = ".debug"
@@ -140,6 +160,9 @@ dependencies {
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Crash/Metrics
+    implementation("io.sentry:sentry-android:7.8.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

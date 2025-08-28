@@ -44,6 +44,23 @@ npm install
 npm run dev
 ```
 
+## 📚 Dokumentace
+
+- Procházejte dokumenty v `docs/` nebo spusťte lokální web:
+
+```bash
+# v kořeni repozitáře
+pip install mkdocs mkdocs-mermaid2-plugin
+mkdocs serve
+# otevřete http://127.0.0.1:8000
+```
+
+- Vstupní stránky:
+  - `docs/index.md` (přehled)
+  - `docs/install/phone.md`, `docs/install/hybrid.md`, `docs/install/pro.md`, `docs/install/pi-gateway.md`
+  - `docs/wiring.md`, `docs/api/overview.md`, `docs/troubleshooting.md`
+  - Diagramy a Mermaid: `docs/architecture/diagrams.md`
+
 ## 📱 Varianty Nasazení
 
 ### Phone Edition (BYOD)

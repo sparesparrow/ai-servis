@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="cs">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>AI-SERVIS – Řešení</title>
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="preload" as="style" href="style.css">
+	<link rel="stylesheet" href="style.css">
+	<script type="application/ld+json">
+	{
+		"@context":"https://schema.org",
+		"@type":"LocalBusiness",
+		"name":"AI-SERVIS",
+		"address":{"@type":"PostalAddress","addressLocality":"Brno-sever","addressCountry":"CZ"},
+		"telephone":"+420777888999",
+		"url":"https://www.ai-servis.cz",
+		"areaServed":"CZ",
+		"openingHours":"Mo-Fr 08:00-18:00"
+	}
+	</script>
+</head>
+<body>
+	<header class="hero">
+		<h1>AI-SERVIS</h1>
+		<p>Phone vs Hybrid vs Pro</p>
+		<div class="cta-strip"><span>Chcete instalaci do 7 dnů?</span> <a class="btn btn--primary" href="#contact">Rezervovat termín</a></div>
+	</header>
+
+	<main>
+		<section id="pricing" class="cards">
+			<article class="card">
+				<h2>Phone Edition</h2>
+				<p>22.000 – 38.000 Kč</p>
+				<ul>
+					<li>BYOD, bez krabičky</li>
+					<li>ANPR na telefonu</li>
+					<li>OBD a hlas</li>
+				</ul>
+				<a href="#contact" class="btn">Získat nabídku</a>
+			</article>
+			<article class="card highlight">
+				<h2>Hybrid Edition</h2>
+				<p>48.000 – 89.000 Kč</p>
+				<ul>
+					<li>Telefon + mikro DVR</li>
+					<li>Parking mode</li>
+					<li>Vyšší spolehlivost</li>
+				</ul>
+				<a href="#contact" class="btn btn--primary">Nejčastější volba</a>
+			</article>
+			<article class="card">
+				<h2>Pro Edition</h2>
+				<p>89.000 – 143.000 Kč</p>
+				<ul>
+					<li>Vehicle PC</li>
+					<li>Multi‑kamera DVR</li>
+					<li>Fleet funkce</li>
+				</ul>
+				<a href="#contact" class="btn">Kontaktovat experta</a>
+			</article>
+		</section>
+
+		<section id="faq">
+			<h2>FAQ</h2>
+			<details><summary>Je sledování SPZ legální?</summary>
+				<p>Probíhá lokálně, SPZ hashujeme a mažeme po zvoleném intervalu. Funkci lze kdykoli vypnout.</p>
+			</details>
+			<details><summary>Nabízíte pronájem?</summary>
+				<p>Ano, 1/24 z ceny plus servis, OTA a hotline v ceně.</p>
+			</details>
+		</section>
+
+		<section id="contact">
+			<h2>Poptávka</h2>
+			<form>
+				<input placeholder="Jméno" required>
+				<input placeholder="E‑mail" type="email" required>
+				<select>
+					<option>Phone Edition</option>
+					<option>Hybrid Edition</option>
+					<option>Pro Edition</option>
+				</select>
+				<button type="submit" class="btn btn--primary">Odeslat</button>
+			</form>
+		</section>
+	</main>
+
+	<script src="app.js" defer></script>
+</body>
+</html>

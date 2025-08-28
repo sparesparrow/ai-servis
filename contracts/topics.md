@@ -1,13 +1,13 @@
 # AI-SERVIS MQTT Topics Specification v1.0
 
 ## Topic Structure
-All topics follow the pattern: `ai-servis/{domain}/{action}/{device-id}`
+All topics follow the pattern: `{domain}/{action}/{device-id}`
 
 ## Vehicle Telemetry Topics
 
 ### OBD Data Stream
 ```
-ai-servis/vehicle/telemetry/{vin}/obd
+vehicle/telemetry/{vin}/obd
 ```
 - **QoS**: 1 (At least once delivery)
 - **Retained**: false
@@ -16,7 +16,7 @@ ai-servis/vehicle/telemetry/{vin}/obd
 
 ### ANPR Detection Events
 ```
-ai-servis/vehicle/events/{vin}/anpr
+vehicle/events/{vin}/anpr
 ```
 - **QoS**: 2 (Exactly once delivery)
 - **Retained**: false
@@ -25,7 +25,7 @@ ai-servis/vehicle/events/{vin}/anpr
 
 ### Vehicle Alerts
 ```
-ai-servis/vehicle/alerts/{vin}
+vehicle/alerts/{vin}
 ```
 - **QoS**: 2 (Exactly once delivery)
 - **Retained**: true (for offline devices)
@@ -36,7 +36,7 @@ ai-servis/vehicle/alerts/{vin}
 
 ### IO Commands
 ```
-ai-servis/vehicle/cmd/{vin}/io
+vehicle/cmd/{vin}/io
 ```
 - **QoS**: 1
 - **Retained**: false
@@ -45,7 +45,7 @@ ai-servis/vehicle/cmd/{vin}/io
 
 ### Device State Updates
 ```
-ai-servis/device/state/{node-id}
+device/state/{node-id}
 ```
 - **QoS**: 1
 - **Retained**: true
@@ -56,7 +56,7 @@ ai-servis/device/state/{node-id}
 
 ### Data Retention Commands
 ```
-ai-servis/privacy/retention/{device-id}
+privacy/retention/{device-id}
 ```
 - **QoS**: 2
 - **Retained**: false
@@ -65,7 +65,7 @@ ai-servis/privacy/retention/{device-id}
 
 ### Security Audit Log
 ```
-ai-servis/security/audit/{device-id}
+security/audit/{device-id}
 ```
 - **QoS**: 1
 - **Retained**: true
@@ -76,7 +76,7 @@ ai-servis/security/audit/{device-id}
 
 ### Device Discovery
 ```
-ai-servis/system/discovery/{device-type}
+system/discovery/{device-type}
 ```
 - **QoS**: 0
 - **Retained**: false
@@ -85,7 +85,7 @@ ai-servis/system/discovery/{device-type}
 
 ### OTA Updates
 ```
-ai-servis/system/ota/{device-id}
+system/ota/{device-id}
 ```
 - **QoS**: 2
 - **Retained**: false
@@ -94,7 +94,7 @@ ai-servis/system/ota/{device-id}
 
 ### Health Monitoring
 ```
-ai-servis/system/health/{device-id}
+system/health/{device-id}
 ```
 - **QoS**: 1
 - **Retained**: true
@@ -106,7 +106,7 @@ ai-servis/system/health/{device-id}
 ### OBD Data Example
 ```json
 {
-  "topic": "ai-servis/vehicle/telemetry/WBA3B5C50ED123456/obd",
+  "topic": "vehicle/telemetry/WBA3B5C50ED123456/obd",
   "payload": {
     "fuel_level": 23,
     "engine_rpm": 2100,
@@ -122,7 +122,7 @@ ai-servis/system/health/{device-id}
 ### ANPR Event Example
 ```json
 {
-  "topic": "ai-servis/vehicle/events/WBA3B5C50ED123456/anpr",
+  "topic": "vehicle/events/WBA3B5C50ED123456/anpr",
   "payload": {
     "plate_hash": "a1b2c3d4e5f6...",
     "confidence": 0.92,
@@ -139,7 +139,7 @@ ai-servis/system/health/{device-id}
 ### Alert Example
 ```json
 {
-  "topic": "ai-servis/vehicle/alerts/WBA3B5C50ED123456",
+  "topic": "vehicle/alerts/WBA3B5C50ED123456",
   "payload": {
     "severity": "warning",
     "code": "FUEL_LOW",
