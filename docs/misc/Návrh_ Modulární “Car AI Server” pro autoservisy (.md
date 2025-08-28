@@ -22,7 +22,7 @@ Poznámka k právu a praxi (CZ/EU):
         - Audio server (RTP‑MIDI/ALSA bridge + lokální knihovna + TTS/TTV)
         - SIP server (Asterisk/Kamailio) + softphone klient
         - Wi‑Fi Hotspot + Bluetooth gateway
-        - MCP hub: ElevenLabs conversational agent, navigace, hudba, ovládání zařízení, “catalog” upgrady
+        - MCP hub: ElevenLabs conversational agent, navigace, hudba, ovládání zařízení, "catalog" upgrady
         - Data broker (MQTT) a Event bus (NATS/Redis Streams)
         - UI: Web HMI + Android companion app
 - Android smartphone uživatele
@@ -42,14 +42,14 @@ Cíl:
 
 - Detekovat SPZ v reálném čase ze zadní kamery.
 - Vést rolling cache hashovaných SPZ s časovou značkou a počtem výskytů.
-- Upozorňovat, pokud se SPZ opakuje v definovaném intervalu/okruhu nebo je na lokálním “watchlistu”.
+- Upozorňovat, pokud se SPZ opakuje v definovaném intervalu/okruhu nebo je na lokálním "watchlistu".
 
 Technologie:
 
 - OpenALPR/CompreFace/OCR + YOLOv8n/YOLOv10n/PP‑OCR‑lite s TensorRT/ONNX na ARM.
 - GStreamer/FFmpeg pipeline: RTSP → frames → detekce → OCR → normalizace formátu CZ/EU.
 - Normalizace a hashování: SPZ → canonical form → HMAC‑SHA256 s pepper v TPM/secure storage.
-- Eventing: “plate_seen{hash, time, conf, frame_id}” → MQTT/NATS.
+- Eventing: "plate_seen{hash, time, conf, frame_id}" → MQTT/NATS.
 - Pravidla:
     - Duplicate alert: více než N výskytů téhož hash v X minutách.
     - Watchlist alert: hash ∈ watchlist (lokální soubor/kv‑store).
@@ -62,14 +62,14 @@ Datová politika:
 - Export audit logu pro zákazníka.
 
 
-## Integrační katalog “upgrade” modulů
+## Integrační katalog "upgrade" modulů
 
 - Wi‑Fi Hotspot + Bluetooth
     - Pi jako router: hostapd + dnsmasq + nftables; tethering přes telefon/externí LTE.
     - Bluetooth A2DP sink/source; HFP routing přes audio server.
 - Audio server
     - ALSA/PulseAudio/PipeWire; RTP‑MIDI bridge pro nízkolatenční řízení.
-    - Napojení na ElevenLabs TTS/TTV pro hlasové výstupy a “conversational agent”.
+    - Napojení na ElevenLabs TTS/TTV pro hlasové výstupy a "conversational agent".
     - Zónové směrování (kabina vs. hands‑free hovor vs. notifikace).
 - ATEAS‑like kamerový server
     - RTSP ingest (zadní/přední/interiér).
@@ -77,7 +77,7 @@ Datová politika:
     - Web přehrávač + bookmarky událostí.
 - ElevenLabs Conversational AI agent
     - Duplex audio s vadou přerušování řešit VAD + barge‑in.
-    - Nástroje přes MCP: “play_music”, “navigate_to”, “place_call”, “query_watchlist”, “toggle_hotspot”, “clip_event”.
+    - Nástroje přes MCP: "play_music", "navigate_to", "place_call", "query_watchlist", "toggle_hotspot", "clip_event".
 - SIP server
     - Asterisk/Kamailio v Pi; Android softphone; hands‑free s echo‑cancel.
     - MCP tool pro call control z AI agenta.
@@ -87,8 +87,8 @@ Datová politika:
 - Hlasově ovládaný MCP klient
     - Mluvíš přímo na Android MCP klient (tvůj repo) nebo na Pi mikrofon.
     - Befehly mapované na MCP Tools.
-- “Futuristické vývojové prostředí”
-    - Lokální MCP orchestrátor + “hard‑coder” asistent, generování projektů a skriptů, které se rovnou nasazují do Dockeru na Pi.
+- "Futuristické vývojové prostředí"
+    - Lokální MCP orchestrátor + "hard‑coder" asistent, generování projektů a skriptů, které se rovnou nasazují do Dockeru na Pi.
     - On‑device dev flow: Git server v autě, hot‑reload modulů.
 
 
@@ -101,14 +101,14 @@ Datová politika:
     - Klíčový companion: hlasové ovládání a UI akcí; příjem notifikací; přístup k senzorům telefonu (GPS, síť).
     - Intenty: otevřít navigaci, spustit playlist, potvrdit alerty.
 - bzeed‑mobility
-    - Nadstavbový monorepo “mobility” bundler: definice Docker stacku, IaC (compose), infrastructure scripts (hostapd, nftables), a “catalog.json” pro autoservisy (nabídka modulů/upgradů).
+    - Nadstavbový monorepo "mobility" bundler: definice Docker stacku, IaC (compose), infrastructure scripts (hostapd, nftables), a "catalog.json" pro autoservisy (nabídka modulů/upgradů).
     - CI skript, co sestaví kompletní image pro Pi včetně autoinstalleru.
 - mcp‑prompts, mcp‑project‑orchestrator, cursor‑rules, hard‑coder (z tvého profilu)
-    - Využít k vytvoření “Car Dev Console”: generuje MCP Tools/Servers pro nové moduly na základě promptů; rychlé prototypování a deployment do běžící flotily.
+    - Využít k vytvoření "Car Dev Console": generuje MCP Tools/Servers pro nové moduly na základě promptů; rychlé prototypování a deployment do běžící flotily.
 - Přidat MCP servery:
-    - “car‑control‑mcp”: ovládání GPIO/ESP32 (světla, relé), čtení CAN (přes MCP2515), telemetrie do MQTT.
-    - “lpr‑events‑mcp”: dotazy na cache, watchlist CRUD, export klipů.
-    - “sip‑control‑mcp”, “audio‑mixer‑mcp”, “nav‑intent‑mcp”.
+    - "car‑control‑mcp": ovládání GPIO/ESP32 (světla, relé), čtení CAN (přes MCP2515), telemetrie do MQTT.
+    - "lpr‑events‑mcp": dotazy na cache, watchlist CRUD, export klipů.
+    - "sip‑control‑mcp", "audio‑mixer‑mcp", "nav‑intent‑mcp".
 
 Informace o tvém GitHub profilu a pinovaných projektech (včetně rtp‑midi, MCP serverů a orchestrátorů) potvrzuje dostupnost základních stavebních kamenů a aktivitu na nich[^1_1].
 
@@ -147,7 +147,7 @@ Informace o tvém GitHub profilu a pinovaných projektech (včetně rtp‑midi, 
 
 - Web UI na Pi: přehled modulů, přepínače, privacy nastavení, watchlist editor, DVR timeline, logy, OTA update.
 - Android companion: notifikace, rychlé akce, navigační deeplinks.
-- “Autoservis katalog” export: YAML/JSON s ceníkem a moduly, generováno z bzeed‑mobility.
+- "Autoservis katalog" export: YAML/JSON s ceníkem a moduly, generováno z bzeed‑mobility.
 
 7) Bezpečnost a compliance
 
@@ -168,17 +168,17 @@ Informace o tvém GitHub profilu a pinovaných projektech (včetně rtp‑midi, 
     - Příklady integrace s PipeWire/ALSA bridge v autě.
     - Service unit + config pro nízkolatenční tok.
 - android‑mcp‑client:
-    - Hlasové “intenty” pro navigaci, hudbu, hovory; notifikace pro LPR alerts.
+    - Hlasové "intenty" pro navigaci, hudbu, hovory; notifikace pro LPR alerts.
     - mDNS discovery a pairing s Pi; offline fallback přes Bluetooth.
 
 
 ## Scénář užití (zákazník v servisu)
 
-- Vybere “Car AI Server” základ, plus moduly:
-    - “Rear LPR” s upozorněním na duplicity/watchlist.
-    - “AI asistent s hlasem” (ElevenLabs).
-    - “Audio server + SIP” a “Wi‑Fi hotspot”.
-    - Případně “Kamerový DVR”.
+- Vybere "Car AI Server" základ, plus moduly:
+    - "Rear LPR" s upozorněním na duplicity/watchlist.
+    - "AI asistent s hlasem" (ElevenLabs).
+    - "Audio server + SIP" a "Wi‑Fi hotspot".
+    - Případně "Kamerový DVR".
 - Instalace proběhne přes připravený image a provisioning skript.
 - Technik v UI aktivuje požadované moduly, nastaví privacy/retenci/watchlist.
 - Zákazník dostane Android app pairing a krátký návod.
@@ -476,11 +476,11 @@ services:
 # https://ppl-ai-code-interpreter-files.s3.amazonaws.com/web/direct-files/6a81092a497c18982ed95ded0f062213/98604c6e-473e-40bb-a910-76287239426e/index.html?utm_source=perplexity
 tohle vypadá skvěle, ale něco tomu chybí. pojďme to ještě vylepšit
 
-Skvělé, pojďme to posunout na „produkční“ úroveň. Níže je konkrétní checklist vylepšení pro obsah, UX/UI, výkon, SEO, přístupnost i konverze, plus hotové textové a technické snippetty, které stačí doplnit.
+Skvělé, pojďme to posunout na „produkční" úroveň. Níže je konkrétní checklist vylepšení pro obsah, UX/UI, výkon, SEO, přístupnost i konverze, plus hotové textové a technické snippetty, které stačí doplnit.
 
 # Co přidat hned (největší dopad)
 
-- CTA panel „Objednat instalaci“ na každé sekci
+- CTA panel „Objednat instalaci" na každé sekci
 - Sticky mini‑navigace balíčků s porovnáním
 - Důvěryhodnost: reference, fotky z instalace, loga partnerů, záruky
 - Live kalkulátor ceny a termínu instalace
@@ -490,19 +490,19 @@ Skvělé, pojďme to posunout na „produkční“ úroveň. Níže je konkrétn
 
 # UX/UI vylepšení
 
-- Hero: přidej sekundární vizuál produktu (Pi + kamera v autě) a „Quick pick“ výběr balíčku.
-- Karty produktů: krátký „benefit headline“ + 3 odrážky výhod; tlačítko „Chci tento modul“.
-- Ceník: zvýrazni doporučený balíček, přepínač „Jednorázově / Pronájem“.
+- Hero: přidej sekundární vizuál produktu (Pi + kamera v autě) a „Quick pick" výběr balíčku.
+- Karty produktů: krátký „benefit headline" + 3 odrážky výhod; tlačítko „Chci tento modul".
+- Ceník: zvýrazni doporučený balíček, přepínač „Jednorázově / Pronájem".
 - Kontakt: přepni na 2‑krokový formulář (základní údaje → výběr termínu).
 - Vlož FAQ akordeon přímo pod ceník.
 
 # Obsahové doplnění (konkrétní texty)
 
 - Benefit nadpisy
-  - Sledování SPZ: „Včasné varování na opakující se vozidla“
-  - AI Asistent: „Mluv, a auto poslouchá“
-  - Audio Server: „Čistý zvuk, chytré routování“
-  - Kamerový DVR: „Důkazy vždy po ruce“
+  - Sledování SPZ: „Včasné varování na opakující se vozidla"
+  - AI Asistent: „Mluv, a auto poslouchá"
+  - Audio Server: „Čistý zvuk, chytré routování"
+  - Kamerový DVR: „Důkazy vždy po ruce"
 
 - Guarantee bar
   - 24měs. záruka na instalaci
@@ -515,18 +515,18 @@ Skvělé, pojďme to posunout na „produkční“ úroveň. Níže je konkrétn
 
 # Komponenty a sekce k doplnění
 
-- Sekce „Jak to funguje“
+- Sekce „Jak to funguje"
   - 1) Kamera → 2) AI detekce → 3) Hash → 4) Notifikace → 5) DVR klip
-- „Pro firmy“ (fleety)
+- „Pro firmy" (fleety)
   - Hromadná správa, jednotný katalog, SLA, reporting
-- „Proč AI‑SERVIS“
+- „Proč AI‑SERVIS"
   - 70–93% úspora vs. tradiční ANPR, otevřený ekosystém, český support
-- „Partnerský program“
+- „Partnerský program"
   - Marže pro autoservisy, školení, materiály, hotline
 
 # Konverzní prvky
 
-- Sticky tlačítko „Objednat“ (mobil i desktop)
+- Sticky tlačítko „Objednat" (mobil i desktop)
 - Mini‑kalkulátor ceny (výběr modulů → cena, doba instalace)
 - Rychlé kontakty: tel link, WhatsApp, e‑mail, mapa
 
@@ -563,7 +563,7 @@ Příklad JSON‑LD (vložit do <head>):
 - Unikátní title/description pro každou sekci (Produkty, Ceník, Specifikace…)
 - H1 pouze jednou (AI‑SERVIS), podsekce H2/H3
 - Interní kotvy: #anpr, #ai-asistent, #audio, #dvr, #sip, #navigace
-- Czech i English verze (hreflang), a microcopy bez „marketing‑speak“.
+- Czech i English verze (hreflang), a microcopy bez „marketing‑speak".
 
 # Přístupnost
 
@@ -572,7 +572,7 @@ Příklad JSON‑LD (vložit do <head>):
 - Focus stavy a ovladatelnost klávesnicí
 - Alt texty u ikon a vizuálů
 
-# Přepínač „Koupit vs. Pronájem“
+# Přepínač „Koupit vs. Pronájem"
 
 - Přidej toggle měsíčního pronájmu (např. 1/24 ceny + servis):
   - Základní: 1.990 Kč/měs.
@@ -1045,7 +1045,7 @@ AI-SERVIS ROI \& Business Case - 3-letý finanční výhled
 
 # could we remove raspberry pi from the system to save money? maybe driver's smartphone might serve as the central AI server communicating with one or more ESP32 modules? or the design could involve either android, ios, raspberry, laptob or other types of client devices?
 
-Short answer: Yes. The system can be made Pi‑less. A driver’s smartphone (Android or iOS) can act as the “AI hub” and talk to ESP32 nodes, cameras, and cloud/local services. Below is a practical, production‑minded architecture with trade‑offs, costs, and a migration path that supports multiple “central brain” options: Android, iOS, Raspberry Pi, laptop, or a vehicle PC.
+Short answer: Yes. The system can be made Pi‑less. A driver's smartphone (Android or iOS) can act as the "AI hub" and talk to ESP32 nodes, cameras, and cloud/local services. Below is a practical, production‑minded architecture with trade‑offs, costs, and a migration path that supports multiple "central brain" options: Android, iOS, Raspberry Pi, laptop, or a vehicle PC.
 
 # Recommended modular architecture
 
@@ -1108,9 +1108,9 @@ Cons
 
 Mitigations
 
-- Use a foreground “Driving service” with persistent notification and battery optimizations (Android).
+- Use a foreground "Driving service" with persistent notification and battery optimizations (Android).
 - Provide a small supercapacitor/UPS in ESP32 nodes for graceful shutdown and event retention.
-- For fleets or high‑reliability, offer Pi/mini‑PC tier as “always‑on recorder” while phone is just UI.
+- For fleets or high‑reliability, offer Pi/mini‑PC tier as "always‑on recorder" while phone is just UI.
 
 
 # Android-first reference design
@@ -1156,8 +1156,8 @@ Offer two SKU lines:
 
 - Same ESP32 firmware and topics regardless of hub.
 - A discovery handshake:
-    - ESP32 advertises over BLE and UDP; hub with highest priority (Android > Pi > laptop) takes the “Coordinator” role.
-- If the phone leaves, ESP32 enters “watch” mode and caches events; optional mini‑recorder takes over if present.
+    - ESP32 advertises over BLE and UDP; hub with highest priority (Android > Pi > laptop) takes the "Coordinator" role.
+- If the phone leaves, ESP32 enters "watch" mode and caches events; optional mini‑recorder takes over if present.
 
 
 # Implementation notes
@@ -1168,14 +1168,14 @@ Offer two SKU lines:
 - Security
     - First‑pair with QR code; Ed25519 keys stored in SecureElement/KeyStore; per‑node TLS for Wi‑Fi transfers.
 - Privacy
-    - On‑device retention sliders; “incognito drive” switch; ANPR hashing; no default cloud.
+    - On‑device retention sliders; "incognito drive" switch; ANPR hashing; no default cloud.
 
 
 # What changes on the website and catalog
 
-- Add “Phone Edition” as entry plan; emphasize “No extra box required”.
+- Add "Phone Edition" as entry plan; emphasize "No extra box required".
 - Show compatibility badges: Android (full), iOS (dashboard+alerts), Windows/macOS (service tool), Raspberry/Vehicle PC (pro tier).
-- Visual decision tree: “Need 24/7/parking mode DVR?” → choose Hybrid; else Phone Edition.
+- Visual decision tree: "Need 24/7/parking mode DVR?" → choose Hybrid; else Phone Edition.
 - Update infografiky: add Pi‑less architecture and power diagram from car charger → phone → UVC hub/ESP32.
 
 
@@ -1197,7 +1197,7 @@ Offer two SKU lines:
 If desired, I can:
 
 - Refactor the current software plan into an Android‑first repo structure, with ESP32 firmwares and a compatibility layer for optional Pi.
-- Deliver updated web sections and diagrams for “Phone Edition vs Hybrid Edition” including pricing cards and install time.
+- Deliver updated web sections and diagrams for "Phone Edition vs Hybrid Edition" including pricing cards and install time.
 <span style="display:none">[^6_1]</span>
 
 <div style="text-align: center">⁂</div>
@@ -1209,7 +1209,7 @@ If desired, I can:
 
 # Refactor the current software plan into an Android‑first repo structure, with ESP32 firmwares and a compatibility layer for optional Pi.
 
-Deliver updated web sections and diagrams for “Phone Edition vs Hybrid Edition” and include more types of deployment based on specific customer's needs or investment capabilities.
+Deliver updated web sections and diagrams for "Phone Edition vs Hybrid Edition" and include more types of deployment based on specific customer's needs or investment capabilities.
 
 Great direction. Below is a concise, production‑minded refactor that makes Android the primary hub, while keeping ESP32 firmwares first‑class and leaving a thin compatibility layer for an optional Raspberry Pi/mini‑PC.
 
@@ -1308,10 +1308,10 @@ MQTT topics (example)
 
 BLE GATT (ESP32)
 
-- Service 0xFFF0 “Telemetry”
+- Service 0xFFF0 "Telemetry"
     - 0xFFF1 notify: telemetry frames (CBOR)
     - 0xFFF2 write: commands (JSON/CBOR)
-- Service 0xFFF3 “Config”
+- Service 0xFFF3 "Config"
     - 0xFFF4 read/write: config chunked
     - 0xFFF5 notify: ota progress
 
@@ -1324,7 +1324,7 @@ Security
 
 # 3) Android app architecture
 
-- Foreground “DrivingService” orchestrates:
+- Foreground "DrivingService" orchestrates:
     - ConnectivityManager: BLE+Wi‑Fi Direct selection, mDNS discovery.
     - MessageBus: embedded MQTT or shared Flow bus; backpressure aware.
     - RulesEngine: YAML/JSON rules → compiled predicates → actions.
@@ -1410,7 +1410,7 @@ Comparison table (key rows)
 
 - Cena od / instalační čas / DVR 24/7 / Multi‑kamera / ANPR výkon / OBD diagnostika / Hlasový AI / Fleet správa / Závislost na telefonu
 
-Add “Design your deployment” wizard
+Add "Design your deployment" wizard
 
 - Rozpočet (slider)
 - Požadovaná spolehlivost (low/med/high)
@@ -1440,7 +1440,7 @@ Privacy \& Safety section
 - Contracts map (topics, GATT services).
 - Power topology (PD/QC car adapter → powered OTG hub → phone + UVC; ESP32 on 12V→5V buck).
 
-I can generate updated visuals to match the above and deliver site-ready PNG/SVG plus a prebuilt Solutions page section (HTML/CSS/JS or Next.js components). If you want, I’ll scaffold the monorepo (folders, README, templates, CI pipelines) and push a first commit with:
+I can generate updated visuals to match the above and deliver site-ready PNG/SVG plus a prebuilt Solutions page section (HTML/CSS/JS or Next.js components). If you want, I'll scaffold the monorepo (folders, README, templates, CI pipelines) and push a first commit with:
 
 - contracts/ v1.0
 - Android app skeleton (modular features, DI, CameraX sample, BLE scan)
@@ -2070,7 +2070,7 @@ Serial.println();
 
 9) Integrace do AI‑SERVIS
 
-- ESP32 “obd‑bridge” publikuje do MQTT topicu: vehicle/telemetry/<vin>/raw_can a dekódované PIDs do vehicle/telemetry/<vin>/obd.
+- ESP32 "obd‑bridge" publikuje do MQTT topicu: vehicle/telemetry/<vin>/raw_can a dekódované PIDs do vehicle/telemetry/<vin>/obd.
 - Android app naslouchá přes BLE (nízká latence) nebo Wi‑Fi (vyšší throughput) a spouští hlasové alerty (palivo <20%, přehřátí, DTC kód atd.).
 - Pravidla (rules engine) si drž na telefonu i v ESP32 (základní lokální alarmy bez telefonu).
 
@@ -2357,7 +2357,7 @@ Rychlý test (TWAI s transceiverem)
 
 - Knihovna: ESP-IDF (nebo Arduino core s TWAI driverem).
 - Nastav bitrate 500 kbps (většina EU aut) a 11-bit ID.
-- Povol “accept all” filtr, ať vidíš rámce.
+- Povol "accept all" filtr, ať vidíš rámce.
 - Po zapnutí zapalování bys měl na sériové lince vidět CAN rámce.
 
 Bezpečnost
@@ -2378,7 +2378,7 @@ Chceš, abych ti k téhle konkrétní desce (ESP32 DevKit na fotce) poslal přes
 
 # obd to esp32 pinout
 
-Here’s a safe, proven OBD‑II → ESP32 pinout you can wire today. It covers the two common ways to get CAN into an ESP32:
+Here's a safe, proven OBD‑II → ESP32 pinout you can wire today. It covers the two common ways to get CAN into an ESP32:
 
 A) ESP32 (TWAI built‑in) + CAN transceiver (SN65HVD230 3.3V)
 
@@ -2398,9 +2398,9 @@ A) ESP32 (TWAI built‑in) + CAN transceiver (SN65HVD230 3.3V)
     - Common ground: OBD Pin4/5 → buck GND → ESP32 GND → transceiver GND
 - Notes
     - Bitrate: start with 500 kbps, 11‑bit (ISO 15765‑4)
-    - Don’t add a 120Ω terminator (car bus already terminated)
+    - Don't add a 120Ω terminator (car bus already terminated)
     - Use twisted pair for CANH/CANL, keep short
-    - Read‑only: don’t transmit until you’re certain
+    - Read‑only: don't transmit until you're certain
 
 B) ESP32 + MCP2515 (SPI) + TJA1050/MCP2551
 
@@ -2439,7 +2439,7 @@ Safety checklist
 - Start with ignition ON, engine OFF; sniff only (no TX).
 - Keep CAN wires twisted and short; one common ground point.
 
-If you confirm which transceiver module you have on hand (SN65HVD230/TJA1050 etc.), I’ll send you a ready‑to‑flash sketch with GPIO16/17 mapping and a serial sniffer to see frames immediately.
+If you confirm which transceiver module you have on hand (SN65HVD230/TJA1050 etc.), I'll send you a ready‑to‑flash sketch with GPIO16/17 mapping and a serial sniffer to see frames immediately.
 <span style="display:none">[^14_1]</span>
 
 <div style="text-align: center">⁂</div>
@@ -2994,4 +2994,121 @@ async def vehicle_assistant():
 [^15_129]: https://www.youtube.com/watch?v=dDBxC39lNQg
 
 [^15_130]: https://tasmota.github.io/docs/TWAI/
+
+
+---
+
+## 📅 Detailní implementační plán (fáze, milníky, odpovědnosti)
+
+Níže je produkční plán, který navazuje na architekturu (Android‑first + ESP32, volitelný Pi) a obchodní cíle AI‑SERVIS. Kombinuje rychlé "quick wins" v autoservisu s technickým delivery plánem pro MVP → GA a zahrnuje pilotní nasazení u zákazníků.
+
+### Přehled fází (0 → 6)
+
+- Fáze 0 – Iniciační příprava (1 týden)
+- Fáze 1 – Analýza a návrh (1–2 týdny)
+- Fáze 2 – Quick Wins/MVP (3–4 týdny)
+- Fáze 3 – Core operace a stabilizace (4–6 týdnů)
+- Fáze 4 – Advanced customer experience (4–6 týdnů)
+- Fáze 5 – Pilot a validace v terénu (3 týdny)
+- Fáze 6 – Škálování a kontinuální zlepšování (průběžně)
+
+Celkem: ~16–22 týdnů do GA pro "Phone/Hybrid Edition", s možností rozšíření na 28 týdnů dle rozsahu fleet funkcí a DVR.
+
+### Fáze 0 – Iniciační příprava (1 týden)
+
+- Monorepo skeleton dle "Android‑first" návrhu: `contracts/`, `android/`, `esp32/`, `edge-compat/`, `web/`, `ci/`.
+- Contracts v1.0: MQTT topics, BLE GATT, config schema, bezpečnostní minimum (pairing, klíče, mTLS/TLS pinning).
+- CI/CD: build Android (internal track), ESP‑IDF matrix build, Docker (edge‑compat), verzování (semver) a release notes.
+- RACI: Owner Dev Lead; Support DevOps, Mobile, Firmware.
+- Akceptace: repo běží, buildy zelené, podepsané artefakty.
+
+### Fáze 1 – Analýza a návrh (1–2 týdny)
+
+- Workshopy s autoservisem: procesy, GDPR, SLA, instalační postupy; výběr "Phone vs Hybrid vs Pro" scénářů.
+- Výběr LPR stacku (Phone: CameraX+OCR; Hybrid/Pro: Pi/mini‑PC offload). POC čitelnosti CZ/EU.
+- OBD strategie: ELM327 BLE (rychlé MVP) + ESP32‑CAN bridge (produkční). Seznam cílových PIDs a DTC.
+- UX návrh: dashboard (gauges), ANPR feed, Alerts, Privacy boxy, Konfigurátor (web) – navázat na existující web.
+- Akceptace: schválené požadavky, backlog, architektonická rozhodnutí (ADR), testovací plán.
+
+### Fáze 2 – Quick Wins / MVP (3–4 týdny)
+
+- Android MVP:
+  - Foreground "DrivingService", BLE scan/pairing, základní MQTT/EventBus.
+  - OBD přes ELM327 BLE (fuel, RPM, speed, coolant), základní rules (palivo <20%, teplota >105°C).
+  - ANPR light: snapshot → OCR → hash → notifikace (on‑device; 5–10 fps cílově podle HW).
+- ESP32 OBD bridge MVP: TWAI + transceiver, read‑only, publikace do `vehicle/telemetry/{vin}/obd`.
+- Web UI: sekce "Phone/Hybrid/Pro", kalkulátor, CTA a FAQ; nasazení na CDN.
+- Akceptace: 1 auto v laboratoři, telemetrie a alerty v reálném čase, web generuje leady.
+
+### Fáze 3 – Core operace a stabilizace (4–6 týdnů)
+
+- Android:
+  - Stabilní konektivita (BLE reconnect, Wi‑Fi Direct), mDNS discovery, storage s retenční politikou.
+  - ANPR výkon a přesnost (region rules, normalizace, privacy hash); hlasové TTS/STT s barge‑in.
+  - DVR light: event‑clip buffer, offload na domácí Wi‑Fi.
+- ESP32:
+  - OBD‑II/CAN optimalizace (PID tabulky, rate limiting), OTA, watchdog, lokální základní alarmy (bez telefonu).
+- Edge‑compat (volitelně): Pi camera‑server + lpr‑engine + mqtt‑bridge pro Hybrid/Pro.
+- Bezpečnost: klíče, párování QR, TLS pinning; audit log v aplikaci.
+- Akceptace: stabilní jízda 2–4 hodiny bez výpadků; MTBF > 20h v testech; privacy testy OK.
+
+### Fáze 4 – Advanced customer experience (4–6 týdnů)
+
+- Personalizace a komunikace: notifikace, servisní připomínky (prediktivně dle OBD), hlasové scénáře.
+- Fleet "lite": multi‑vehicle přehled (mirror témat do cloud brokeru dle souhlasu), export reportů.
+- Web: konfigurátor "Design your deployment" + instantní nabídky, měření konverzí (GTM/GA4).
+- Akceptace: UX testy 10+ uživatelů; NPS > 50; konverze lead→poptávka > 5%.
+
+### Fáze 5 – Pilot a terénní validace (3 týdny)
+
+- Pilot 10 instalací v Brně (Phone 6, Hybrid 3, Pro 1). Standardizovaný instalační checklist a protokol.
+- Telemetrie pilotu: chybovost připojení, false‑positive u ANPR, latence hlasu, teplotní chování telefonu.
+- SLA a podpora: L1/L2 support runbook, náhradní díly, OTA kanál.
+- Akceptace: 8/10 spokojených instalací, <1 kritická závada, validované KPI a cenový model.
+
+### Fáze 6 – Škálování a kontinuální zlepšování (průběžně)
+
+- Rollout regionální → národní; školení partnerských autoservisů; distribuční balíčky.
+- Observabilita: crash/log export, health metriky, anonymizované telemetry (opt‑in).
+- Roadmap: CAN‑FD, parking mode, fler‑kamera, SDK pro integrátory.
+
+### RACI (zkráceně)
+
+- Product/Program: odpovědný za rozsah, priority, budget.
+- Mobile Lead: DrivingService, ANPR, Voice, storage, UX.
+- Firmware Lead: ESP32 OBD/CAN, IO, OTA, bezpečnost.
+- Edge Lead: Pi camera‑server, lpr‑engine, mqtt‑bridge.
+- DevOps: CI/CD, release, podpisy, Sentry/analytics.
+- Legal/Privacy: DPIA, GDPR, smluvní dokumenty.
+
+### KPI a akceptační kritéria
+
+- Spolehlivost: >99% session success, reconnect <3s, MTBF > 100h (GA cílově).
+- ANPR: přesnost >90% za denního světla, latence alertu <2s, privacy hash by default.
+- OBD: 10Hz klíčové PIDs, varování do 1s od triggeru, read‑only bezpečnost.
+- UX: onboarding <5 min, 0 pádů na 1.000 relací, NPS > 50.
+- Provoz: 10 pilotních instalací bez kritických závad, >80% kladné hodnocení techniků.
+
+### Rizika a mitigace
+
+- Phone termály a battery management: foreground service, doporučený držák s chlazením, whitelist power‑saving výjimek.
+- Fragmentace Androidu: test matrix zařízení, známé "good devices" list.
+- CAN variabilita: profil PID tabulek, fallback na ELM327 BLE, diagnostický režim.
+- Privacy: striktní edge‑only default, opt‑in cloud mirror, transparentní UI, retenční slider.
+
+### Vztah k obchodním "quick wins" v servisu
+
+- Okamžitě nasaditelné: web chatbot a poptávkové formuláře, notifikace servisních prohlídek, jednoduché fleet reporty z pilotu.
+- Krátkodobě (do 4 týdnů): AI‑powered diagnostické karty (z OBD), automatizace objednávek (notifikace + export), zákaznické připomínky.
+
+### Milníky a výstupy
+
+- M0: Monorepo + CI běží (F0)
+- M1: Android/ESP32 MVP propojeno, první alerty (F2)
+- M2: Stabilizace jízdy, DVR light, security OK (F3)
+- M3: UX vyladění + Fleet lite + web konfigurátor (F4)
+- M4: Úspěšný pilot 10 aut, schválené KPI a ceník (F5)
+- GA: rollout a partnerská síť, SLA a podpora (F6)
+
+Tento plán je kompatibilní s variantami Phone/Hybrid/Pro a lze jej postupně rozšířit na 28týdenní enterprise roadmapu včetně fleet SLA, multi‑cam DVR a dlouhé retence.
 
