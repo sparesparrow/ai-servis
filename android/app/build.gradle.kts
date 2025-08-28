@@ -1,6 +1,10 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("kotlin-parcelize")
@@ -25,10 +29,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val props = java.util.Properties()
+            val props = Properties()
             val propsFile = rootProject.file("keystore.properties")
             if (propsFile.exists()) {
-                props.load(java.io.FileInputStream(propsFile))
+                props.load(FileInputStream(propsFile))
             }
             val alias = props.getProperty("keyAlias") ?: System.getenv("KEY_ALIAS")
             val pass = props.getProperty("keyPassword") ?: System.getenv("KEY_PASSWORD")
