@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 enum class SamplingMode { NORMAL, REDUCED, MINIMAL }
 
@@ -40,7 +41,7 @@ interface SystemPolicyManager {
 
 @Singleton
 class SystemPolicyManagerImpl @Inject constructor(
-	private val context: Context
+	@ApplicationContext private val context: Context
 ) : SystemPolicyManager {
 
 	private val scope = CoroutineScope(Dispatchers.Default)

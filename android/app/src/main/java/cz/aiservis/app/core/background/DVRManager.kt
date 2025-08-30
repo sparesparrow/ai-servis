@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 interface DVRManager {
     val clipEvents: SharedFlow<ClipEvent>
@@ -40,7 +41,7 @@ enum class ClipEventType {
 
 @Singleton
 class DVRManagerImpl @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
     private val clipsDao: ClipsDao,
     private val coroutineScope: CoroutineScope
 ) : DVRManager {

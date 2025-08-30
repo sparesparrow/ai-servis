@@ -7,10 +7,11 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import javax.inject.Inject
 import javax.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Singleton
 class ConnectivityObserver @Inject constructor(
-	private val context: Context
+	@ApplicationContext private val context: Context
 ) {
 	private var connectivityManager: ConnectivityManager? = null
 	private var networkCallback: ConnectivityManager.NetworkCallback? = null

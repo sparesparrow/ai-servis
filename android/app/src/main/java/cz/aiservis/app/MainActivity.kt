@@ -23,15 +23,15 @@ import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.rememberSnackbarHostState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.icons.Icons
-import androidx.compose.material3.icons.filled.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
 	@Composable
 	private fun AppRoot() {
 		var selected by remember { mutableStateOf(0) }
-		val snackbarHostState = rememberSnackbarHostState()
+		val snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 		Scaffold(
 			snackbarHost = { SnackbarHost(snackbarHostState) },
 			bottomBar = {
@@ -171,11 +171,10 @@ class MainActivity : ComponentActivity() {
 	@Composable
 	private fun ClipsScreen(modifier: Modifier = Modifier) {
 		val vm: ClipsViewModel = hiltViewModel()
+		val clips by vm.clips.collectAsState(initial = emptyList())
 		LazyColumn(modifier = modifier.fillMaxSize().padding(16.dp)) {
-			items(vm.clips, key = { list -> list.hashCode() }) { list ->
-				list.forEach { clip: ClipEntity ->
-					Text("Clip: ${clip.reason}  ${clip.filePath}  offloaded=${clip.offloaded}")
-				}
+			items(clips) { clip: ClipEntity ->
+				Text("Clip: ${clip.reason}  ${clip.filePath}  offloaded=${clip.offloaded}")
 			}
 		}
 	}
@@ -225,8 +224,7 @@ private fun PolicyAdvisory(message: String?, mode: String, battery: Int) {
 	if (!message.isNullOrBlank()) {
 		Snackbar(
 			shape = SnackbarDefaults.shape,
-			action = { Text("Mode: ${mode}") },
-			withDismissAction = false
+			action = { Text("Mode: ${mode}") }
 		) {
 			Text("${message}  •  Battery ${battery}%")
 		}

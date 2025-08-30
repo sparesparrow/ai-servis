@@ -234,7 +234,7 @@ class DrivingService : LifecycleService() {
 		if (alerts.isNotEmpty()) {
 			alerts.forEach { alert ->
 				serviceScope.launch { events.recordAlert(alert) }
-				mqttManager.publishAlert(alert)
+				serviceScope.launch { mqttManager.publishAlert(alert) }
 				showAlertNotification(alert)
 				serviceScope.launch { voiceManager.speak(alert.message) }
 				dvrManager.triggerEventClip("alert_${alert.code}")

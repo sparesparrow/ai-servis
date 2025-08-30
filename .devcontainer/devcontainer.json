@@ -1,0 +1,52 @@
+{
+  "name": "ai-servis Android Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installGradle": true,
+      "installMaven": false
+    },
+    "ghcr.io/devcontainers/features/android-sdk:1": {
+      "packages": "platform-tools platforms;android-34 build-tools;34.0.0",
+      "ndk": "25.2.9519653"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "containerEnv": {
+    "ANDROID_SDK_ROOT": "/opt/android-sdk"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+        "ms-androidtools.vscode-android",
+        "ms-vscode.vscode-typescript-next",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=gradle-cache,target=/home/vscode/.gradle,type=volume"
+  ],
+  "postCreateCommand": "bash -lc 'yes | sdkmanager --licenses || true'",
+  "forwardPorts": [
+    3000,
+    4321,
+    8080
+  ]
+}
+
+
+
+

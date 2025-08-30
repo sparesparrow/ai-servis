@@ -14,6 +14,7 @@ nav:
     - Hybrid Edition: install/hybrid.md
     - Pro Edition: install/pro.md
     - Pi Gateway (Standalone): install/pi-gateway.md
+    - Dev (No Pi): install/dev-docker.md
     - Installer Checklist: install/installer-checklist.md
   - Wiring & Power: wiring.md
   - API & Contracts:

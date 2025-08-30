@@ -14,6 +14,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -35,7 +36,7 @@ class PreferencesRepository @Inject constructor(
 
 	private val scope = CoroutineScope(Dispatchers.IO)
 
-	val vin: Flow<String> = context.dataStore.data.map { prefs: Preferences ->
+	val vin: StateFlow<String> = context.dataStore.data.map { prefs: Preferences ->
 		prefs[Keys.VIN] ?: "DEMO_VIN"
 	}.stateIn(scope, SharingStarted.Eagerly, "DEMO_VIN")
 
@@ -45,7 +46,7 @@ class PreferencesRepository @Inject constructor(
 		}
 	}
 
-	val incognitoMode: Flow<Boolean> = context.dataStore.data.map { prefs ->
+	val incognitoMode: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
 		prefs[Keys.INCOGNITO] ?: false
 	}.stateIn(scope, SharingStarted.Eagerly, false)
 
@@ -53,7 +54,7 @@ class PreferencesRepository @Inject constructor(
 		context.dataStore.edit { it[Keys.INCOGNITO] = enabled }
 	}
 
-	val retentionDays: Flow<Int> = context.dataStore.data.map { prefs ->
+	val retentionDays: StateFlow<Int> = context.dataStore.data.map { prefs ->
 		prefs[Keys.RETENTION_DAYS] ?: 2
 	}.stateIn(scope, SharingStarted.Eagerly, 2)
 
@@ -61,7 +62,7 @@ class PreferencesRepository @Inject constructor(
 		context.dataStore.edit { it[Keys.RETENTION_DAYS] = days }
 	}
 
-	val metricsOptIn: Flow<Boolean> = context.dataStore.data.map { prefs ->
+	val metricsOptIn: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
 		prefs[Keys.METRICS_OPT_IN] ?: false
 	}.stateIn(scope, SharingStarted.Eagerly, false)
 
@@ -73,7 +74,7 @@ class PreferencesRepository @Inject constructor(
 		context.dataStore.edit { it[Keys.LAST_HEALTH_PING_TS] = ts }
 	}
 
-	val anprRegion: Flow<String> = context.dataStore.data.map { prefs ->
+	val anprRegion: StateFlow<String> = context.dataStore.data.map { prefs ->
 		prefs[Keys.ANPR_REGION] ?: "CZ"
 	}.stateIn(scope, SharingStarted.Eagerly, "CZ")
 
