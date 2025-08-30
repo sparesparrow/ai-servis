@@ -30,3 +30,11 @@ markdown_extensions:
   - admonition
   - attr_list
   - pymdownx.superfences
+
+# --- Auto-appended by apply-exported-assets.sh ---
+# If nav is managed manually, ensure these entries are present:
+# - Universal:
+#   - Proposal: docs/ai-servis-universal-proposal.md
+#   - Implementation Ready: docs/implementation-ready-summary.md
+#   - Architecture Diagrams: docs/architecture/diagrams.md
+#   - Master TODO: docs/TODO-master-list.md
