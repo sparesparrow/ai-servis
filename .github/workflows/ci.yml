@@ -5,10 +5,14 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly security scan on Mondays
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
 
 jobs:
   lint-and-test:
@@ -105,8 +109,71 @@ jobs:
         flags: unittests
         name: codecov-umbrella
 
-  build-images:
+  build-cpp:
     needs: lint-and-test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - { runner: ubuntu-latest, arch: x86_64, profile: linux-release, conan_arch: x86_64, platform: linux/amd64 }
+          - { runner: ubuntu-20.04, arch: arm64, profile: linux-arm64, conan_arch: armv8, platform: linux/arm64 }
+          - { runner: macos-latest, arch: x86_64, profile: macos-release, conan_arch: x86_64, platform: darwin/amd64 }
+          - { runner: windows-latest, arch: x86_64, profile: windows-release, conan_arch: x86_64, platform: windows/amd64 }
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Conan
+        run: |
+          pip install conan
+          conan profile detect --force
+
+      - name: Cache Conan packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan2
+          key: ${{ runner.os }}-conan-${{ matrix.arch }}-${{ hashFiles('conanfile.py', 'profiles/${{ matrix.profile }}') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-${{ matrix.arch }}-
+
+      - name: Install dependencies with Conan
+        run: |
+          cd platforms/cpp
+          conan install ../.. --profile ../../profiles/${{ matrix.profile }} --build missing
+
+      - name: Configure CMake
+        run: |
+          cd platforms/cpp
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cd platforms/cpp
+          cmake --build build --parallel
+
+      - name: Run tests
+        run: |
+          cd platforms/cpp
+          ctest --test-dir build --output-on-failure
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpp-${{ matrix.arch }}-binaries
+          path: |
+            platforms/cpp/build/hardware-server*
+            platforms/cpp/build/mcp-server*
+            platforms/cpp/build/webgrab-client*
+            platforms/cpp/build/webgrab-server*
+
+  build-images:
+    needs: [lint-and-test, build-cpp]
     runs-on: ubuntu-latest
     
     strategy:
@@ -115,7 +182,8 @@ jobs:
           'core-orchestrator',
           'ai-audio-assistant', 
           'ai-platform-controllers/linux',
-          'service-discovery'
+          'service-discovery',
+          'hardware-bridge'
         ]
         platform: [linux/amd64, linux/arm64]
     
@@ -145,6 +213,7 @@ jobs:
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
+      id: build
       with:
         context: ./modules/${{ matrix.component }}
         platforms: ${{ matrix.platform }}
@@ -153,6 +222,18 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        
+    - name: Run Trivy vulnerability scanner on image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ steps.meta.outputs.tags }}
+        format: 'sarif'
+        output: 'trivy-image-results-${{ matrix.component }}.sarif'
+        
+    - name: Upload Trivy image scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-image-results-${{ matrix.component }}.sarif'
 
   integration-tests:
     needs: build-images
@@ -212,22 +293,71 @@ jobs:
 
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Run Trivy vulnerability scanner
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python, cpp, javascript
+        queries: security-extended,security-and-quality
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+    
+    - name: Run Trivy vulnerability scanner (Filesystem)
       uses: aquasecurity/trivy-action@master
       with:
         scan-type: 'fs'
         scan-ref: '.'
         format: 'sarif'
-        output: 'trivy-results.sarif'
+        output: 'trivy-fs-results.sarif'
     
-    - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+    - name: Upload Trivy FS scan results
+      uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: 'trivy-results.sarif'
+        sarif_file: 'trivy-fs-results.sarif'
+    
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/python@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --sarif-file-output=snyk.sarif
+    
+    - name: Upload Snyk results
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: snyk.sarif
+    
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'ai-servis'
+        path: '.'
+        format: 'SARIF'
+        out: 'dependency-check-report'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --nvdApiKey ${{ secrets.NVD_API_KEY }}
+    
+    - name: Upload OWASP Dependency Check results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: dependency-check-report/dependency-check-report.sarif
 
   performance-tests:
     needs: integration-tests
