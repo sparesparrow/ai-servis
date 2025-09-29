@@ -1,0 +1,46 @@
+{
+    "version": 3,
+    "vendor": {
+        "conan": {}
+    },
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 15,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "conan-release",
+            "displayName": "'conan-release' config",
+            "description": "'conan-release' configure using 'Ninja' generator",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_POLICY_DEFAULT_CMP0091": "NEW",
+                "CMAKE_BUILD_TYPE": "Release"
+            },
+            "environment": {
+                "PATH": "/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/bin:$penv{PATH}",
+                "LD_LIBRARY_PATH": "/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/lib:$penv{LD_LIBRARY_PATH}",
+                "DYLD_LIBRARY_PATH": "/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/lib:$penv{DYLD_LIBRARY_PATH}"
+            },
+            "toolchainFile": "conan_toolchain.cmake",
+            "binaryDir": "/workspace/platforms/cpp"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "conan-release",
+            "configurePreset": "conan-release",
+            "jobs": 4
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "conan-release",
+            "configurePreset": "conan-release",
+            "environment": {
+                "OPENSSL_MODULES": "/home/ubuntu/.conan2/p/b/opens0e33b45f7ebec/p/lib/ossl-modules"
+            }
+        }
+    ]
+}

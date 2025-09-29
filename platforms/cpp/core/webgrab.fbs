@@ -114,3 +114,13 @@ table MQTTEnvelope {
   target:string;     // target service identifier
   payload:Message;   // the actual message content
 }
+
+// Root types for serialization
+root_type DownloadRequest;
+root_type DownloadResponse;
+root_type DownloadStatusRequest;
+root_type DownloadStatusResponse;
+root_type DownloadAbortRequest;
+root_type ShutdownRequest;
+root_type ErrorResponse;
+root_type Message;
