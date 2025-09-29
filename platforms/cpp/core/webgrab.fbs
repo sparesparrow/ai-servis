@@ -1,0 +1,116 @@
+namespace webgrab;
+
+table DownloadRequest {
+  url:string;
+}
+
+table DownloadResponse {
+  sessionId:uint32;
+}
+
+table DownloadStatusRequest {
+  sessionId:uint32;
+}
+
+table DownloadStatusResponse {
+  status:string;
+}
+
+table DownloadAbortRequest {
+  sessionId:uint32;
+}
+
+table ShutdownRequest {
+}
+
+// GPIO Control Messages
+table GPIOConfigureRequest {
+  pin:int32;
+  direction:string; // "input" or "output"
+}
+
+table GPIOSetRequest {
+  pin:int32;
+  value:bool;
+}
+
+table GPIOGetRequest {
+  pin:int32;
+}
+
+table GPIOStatusRequest {
+}
+
+table GPIOConfigureResponse {
+  pin:int32;
+  success:bool;
+}
+
+table GPIOSetResponse {
+  pin:int32;
+  success:bool;
+}
+
+table GPIOGetResponse {
+  pin:int32;
+  value:bool;
+  success:bool;
+}
+
+table GPIOStatusResponse {
+  pins:[GPIOPinStatus];
+}
+
+table GPIOPinStatus {
+  pin:int32;
+  direction:string;
+  value:bool;
+}
+
+// MQTT Transport Envelope
+table MQTTMessage {
+  topic:string;
+  payload:string;  // JSON payload
+  qos:int32 = 0;
+  retain:bool = false;
+}
+
+table ErrorResponse {
+  error:string;
+}
+
+// Enhanced unions for MQTT + legacy support
+union Request {
+  DownloadRequest,
+  DownloadStatusRequest,
+  DownloadAbortRequest,
+  ShutdownRequest,
+  GPIOConfigureRequest,
+  GPIOSetRequest,
+  GPIOGetRequest,
+  GPIOStatusRequest
+}
+
+union Response {
+  DownloadResponse,
+  DownloadStatusResponse,
+  ErrorResponse,
+  GPIOConfigureResponse,
+  GPIOSetResponse,
+  GPIOGetResponse,
+  GPIOStatusResponse
+}
+
+table Message {
+  request:Request;
+  response:Response;
+}
+
+// MQTT-specific envelope for cross-process communication
+table MQTTEnvelope {
+  message_id:string;
+  timestamp:uint64;
+  source:string;     // "python-orchestrator", "cpp-hardware-server", etc.
+  target:string;     // target service identifier
+  payload:Message;   // the actual message content
+}
