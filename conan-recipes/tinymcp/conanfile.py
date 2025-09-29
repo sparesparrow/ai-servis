@@ -1,5 +1,4 @@
 from conan import ConanFile
-from conan.tools.scm import Git
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy, save, load, rmdir
 from conan.tools.build import check_min_cppstd
@@ -36,11 +35,11 @@ class TinyMCPConan(ConanFile):
         "use_system_json": False
     }
     
-    generators = "CMakeToolchain", "CMakeDeps"
+    # generators are created in generate() method
     
     # Git repository configuration
     _git_url = "https://github.com/sparesparrow/tinymcp.git"
-    _git_branch = "main"
+    _git_branch = "master"  # Use master branch
     _git_commit = None  # Use specific commit for reproducibility
     
     @property
@@ -56,7 +55,7 @@ class TinyMCPConan(ConanFile):
             del self.options.fPIC
     
     def layout(self):
-        cmake_layout(self, src_folder="src")
+        cmake_layout(self)
     
     def requirements(self):
         # TinyMCP dependencies
@@ -72,16 +71,9 @@ class TinyMCPConan(ConanFile):
             self.requires("gtest/1.14.0")
     
     def source(self):
-        git = Git(self)
-        git.clone(url=self._git_url, target=".")
-        
-        if self._git_commit:
-            git.checkout(commit=self._git_commit)
-        else:
-            git.checkout(branch=self._git_branch)
-        
-        # Apply patches if needed
-        self._apply_patches()
+        # Copy local TinyMCP implementation
+        src_path = "/workspace/external/tinymcp"
+        copy(self, "*", src=src_path, dst=self.source_folder, keep_path=True)
     
     def _apply_patches(self):
         """Apply any necessary patches to TinyMCP source"""
@@ -240,7 +232,7 @@ check_required_components(tinymcp)
     
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(build_script_folder=self.source_folder)
         cmake.build()
         
         if self.options.with_tests:
