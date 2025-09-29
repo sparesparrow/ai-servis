@@ -27,11 +27,12 @@ conan install ../../.. --profile ../../../profiles/linux-release --build missing
 
 # Configure with CMake
 echo -e "${YELLOW}Configuring with CMake...${NC}"
-cmake ../ -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+TOOLCHAIN_ABS="/workspace/build-release/conan/conan_toolchain.cmake"
+cmake -S ../ -B . -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_ABS" -DCMAKE_BUILD_TYPE=Release
 
 # Build
 echo -e "${YELLOW}Building...${NC}"
-make -j$(nproc)
+cmake --build . --parallel "$(nproc)"
 
 echo -e "${GREEN}Build completed successfully!${NC}"
 echo -e "${GREEN}Hardware server executable: ${BUILD_DIR}/hardware-server${NC}"

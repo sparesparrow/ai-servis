@@ -4,6 +4,7 @@ arch=x86_64
 compiler=gcc
 compiler.version=13
 compiler.libcxx=libstdc++11
+compiler.cppstd=gnu17
 build_type=Release
 
 [options]
@@ -13,4 +14,4 @@ mosquitto/*:shared=False
 libcurl/*:shared=False
 
 [conf]
-tools.cmake.cmaketoolchain:generator=Ninja
+tools.cmake.cmaketoolchain:generator=Unix Makefiles

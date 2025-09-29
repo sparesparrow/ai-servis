@@ -5,18 +5,28 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Include Conan toolchain if available
-if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
-    include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
-endif()
-
-if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_basic_setup(TARGETS)
-endif()
-
-# Find required packages (fallback if not using Conan)
+# Find required packages (Conan's CMakeDeps will satisfy these)
 find_package(Threads REQUIRED)
+find_package(jsoncpp REQUIRED)
+find_package(flatbuffers REQUIRED)
+find_package(CURL REQUIRED)
+
+# FlatBuffers code generation (ensure header matches installed flatbuffers)
+find_program(FLATBUFFERS_FLATC_EXECUTABLE flatc)
+if(FLATBUFFERS_FLATC_EXECUTABLE)
+    set(FLATBUFFERS_SCHEMA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/core)
+    set(FLATBUFFERS_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/core)
+
+    add_custom_target(gen_flatbuffers_headers
+        COMMAND ${FLATBUFFERS_FLATC_EXECUTABLE} --cpp --gen-mutable -o ${FLATBUFFERS_OUTPUT_DIR} ${FLATBUFFERS_SCHEMA_DIR}/webgrab.fbs
+        BYPRODUCTS ${FLATBUFFERS_OUTPUT_DIR}/webgrab_generated.h
+        DEPENDS ${FLATBUFFERS_SCHEMA_DIR}/webgrab.fbs
+        COMMENT "Generating FlatBuffers C++ headers"
+        VERBATIM
+    )
+else()
+    message(WARNING "FlatBuffers compiler (flatc) not found. Generated headers may be outdated.")
+endif()
 
 # Core library
 add_library(webgrab_core STATIC
@@ -34,29 +44,17 @@ add_library(webgrab_core STATIC
     core/CurlClientWrapper.cpp
 )
 
-# Link core library
-if(TARGET CONAN_PKG::flatbuffers)
-    target_link_libraries(webgrab_core
-        CONAN_PKG::jsoncpp
-        CONAN_PKG::flatbuffers
-        CONAN_PKG::libcurl
-        Threads::Threads
-    )
-else()
-    # Fallback for systems without Conan
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(JSONCPP REQUIRED jsoncpp)
-    find_library(FLATBUFFERS_LIBRARY flatbuffers REQUIRED)
-    find_package(CURL REQUIRED)
-
-    target_link_libraries(webgrab_core
-        ${JSONCPP_LIBRARIES}
-        ${FLATBUFFERS_LIBRARY}
-        CURL::libcurl
-        Threads::Threads
-    )
-    target_include_directories(webgrab_core PRIVATE ${JSONCPP_INCLUDE_DIRS})
+if(TARGET gen_flatbuffers_headers)
+    add_dependencies(webgrab_core gen_flatbuffers_headers)
 endif()
+
+# Link core library
+target_link_libraries(webgrab_core
+    JsonCpp::JsonCpp
+    flatbuffers::flatbuffers
+    CURL::libcurl
+    Threads::Threads
+)
 
 # Hardware Control Server
 add_executable(hardware-server
@@ -64,18 +62,20 @@ add_executable(hardware-server
     core/HardwareControlServer.cpp
 )
 
-if(TARGET CONAN_PKG::libgpiod)
+# Prefer CMake packages provided by Conan; fallback to pkg-config
+find_package(libgpiod QUIET)
+find_package(mosquitto QUIET)
+
+if(TARGET libgpiod::libgpiod AND TARGET mosquitto::mosquitto)
     target_link_libraries(hardware-server
         webgrab_core
-        CONAN_PKG::libgpiod
-        CONAN_PKG::mosquitto
+        libgpiod::libgpiod
+        mosquitto::mosquitto
     )
 else()
-    # Fallback
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GPIOD REQUIRED libgpiod)
     pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
-
     target_link_libraries(hardware-server
         webgrab_core
         ${GPIOD_LIBRARIES}
@@ -118,11 +118,11 @@ if(FLATBUFFERS_FLATC_EXECUTABLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/core/MCPIntegration/MCPServer/src
     )
 
-    if(TARGET CONAN_PKG::libgpiod)
+    if(TARGET libgpiod::libgpiod AND TARGET mosquitto::mosquitto)
         target_link_libraries(mcp-server
             webgrab_core
-            CONAN_PKG::mosquitto
-            CONAN_PKG::libgpiod
+            mosquitto::mosquitto
+            libgpiod::libgpiod
         )
     else()
         target_link_libraries(mcp-server
