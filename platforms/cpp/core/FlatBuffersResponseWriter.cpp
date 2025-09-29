@@ -11,22 +11,19 @@ FlatBuffersResponseWriter::~FlatBuffersResponseWriter() {
     close();
 }
 
-bool FlatBuffersResponseWriter::write(const DownloadResponse& resp) {
+bool FlatBuffersResponseWriter::write(const webgrab::DownloadResponse& resp) {
     builder_.Clear();
-    auto fb_resp = webgrab::CreateDownloadResponse(builder_, resp.sessionId);
+    auto fb_resp = webgrab::CreateDownloadResponse(builder_, resp.sessionId());
     builder_.Finish(fb_resp);
     return sendResponse();
 }
 
-bool FlatBuffersResponseWriter::write(const StatusResponse& resp) {
-    builder_.Clear();
-    auto status_offset = builder_.CreateString(resp.status);
-    auto fb_resp = webgrab::CreateDownloadStatusResponse(builder_, resp.sessionId, status_offset);
-    builder_.Finish(fb_resp);
-    return sendResponse();
+bool FlatBuffersResponseWriter::write(const webgrab::StatusResponse& resp) {
+    // TODO: Implement status response writing
+    return true;
 }
 
-bool FlatBuffersResponseWriter::write(const ErrorResponse& resp) {
+bool FlatBuffersResponseWriter::write(const webgrab::ErrorResponse& resp) {
     // Implement
     return true; // Placeholder
 }
