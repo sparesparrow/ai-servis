@@ -1,3 +1,7 @@
+__pycache__
+volumes/
+venv/
+.venv/
 # Android
 android/.gradle/
 android/build/

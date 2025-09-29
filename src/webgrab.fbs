@@ -1,0 +1,46 @@
+namespace webgrab;
+
+table DownloadRequest {
+  url:string;
+}
+
+table DownloadResponse {
+  sessionId:uint32;
+}
+
+table DownloadStatusRequest {
+  sessionId:uint32;
+}
+
+table DownloadStatusResponse {
+  status:string;
+}
+
+table DownloadAbortRequest {
+  sessionId:uint32;
+}
+
+table ShutdownRequest {
+}
+
+table ErrorResponse {
+  error:string;
+}
+
+union Request {
+  DownloadRequest,
+  DownloadStatusRequest,
+  DownloadAbortRequest,
+  ShutdownRequest
+}
+
+union Response {
+  DownloadResponse,
+  DownloadStatusResponse,
+  ErrorResponse
+}
+
+table Message {
+  request:Request;
+  response:Response;
+}

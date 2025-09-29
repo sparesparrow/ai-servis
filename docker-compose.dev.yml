@@ -122,7 +122,7 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - ./containers/mosquitto/mosquitto-dev.conf:/mosquitto/config/mosquitto.conf
+      - ./containers/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./volumes/mqtt-data:/mosquitto/data
       - ./volumes/mqtt-logs:/mosquitto/log
     networks:
