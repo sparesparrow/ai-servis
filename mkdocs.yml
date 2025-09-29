@@ -1,9 +1,27 @@
 site_name: AI-SERVIS Documentation
 site_description: Modular Car AI Server — Android-first with ESP32 and optional Pi gateway
-repo_url: https://github.com/sparesparrow/ai-servis
-repo_name: sparesparrow/ai-servis
+repo_url: https://github.com/sparesparrow/ai-servis-universal
+repo_name: sparesparrow/ai-servis-universal
+site_url: https://sparesparrow.github.io/ai-servis-universal/
 theme:
-  name: mkdocs
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.expand
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+  icon:
+    repo: fontawesome/brands/github
 nav:
   - Overview: index.md
   - Architecture:
@@ -30,6 +48,12 @@ markdown_extensions:
   - admonition
   - attr_list
   - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sparesparrow/ai-servis
 
 # --- Auto-appended by apply-exported-assets.sh ---
 # If nav is managed manually, ensure these entries are present:

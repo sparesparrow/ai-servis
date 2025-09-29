@@ -5,11 +5,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find required packages (Conan's CMakeDeps will satisfy these)
-find_package(Threads REQUIRED)
+# Find Conan-generated packages
 find_package(jsoncpp REQUIRED)
 find_package(flatbuffers REQUIRED)
 find_package(CURL REQUIRED)
+find_package(libgpiod REQUIRED)
+find_package(mosquitto REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
 
 # FlatBuffers code generation (ensure header matches installed flatbuffers)
 find_program(FLATBUFFERS_FLATC_EXECUTABLE flatc)
@@ -48,11 +52,17 @@ if(TARGET gen_flatbuffers_headers)
     add_dependencies(webgrab_core gen_flatbuffers_headers)
 endif()
 
+# Include directories for core library
+target_include_directories(webgrab_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
+)
+
 # Link core library
 target_link_libraries(webgrab_core
     JsonCpp::JsonCpp
     flatbuffers::flatbuffers
     CURL::libcurl
+    mosquitto::mosquitto
     Threads::Threads
 )
 
@@ -62,30 +72,11 @@ add_executable(hardware-server
     core/HardwareControlServer.cpp
 )
 
-# Prefer CMake packages provided by Conan; fallback to pkg-config
-find_package(libgpiod QUIET)
-find_package(mosquitto QUIET)
-
-if(TARGET libgpiod::libgpiod AND TARGET mosquitto::mosquitto)
-    target_link_libraries(hardware-server
-        webgrab_core
-        libgpiod::libgpiod
-        mosquitto::mosquitto
-    )
-else()
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GPIOD REQUIRED libgpiod)
-    pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
-    target_link_libraries(hardware-server
-        webgrab_core
-        ${GPIOD_LIBRARIES}
-        ${MOSQUITTO_LIBRARIES}
-    )
-    target_include_directories(hardware-server PRIVATE
-        ${GPIOD_INCLUDE_DIRS}
-        ${MOSQUITTO_INCLUDE_DIRS}
-    )
-endif()
+target_link_libraries(hardware-server
+    webgrab_core
+    libgpiod::libgpiod
+    mosquitto::mosquitto
+)
 
 # MCP Server with FlatBuffers generation
 # Find flatc (should be available via Conan)
@@ -118,23 +109,11 @@ if(FLATBUFFERS_FLATC_EXECUTABLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/core/MCPIntegration/MCPServer/src
     )
 
-    if(TARGET libgpiod::libgpiod AND TARGET mosquitto::mosquitto)
-        target_link_libraries(mcp-server
-            webgrab_core
-            mosquitto::mosquitto
-            libgpiod::libgpiod
-        )
-    else()
-        target_link_libraries(mcp-server
-            webgrab_core
-            ${MOSQUITTO_LIBRARIES}
-            ${GPIOD_LIBRARIES}
-        )
-        target_include_directories(mcp-server PRIVATE
-            ${MOSQUITTO_INCLUDE_DIRS}
-            ${GPIOD_INCLUDE_DIRS}
-        )
-    endif()
+    target_link_libraries(mcp-server
+        webgrab_core
+        mosquitto::mosquitto
+        libgpiod::libgpiod
+    )
 
     # Copy MCP config
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/core/MCPIntegration/MCPServer/config.ini
