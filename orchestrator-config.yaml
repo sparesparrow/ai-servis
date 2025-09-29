@@ -171,6 +171,23 @@ components:
                 enum: [spotify, local, youtube]
               query:
                 type: string
+        - name: car_upgrade
+          description: Orchestrate voice-initiated vehicle software upgrade with safety gates
+          schema:
+            type: object
+            properties:
+              component:
+                type: string
+                description: Target component to upgrade (maps, firmware, assistant)
+              version:
+                type: string
+                description: Desired version tag or channel
+              schedule:
+                type: string
+                description: When to apply (now, parked_only, window)
+              policy:
+                type: string
+                description: Upgrade policy (safe, fast, canary)
         - name: control_volume
           description: Control audio volume
           schema:
