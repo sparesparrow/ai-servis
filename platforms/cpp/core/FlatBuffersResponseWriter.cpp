@@ -19,8 +19,11 @@ bool FlatBuffersResponseWriter::write(const webgrab::DownloadResponse& resp) {
 }
 
 bool FlatBuffersResponseWriter::write(const webgrab::StatusResponse& resp) {
-    // TODO: Implement status response writing
-    return true;
+    builder_.Clear();
+    auto status_str = builder_.CreateString(resp.status()->str());
+    auto fb_resp = webgrab::CreateDownloadStatusResponse(builder_, status_str);
+    builder_.Finish(fb_resp);
+    return sendResponse();
 }
 
 bool FlatBuffersResponseWriter::write(const webgrab::ErrorResponse& resp) {
