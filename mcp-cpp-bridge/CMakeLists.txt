@@ -16,7 +16,7 @@ option(MCP_ENABLE_TESTING "Enable testing" ON)
 option(MCP_ENABLE_BENCHMARKS "Enable benchmarks" OFF)
 
 # Find packages
-find_package(nlohmann_json REQUIRED)
+find_package(jsoncpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
 find_package(asio REQUIRED)

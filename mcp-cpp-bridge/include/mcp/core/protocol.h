@@ -6,17 +6,15 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 
 namespace mcp {
 
 /**
- * @brief Core MCP Protocol implementation following JSON-RPC 2.0
+ * Core MCP Protocol implementation following JSON-RPC 2.0
  */
 class Protocol {
 public:
-    using Json = nlohmann::json;
-    
     // Request/Response ID type
     using Id = std::variant<std::monostate, int64_t, std::string>;
     
@@ -38,92 +36,92 @@ public:
     struct Error {
         ErrorCode code;
         std::string message;
-        std::optional<Json> data;
+        std::optional<Json::Value> data;
         
-        Json to_json() const;
+        Json::Value toJson() const;
     };
     
     struct Request {
         std::string jsonrpc = "2.0";
         std::string method;
-        std::optional<Json> params;
+        std::optional<Json::Value> params;
         std::optional<Id> id;
         
-        static Request from_json(const Json& j);
-        Json to_json() const;
+        static Request fromJson(const Json::Value& j);
+        Json::Value toJson() const;
     };
     
     struct Response {
         std::string jsonrpc = "2.0";
-        std::optional<Json> result;
+        std::optional<Json::Value> result;
         std::optional<Error> error;
         Id id;
         
-        static Response from_json(const Json& j);
-        Json to_json() const;
+        static Response fromJson(const Json::Value& j);
+        Json::Value toJson() const;
     };
     
     struct Notification {
         std::string jsonrpc = "2.0";
         std::string method;
-        std::optional<Json> params;
+        std::optional<Json::Value> params;
         
-        static Notification from_json(const Json& j);
-        Json to_json() const;
+        static Notification fromJson(const Json::Value& j);
+        Json::Value toJson() const;
     };
     
     // MCP-specific message types
     using Message = std::variant<Request, Response, Notification>;
     
     // Parse raw JSON into MCP message
-    static std::optional<Message> parse(const std::string& json_str);
-    static std::optional<Message> parse(const Json& json);
+    static std::optional<Message> parse(const std::string& jsonStr);
+    static std::optional<Message> parse(const Json::Value& json);
     
     // Serialize MCP message to JSON
     static std::string serialize(const Message& msg);
-    static Json to_json(const Message& msg);
+    static Json::Value toJson(const Message& msg);
 };
 
 /**
- * @brief MCP Tool definition
+ * MCP Tool definition
  */
 struct Tool {
     std::string name;
     std::string description;
-    nlohmann::json input_schema;
+    Json::Value inputSchema;
     
     // Tool execution handler
-    using Handler = std::function<nlohmann::json(const nlohmann::json& params)>;
+    using Handler = std::function<Json::Value(const Json::Value& params)>;
     Handler handler;
     
-    nlohmann::json to_json() const;
+    Json::Value toJson() const;
 };
 
 /**
- * @brief MCP Resource definition
+ * MCP Resource definition
  */
 struct Resource {
     std::string uri;
     std::string name;
     std::optional<std::string> description;
-    std::optional<std::string> mime_type;
+    std::optional<std::string> mimeType;
     
-    nlohmann::json to_json() const;
+    Json::Value toJson() const;
 };
 
 /**
- * @brief MCP Prompt definition
+ * MCP Prompt definition
  */
 struct Prompt {
     std::string name;
     std::string description;
     std::vector<std::pair<std::string, std::string>> arguments;
     
-    nlohmann::json to_json() const;
+    Json::Value toJson() const;
 };
 
 /**
- * @brief Server capabilities
+ * Server capabilities
  */
 struct ServerCapabilities {
     std::optional<bool> tools;
@@ -131,17 +129,17 @@ struct ServerCapabilities {
     std::optional<bool> resources;
     std::optional<bool> logging;
     
-    nlohmann::json to_json() const;
+    Json::Value toJson() const;
 };
 
 /**
- * @brief Client capabilities  
+ * Client capabilities  
  */
 struct ClientCapabilities {
     std::optional<bool> sampling;
     std::optional<bool> roots;
     
-    nlohmann::json to_json() const;
+    Json::Value toJson() const;
 };
 
 } // namespace mcp

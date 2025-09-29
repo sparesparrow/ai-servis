@@ -53,7 +53,7 @@ class MCPCppBridgeConan(ConanFile):
         
     def requirements(self):
         # Core dependencies
-        self.requires("nlohmann_json/3.11.3")
+        self.requires("jsoncpp/1.9.5")
         self.requires("spdlog/1.13.0")
         self.requires("fmt/10.2.1")
         
