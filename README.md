@@ -8,6 +8,7 @@ Kompletní řešení pro autoservisy kombinující ANPR, OBD diagnostiku, hlasov
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/u/aiservices)
 [![Platform](https://img.shields.io/badge/Platform-AMD64%20|%20ARM64%20|%20Mobile-blue)](https://github.com/sparesparrow/ai-servis)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io)
+[![Conan](https://img.shields.io/badge/dependency%20management-conan-blue)](https://conan.io)
 
 ## 🎯 **Vize Projektu**
 
@@ -189,6 +190,27 @@ docker-compose ps
 # Přístup k logs
 docker-compose logs -f ai-audio-assistant
 ```
+
+### 🔨 **Building Hardware Control Server**
+
+The hardware control server uses Conan for dependency management:
+
+```bash
+# Install Conan (if not already installed)
+pip install conan
+conan profile detect --force
+
+# Build hardware server with Conan
+./scripts/build-hardware-server.sh
+
+# Or build manually
+cd src/hardware/build
+conan install ../../.. --profile ../../../profiles/linux-release --build missing
+cmake ../.. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+make -j$(nproc)
+```
+
+For detailed Conan setup instructions, see [docs/conan-setup.md](docs/conan-setup.md).
 
 ### 🏠 **Home Installation (AMD64)**
 
