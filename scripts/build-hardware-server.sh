@@ -17,7 +17,7 @@ if ! command -v conan &> /dev/null; then
 fi
 
 # Create build directory
-BUILD_DIR="src/hardware/build"
+BUILD_DIR="platforms/cpp/build"
 mkdir -p "$BUILD_DIR"
 
 # Install dependencies with Conan
@@ -27,7 +27,7 @@ conan install ../../.. --profile ../../../profiles/linux-release --build missing
 
 # Configure with CMake
 echo -e "${YELLOW}Configuring with CMake...${NC}"
-cmake ../.. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake ../ -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 
 # Build
 echo -e "${YELLOW}Building...${NC}"
@@ -35,3 +35,4 @@ make -j$(nproc)
 
 echo -e "${GREEN}Build completed successfully!${NC}"
 echo -e "${GREEN}Hardware server executable: ${BUILD_DIR}/hardware-server${NC}"
+echo -e "${GREEN}MCP server executable: ${BUILD_DIR}/mcp-server${NC}"

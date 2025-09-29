@@ -50,10 +50,17 @@ graph TB
     end
 
     subgraph "🌐 Transport Layer"
-        MQTT[MQTT Broker]
+        MQTT[MQTT Broker<br/>Cross-Process]
+        MQP[MQP<br/>In-Process]
         HTTP[HTTP/REST APIs]
         BLE[Bluetooth LE]
         WIFI[Wi-Fi Direct]
+    end
+
+    subgraph "⚙️ C++ Platform Components"
+        CPP1[Hardware Server<br/>GPIO Control]
+        CPP2[MCP Server<br/>C++ Tools]
+        CPP3[WebGrab Core<br/>Download Engine]
     end
 
     subgraph "💻 Hardware Platforms"
@@ -85,6 +92,13 @@ graph TB
     CORE <--> MOD10
     CORE <--> MOD11
 
+    CORE --> MQTT
+    MQTT --> CPP1
+    MQTT --> CPP2
+    CPP1 --> MQP
+    CPP2 --> MQP
+    MQP --> CPP3
+
     MOD1 <--> MQTT
     MOD2 <--> HTTP
     MOD3 <--> MQTT
@@ -95,15 +109,18 @@ graph TB
     HTTP --> HW2
     BLE --> HW3
     WIFI --> HW4
+    CPP1 --> HW2
 
     classDef moduleClass fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
     classDef coreClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef transportClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef cppClass fill:#ffebee,stroke:#d32f2f,stroke-width:2px
     classDef hardwareClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
     class MOD1,MOD2,MOD3,MOD4,MOD5,MOD6,MOD7,MOD8,MOD9,MOD10,MOD11 moduleClass
     class CORE,AUTH,AUDIO,DISC coreClass
-    class MQTT,HTTP,BLE,WIFI transportClass
+    class MQTT,MQP,HTTP,BLE,WIFI transportClass
+    class CPP1,CPP2,CPP3 cppClass
     class HW1,HW2,HW3,HW4 hardwareClass
 ```
 
@@ -166,11 +183,40 @@ graph TB
 
 ### 🔒 **Security & ANPR**
 **Bezpečnost a rozpoznávání SPZ**
-- 📖 [Dokumentace](./docs/modules/ai-security-anpr.md)  
+- 📖 [Dokumentace](./docs/modules/ai-security-anpr.md)
 - 🔧 [MCP API Reference](./docs/api/security-anpr.md)
 - 🎯 **Hlavní funkce**: Camera monitoring, license plate recognition, access control
 - 🏠 **Home Use Case**: Visitor recognition and automated door unlock
 - 🚗 **Car Use Case**: Stalker detection and security alerts
+
+### ⚙️ **C++ Platform Components**
+**Hardware control and message processing layer**
+- 📖 [Platform Documentation](./platforms/cpp/README.md)
+- 🔧 [Hybrid Messaging Guide](./docs/architecture/hybrid-messaging.md)
+- 🎯 **Hlavní komponenty**: Hardware Server, MCP Server, WebGrab Core
+- 🏠 **Home Use Case**: Raspberry Pi GPIO control and local AI processing
+- 🚗 **Car Use Case**: ESP32 integration and real-time vehicle control
+
+#### 🔧 **Hardware Server**
+**GPIO control and hardware interfacing**
+- TCP interface for direct hardware access (port 8081)
+- MQTT integration for Python orchestrator communication
+- Raspberry Pi GPIO control via libgpiod
+- Real-time hardware monitoring and control
+
+#### 📡 **MCP Server**
+**C++ tool execution and hardware tasks**
+- Model Context Protocol implementation in C++
+- GPIO task execution (configure, set, get pins)
+- Download job management with FlatBuffers
+- MQTT transport for cross-process communication
+
+#### ⚡ **WebGrab Core**
+**Download engine and file management**
+- Asynchronous file downloading with libcurl
+- Thread-safe job queue processing
+- FlatBuffers serialization for all messages
+- Cross-platform compatibility (Linux, Windows, macOS)
 
 ## 🚀 **Rychlý Start**
 
@@ -191,23 +237,43 @@ docker-compose ps
 docker-compose logs -f ai-audio-assistant
 ```
 
-### 🔨 **Building Hardware Control Server**
+### 🔨 **Building C++ Platform Components**
 
-The hardware control server uses Conan for dependency management:
+The C++ platform components use Conan for dependency management with automatic FlatBuffers header generation:
 
 ```bash
 # Install Conan (if not already installed)
 pip install conan
 conan profile detect --force
 
-# Build hardware server with Conan
+# Build all C++ components (hardware server, MCP server, webgrab core)
 ./scripts/build-hardware-server.sh
 
 # Or build manually
-cd src/hardware/build
-conan install ../../.. --profile ../../../profiles/linux-release --build missing
-cmake ../.. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
-make -j$(nproc)
+cd platforms/cpp
+conan install .. --profile ../profiles/linux-release --build missing
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+cmake --build build -j$(nproc)
+
+# Components built:
+# - hardware-server: GPIO control (port 8081)
+# - mcp-server: MCP tools for hardware tasks
+# - webgrab-client/server: Download management
+```
+
+### 🔧 **Testing C++ Components**
+
+```bash
+# Test hardware server (requires GPIO hardware)
+cd platforms/cpp/build
+./hardware-server &
+
+# Test MCP server
+./mcp-server &
+
+# Test Python integration
+cd modules/hardware-bridge
+python test_integration.py
 ```
 
 For detailed Conan setup instructions, see [docs/conan-setup.md](docs/conan-setup.md).
@@ -375,9 +441,17 @@ gantt
 - [x] Basic voice control
 - [x] Edge processing framework
 
+### **✅ Recently Completed (C++ Platform Integration)**
+- [x] **Hybrid MQP + MQTT Architecture**: Unified messaging system
+- [x] **C++ Platform Components**: Hardware server, MCP server, WebGrab core
+- [x] **Conan Dependency Management**: Automatic FlatBuffers generation
+- [x] **Python Bridge Modules**: MCP client and hardware controller
+- [x] **Cross-Platform CI/CD**: Multi-architecture C++ builds
+- [x] **Repository Structure**: Organized platforms/ and modules/
+
 ### **🚧 In Progress (Universal Extension)**
 - [ ] **[TASK-001](./TODO-master-list.md#task-001-repository-structure-setup)**: Repository structure setup
-- [ ] **[TASK-006](./TODO-master-list.md#task-006-mcp-framework-library)**: MCP framework development  
+- [ ] **[TASK-006](./TODO-master-list.md#task-006-mcp-framework-library)**: MCP framework development
 - [ ] **[TASK-012](./TODO-master-list.md#task-012-audio-assistant-mcp-server)**: Audio assistant MCP server
 
 ### **📅 Planned (Next Milestones)**
@@ -386,7 +460,7 @@ gantt
 - [ ] **M3 (Week 12)**: Multi-platform support complete
 - [ ] **M4 (Week 16)**: Advanced features implemented
 
-**📊 Overall Progress**: 0/142 tasks completed (0%) | [View Full TODO List](./TODO-master-list.md)
+**📊 Overall Progress**: ~15/142 tasks completed (~11%) | [View Full TODO List](./TODO-master-list.md)
 
 ## 🤝 **Přispívání**
 
