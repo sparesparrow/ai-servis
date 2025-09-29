@@ -87,7 +87,7 @@ class AiServisConan(ConanFile):
             flatc_path = shutil.which("flatc")
 
         if not flatc_path:
-            self.output.warn("FlatBuffers compiler (flatc) not found. C++ headers will not be generated.")
+            self.output.warning("FlatBuffers compiler (flatc) not found. C++ headers will not be generated.")
             return
 
         # Schema and output paths
@@ -96,7 +96,7 @@ class AiServisConan(ConanFile):
         output_file = os.path.join(schema_dir, "webgrab_generated.h")
 
         if not os.path.exists(schema_file):
-            self.output.warn(f"FlatBuffers schema not found: {schema_file}")
+            self.output.warning(f"FlatBuffers schema not found: {schema_file}")
             return
 
         # Generate headers

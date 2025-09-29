@@ -2,6 +2,7 @@
 #include "FlatBuffersRequestWriter.h"
 #include "FlatBuffersResponseReader.h"
 #include "TcpSocket.h"
+#include <iostream>
 
 WebGrabClient::WebGrabClient(const std::string& host, uint16_t port)
     : socket_(std::make_shared<TcpSocket>(host, port)) {}

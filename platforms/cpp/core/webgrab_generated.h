@@ -1598,6 +1598,44 @@ inline bool VerifyResponseVector(::flatbuffers::Verifier &verifier, const ::flat
   return true;
 }
 
+inline const webgrab::Message *GetMessage(const void *buf) {
+  return ::flatbuffers::GetRoot<webgrab::Message>(buf);
+}
+
+inline const webgrab::Message *GetSizePrefixedMessage(const void *buf) {
+  return ::flatbuffers::GetSizePrefixedRoot<webgrab::Message>(buf);
+}
+
+inline Message *GetMutableMessage(void *buf) {
+  return ::flatbuffers::GetMutableRoot<Message>(buf);
+}
+
+inline webgrab::Message *GetMutableSizePrefixedMessage(void *buf) {
+  return ::flatbuffers::GetMutableSizePrefixedRoot<webgrab::Message>(buf);
+}
+
+inline bool VerifyMessageBuffer(
+    ::flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<webgrab::Message>(nullptr);
+}
+
+inline bool VerifySizePrefixedMessageBuffer(
+    ::flatbuffers::Verifier &verifier) {
+  return verifier.VerifySizePrefixedBuffer<webgrab::Message>(nullptr);
+}
+
+inline void FinishMessageBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<webgrab::Message> root) {
+  fbb.Finish(root);
+}
+
+inline void FinishSizePrefixedMessageBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<webgrab::Message> root) {
+  fbb.FinishSizePrefixed(root);
+}
+
 }  // namespace webgrab
 
 #endif  // FLATBUFFERS_GENERATED_WEBGRAB_WEBGRAB_H_
