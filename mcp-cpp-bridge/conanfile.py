@@ -52,6 +52,9 @@ class MCPCppBridgeConan(ConanFile):
         cmake_layout(self, src_folder="src")
         
     def requirements(self):
+        # TinyMCP as base MCP implementation
+        self.requires("tinymcp/0.2.0@ai-servis/stable")
+        
         # Core dependencies
         self.requires("jsoncpp/1.9.5")
         self.requires("spdlog/1.13.0")

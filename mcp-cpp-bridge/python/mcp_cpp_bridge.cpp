@@ -4,26 +4,27 @@
 #include <pybind11/chrono.h>
 #include <pybind11/complex.h>
 #include <pybind11/numpy.h>
-#include <nlohmann/json.hpp>
-#include "mcp/server/server.hpp"
-#include "mcp/client/client.hpp"
-#include "mcp/transport/stdio_transport.hpp"
-#include "mcp/transport/tcp_transport.hpp"
-#include "mcp/transport/websocket_transport.hpp"
+#include <json/json.h>
+#include "mcp/server/server.h"
+#include "mcp/client/client.h"
+#include "mcp/core/tinymcp_wrapper.h"
+#include "mcp/transport/stdio_transport.h"
+#include "mcp/transport/tcp_transport.h"
+#include "mcp/transport/websocket_transport.h"
 
 namespace py = pybind11;
 using namespace mcp;
 
-// JSON conversion helpers
+// JSON conversion helpers for jsoncpp
 namespace {
-    py::object json_to_python(const nlohmann::json& j) {
-        if (j.is_null()) return py::none();
-        if (j.is_boolean()) return py::bool_(j.get<bool>());
-        if (j.is_number_integer()) return py::int_(j.get<int64_t>());
-        if (j.is_number_float()) return py::float_(j.get<double>());
-        if (j.is_string()) return py::str(j.get<std::string>());
+    py::object json_to_python(const Json::Value& j) {
+        if (j.isNull()) return py::none();
+        if (j.isBool()) return py::bool_(j.asBool());
+        if (j.isInt()) return py::int_(j.asInt64());
+        if (j.isDouble()) return py::float_(j.asDouble());
+        if (j.isString()) return py::str(j.asString());
         
-        if (j.is_array()) {
+        if (j.isArray()) {
             py::list lst;
             for (const auto& item : j) {
                 lst.append(json_to_python(item));
@@ -31,10 +32,10 @@ namespace {
             return lst;
         }
         
-        if (j.is_object()) {
+        if (j.isObject()) {
             py::dict d;
-            for (const auto& [key, value] : j.items()) {
-                d[py::str(key)] = json_to_python(value);
+            for (const auto& key : j.getMemberNames()) {
+                d[py::str(key)] = json_to_python(j[key]);
             }
             return d;
         }
@@ -42,27 +43,43 @@ namespace {
         return py::none();
     }
     
-    nlohmann::json python_to_json(const py::handle& obj) {
-        if (obj.is_none()) return nullptr;
-        if (py::isinstance<py::bool_>(obj)) return obj.cast<bool>();
-        if (py::isinstance<py::int_>(obj)) return obj.cast<int64_t>();
-        if (py::isinstance<py::float_>(obj)) return obj.cast<double>();
-        if (py::isinstance<py::str>(obj)) return obj.cast<std::string>();
+    Json::Value python_to_json(const py::handle& obj) {
+        Json::Value result;
+        
+        if (obj.is_none()) {
+            return result; // Returns null value
+        }
+        if (py::isinstance<py::bool_>(obj)) {
+            result = obj.cast<bool>();
+            return result;
+        }
+        if (py::isinstance<py::int_>(obj)) {
+            result = static_cast<Json::Int64>(obj.cast<int64_t>());
+            return result;
+        }
+        if (py::isinstance<py::float_>(obj)) {
+            result = obj.cast<double>();
+            return result;
+        }
+        if (py::isinstance<py::str>(obj)) {
+            result = obj.cast<std::string>();
+            return result;
+        }
         
         if (py::isinstance<py::list>(obj) || py::isinstance<py::tuple>(obj)) {
-            nlohmann::json j = nlohmann::json::array();
+            result = Json::Value(Json::arrayValue);
             for (const auto& item : obj) {
-                j.push_back(python_to_json(item));
+                result.append(python_to_json(item));
             }
-            return j;
+            return result;
         }
         
         if (py::isinstance<py::dict>(obj)) {
-            nlohmann::json j = nlohmann::json::object();
+            result = Json::Value(Json::objectValue);
             for (const auto& item : obj.cast<py::dict>()) {
-                j[item.first.cast<std::string>()] = python_to_json(item.second);
+                result[item.first.cast<std::string>()] = python_to_json(item.second);
             }
-            return j;
+            return result;
         }
         
         throw std::runtime_error("Unsupported Python type for JSON conversion");
@@ -94,7 +111,7 @@ PYBIND11_MODULE(mcp_cpp_bridge, m) {
             [](const Tool& t) { return json_to_python(t.input_schema); },
             [](Tool& t, py::object obj) { t.input_schema = python_to_json(obj); })
         .def("set_handler", [](Tool& t, py::function handler) {
-            t.handler = [handler](const nlohmann::json& params) -> nlohmann::json {
+            t.handler = [handler](const Json::Value& params) -> Json::Value {
                 py::gil_scoped_acquire acquire;
                 auto result = handler(json_to_python(params));
                 return python_to_json(result);
@@ -165,7 +182,32 @@ PYBIND11_MODULE(mcp_cpp_bridge, m) {
         .def("add_prompt", &server::ServerBuilder::add_prompt)
         .def("build", &server::ServerBuilder::build);
     
+    // TinyMCP wrapper module
+    auto tinymcp_module = m.def_submodule("tinymcp", "TinyMCP integration");
+    
+    py::class_<TinyMCPWrapper>(tinymcp_module, "TinyMCPWrapper")
+        .def(py::init<>())
+        .def_static("create_server", &TinyMCPWrapper::createServer, 
+            "Create a TinyMCP server with configuration")
+        .def_static("create_client", &TinyMCPWrapper::createClient,
+            "Create a TinyMCP client");
+    
+    py::class_<ExtendedMCPServer>(tinymcp_module, "ExtendedMCPServer")
+        .def(py::init<const server::Server::Config&>())
+        .def("register_advanced_tool", &ExtendedMCPServer::registerAdvancedTool)
+        .def("enable_metrics", &ExtendedMCPServer::enableMetrics)
+        .def("enable_tracing", &ExtendedMCPServer::enableTracing)
+        .def("set_thread_pool", &ExtendedMCPServer::setThreadPool)
+        .def("enable_caching", &ExtendedMCPServer::enableCaching);
+    
+    py::class_<ExtendedMCPClient>(tinymcp_module, "ExtendedMCPClient")
+        .def(py::init<const std::string&>())
+        .def("enable_connection_pool", &ExtendedMCPClient::enableConnectionPool)
+        .def("enable_batching", &ExtendedMCPClient::enableBatching)
+        .def("set_retry_policy", &ExtendedMCPClient::setRetryPolicy);
+    
     // Version info
     m.attr("__version__") = "1.0.0";
     m.attr("__author__") = "AI-SERVIS Team";
+    m.attr("__tinymcp_version__") = "0.2.0";
 }

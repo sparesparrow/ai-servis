@@ -44,10 +44,28 @@ profiles:
 
 # Components to build
 components:
-  # MCP C++ Bridge - Core library
+  # TinyMCP - Base MCP implementation
+  - name: tinymcp
+    path: ./conan-recipes/tinymcp
+    conan_file: ./conan-recipes/tinymcp/conanfile.py
+    profile: linux-release
+    options:
+      shared: false
+      enable_logging: true
+      with_tests: false
+    environment:
+      CC: gcc-13
+      CXX: g++-13
+    deploy:
+      type: library
+      version: 0.2.0
+      
+  # MCP C++ Bridge - Extended implementation with TinyMCP
   - name: mcp-cpp-bridge
     path: ./mcp-cpp-bridge
     conan_file: ./mcp-cpp-bridge/conanfile.py
+    dependencies:
+      - tinymcp
     profile: linux-release
     options:
       shared: false

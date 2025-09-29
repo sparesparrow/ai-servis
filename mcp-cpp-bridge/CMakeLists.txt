@@ -16,6 +16,7 @@ option(MCP_ENABLE_TESTING "Enable testing" ON)
 option(MCP_ENABLE_BENCHMARKS "Enable benchmarks" OFF)
 
 # Find packages
+find_package(tinymcp REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
@@ -59,6 +60,7 @@ set(MCP_CORE_SOURCES
     src/core/tool.cpp
     src/core/resource.cpp
     src/core/prompt.cpp
+    src/core/tinymcp_wrapper.cpp
 )
 
 set(MCP_SERVER_SOURCES
@@ -119,7 +121,8 @@ target_include_directories(mcp-cpp-bridge PUBLIC
 
 # Link libraries
 target_link_libraries(mcp-cpp-bridge PUBLIC
-    nlohmann_json::nlohmann_json
+    tinymcp::tinymcp
+    JsonCpp::JsonCpp
     spdlog::spdlog
     fmt::fmt
     asio::asio
