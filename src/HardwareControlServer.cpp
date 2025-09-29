@@ -1,18 +1,22 @@
 #include "HardwareControlServer.h"
+
+// Standard library includes (alphabetically)
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
-#include <cstring>
 
-CHardwareControlServer::CHardwareControlServer(int port)
-    : m_port(port), m_serverSocket(-1), m_running(false) {
+namespace WebGrab {
+
+HardwareControlServer::HardwareControlServer(int port)
+    : port(port), serverSocket(-1), running(false) {
 }
 
-CHardwareControlServer::~CHardwareControlServer() {
+HardwareControlServer::~HardwareControlServer() {
     Stop();
 }
 
-bool CHardwareControlServer::Start() {
+bool HardwareControlServer::Start() {
     if (!InitializeGPIO()) {
         std::cerr << "Failed to initialize GPIO" << std::endl;
         return false;
@@ -23,32 +27,32 @@ bool CHardwareControlServer::Start() {
         return false;
     }
 
-    m_running = true;
-    m_acceptThread = std::thread(&CHardwareControlServer::AcceptConnections, this);
+    running = true;
+    acceptThread = std::thread(&HardwareControlServer::AcceptConnections, this);
 
-    std::cout << "Hardware Control Server started on port " << m_port << std::endl;
+    std::cout << "Hardware Control Server started on port " << port << std::endl;
     return true;
 }
 
-void CHardwareControlServer::Stop() {
-    m_running = false;
+void HardwareControlServer::Stop() {
+    running = false;
 
-    if (m_acceptThread.joinable()) {
-        m_acceptThread.join();
+    if (acceptThread.joinable()) {
+        acceptThread.join();
     }
 
-    if (m_serverSocket != -1) {
-        close(m_serverSocket);
-        m_serverSocket = -1;
+    if (serverSocket != -1) {
+        close(serverSocket);
+        serverSocket = -1;
     }
 
-    m_activeLines.clear();
+    activeLines.clear();
     std::cout << "Hardware Control Server stopped" << std::endl;
 }
 
-bool CHardwareControlServer::InitializeGPIO() {
+bool HardwareControlServer::InitializeGPIO() {
     try {
-        m_chip = std::make_unique<gpiod::chip>("gpiochip0");
+        chip = std::make_unique<gpiod::chip>("gpiochip0");
         std::cout << "Hardware Control Server: GPIO chip initialized" << std::endl;
         return true;
     } catch (const std::exception& e) {
@@ -57,15 +61,15 @@ bool CHardwareControlServer::InitializeGPIO() {
     }
 }
 
-bool CHardwareControlServer::SetupServerSocket() {
-    m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (m_serverSocket == -1) {
+bool HardwareControlServer::SetupServerSocket() {
+    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket == -1) {
         std::cerr << "Failed to create socket" << std::endl;
         return false;
     }
 
     int opt = 1;
-    if (setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+    if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
         std::cerr << "Failed to set socket options" << std::endl;
         return false;
     }
@@ -73,14 +77,14 @@ bool CHardwareControlServer::SetupServerSocket() {
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(m_port);
+    serverAddr.sin_port = htons(port);
 
-    if (bind(m_serverSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+    if (bind(serverSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
         std::cerr << "Failed to bind socket" << std::endl;
         return false;
     }
 
-    if (listen(m_serverSocket, 5) == -1) {
+    if (listen(serverSocket, 5) == -1) {
         std::cerr << "Failed to listen on socket" << std::endl;
         return false;
     }
@@ -88,28 +92,28 @@ bool CHardwareControlServer::SetupServerSocket() {
     return true;
 }
 
-void CHardwareControlServer::AcceptConnections() {
-    while (m_running) {
+void HardwareControlServer::AcceptConnections() {
+    while (running) {
         sockaddr_in clientAddr{};
         socklen_t clientAddrLen = sizeof(clientAddr);
 
-        int clientSocket = accept(m_serverSocket, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrLen);
+        int clientSocket = accept(serverSocket, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrLen);
         if (clientSocket == -1) {
-            if (m_running) {
+            if (running) {
                 std::cerr << "Failed to accept connection" << std::endl;
             }
             continue;
         }
 
         std::cout << "Client connected" << std::endl;
-        std::thread(&CHardwareControlServer::HandleClient, this, clientSocket).detach();
+        std::thread(&HardwareControlServer::HandleClient, this, clientSocket).detach();
     }
 }
 
-void CHardwareControlServer::HandleClient(int clientSocket) {
+void HardwareControlServer::HandleClient(int clientSocket) {
     char buffer[4096];
 
-    while (m_running) {
+    while (running) {
         ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
         if (bytesRead <= 0) {
             break;
@@ -126,7 +130,7 @@ void CHardwareControlServer::HandleClient(int clientSocket) {
     std::cout << "Client disconnected" << std::endl;
 }
 
-std::string CHardwareControlServer::HandleGPIOControl(const std::string& jsonRequest) {
+std::string HardwareControlServer::HandleGPIOControl(const std::string& jsonRequest) {
     Json::Value params;
     Json::Value response;
     Json::Reader reader;
@@ -160,7 +164,8 @@ std::string CHardwareControlServer::HandleGPIOControl(const std::string& jsonReq
                     // If output and value provided, set the value
                     if (direction == "output" && value >= 0) {
                         if (SetGPIOPin(pin, value != 0)) {
-                            response["message"] = response["message"].get("message", "").asString() + " and set to " + std::to_string(value);
+                            std::string currentMessage = response.get("message", "").asString();
+                            response["message"] = currentMessage + " and set to " + std::to_string(value);
                         } else {
                             response["success"] = false;
                             response["error"] = "Failed to set GPIO pin value";
@@ -218,17 +223,17 @@ std::string CHardwareControlServer::HandleGPIOControl(const std::string& jsonReq
     }
 }
 
-bool CHardwareControlServer::ConfigureGPIOPin(int pin, const std::string& direction) {
-    if (!m_chip) return false;
+bool HardwareControlServer::ConfigureGPIOPin(int pin, const std::string& direction) {
+    if (!chip) return false;
 
     try {
         // Release existing line if it exists
-        if (m_activeLines.find(pin) != m_activeLines.end()) {
-            m_activeLines.erase(pin);
+        if (activeLines.find(pin) != activeLines.end()) {
+            activeLines.erase(pin);
         }
 
         // Get and configure the new line
-        gpiod::line line = m_chip->get_line(pin);
+        gpiod::line line = chip->get_line(pin);
 
         if (direction == "input") {
             gpiod::line_request request = {
@@ -247,7 +252,7 @@ bool CHardwareControlServer::ConfigureGPIOPin(int pin, const std::string& direct
         }
 
         // Store the configured line
-        m_activeLines[pin] = std::move(line);
+        activeLines[pin] = std::move(line);
         return true;
 
     } catch (const std::exception& e) {
@@ -256,9 +261,9 @@ bool CHardwareControlServer::ConfigureGPIOPin(int pin, const std::string& direct
     }
 }
 
-bool CHardwareControlServer::SetGPIOPin(int pin, bool value) {
-    auto it = m_activeLines.find(pin);
-    if (it == m_activeLines.end()) return false;
+bool HardwareControlServer::SetGPIOPin(int pin, bool value) {
+    auto it = activeLines.find(pin);
+    if (it == activeLines.end()) return false;
 
     try {
         it->second.set_value(value ? 1 : 0);
@@ -269,9 +274,9 @@ bool CHardwareControlServer::SetGPIOPin(int pin, bool value) {
     }
 }
 
-bool CHardwareControlServer::GetGPIOPin(int pin, bool& value) {
-    auto it = m_activeLines.find(pin);
-    if (it == m_activeLines.end()) return false;
+bool HardwareControlServer::GetGPIOPin(int pin, bool& value) {
+    auto it = activeLines.find(pin);
+    if (it == activeLines.end()) return false;
 
     try {
         int val = it->second.get_value();
@@ -282,3 +287,5 @@ bool CHardwareControlServer::GetGPIOPin(int pin, bool& value) {
         return false;
     }
 }
+
+} // namespace WebGrab

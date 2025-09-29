@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
     try {
         // Create and start the hardware control server
-        CHardwareControlServer server;
+        WebGrab::HardwareControlServer server;
 
         std::cout << "Hardware Control Server starting..." << std::endl;
         std::cout << "GPIO control available via TCP connections on port 8081" << std::endl;
