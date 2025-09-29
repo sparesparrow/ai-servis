@@ -14,4 +14,4 @@ mosquitto/*:shared=False
 libcurl/*:shared=False
 
 [conf]
-tools.cmake.cmaketoolchain:generator=Ninja
+tools.cmake.cmaketoolchain:generator=Unix Makefiles

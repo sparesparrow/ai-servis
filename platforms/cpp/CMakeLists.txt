@@ -13,9 +13,24 @@ find_package(libgpiod REQUIRED)
 find_package(mosquitto REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
-
-# Find required packages (fallback if not using Conan)
 find_package(Threads REQUIRED)
+
+# FlatBuffers code generation (ensure header matches installed flatbuffers)
+find_program(FLATBUFFERS_FLATC_EXECUTABLE flatc)
+if(FLATBUFFERS_FLATC_EXECUTABLE)
+    set(FLATBUFFERS_SCHEMA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/core)
+    set(FLATBUFFERS_OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/core)
+
+    add_custom_target(gen_flatbuffers_headers
+        COMMAND ${FLATBUFFERS_FLATC_EXECUTABLE} --cpp --gen-mutable -o ${FLATBUFFERS_OUTPUT_DIR} ${FLATBUFFERS_SCHEMA_DIR}/webgrab.fbs
+        BYPRODUCTS ${FLATBUFFERS_OUTPUT_DIR}/webgrab_generated.h
+        DEPENDS ${FLATBUFFERS_SCHEMA_DIR}/webgrab.fbs
+        COMMENT "Generating FlatBuffers C++ headers"
+        VERBATIM
+    )
+else()
+    message(WARNING "FlatBuffers compiler (flatc) not found. Generated headers may be outdated.")
+endif()
 
 # Core library
 add_library(webgrab_core STATIC
@@ -32,6 +47,10 @@ add_library(webgrab_core STATIC
     core/TcpListener.cpp
     core/CurlClientWrapper.cpp
 )
+
+if(TARGET gen_flatbuffers_headers)
+    add_dependencies(webgrab_core gen_flatbuffers_headers)
+endif()
 
 # Include directories for core library
 target_include_directories(webgrab_core PUBLIC

@@ -12,16 +12,16 @@
         {
             "name": "conan-release",
             "displayName": "'conan-release' config",
-            "description": "'conan-release' configure using 'Ninja' generator",
-            "generator": "Ninja",
+            "description": "'conan-release' configure using 'Unix Makefiles' generator",
+            "generator": "Unix Makefiles",
             "cacheVariables": {
                 "CMAKE_POLICY_DEFAULT_CMP0091": "NEW",
                 "CMAKE_BUILD_TYPE": "Release"
             },
             "environment": {
-                "PATH": "/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/bin:$penv{PATH}",
-                "LD_LIBRARY_PATH": "/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/lib:$penv{LD_LIBRARY_PATH}",
-                "DYLD_LIBRARY_PATH": "/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/lib:$penv{DYLD_LIBRARY_PATH}"
+                "PATH": "/home/ubuntu/.conan2/p/b/flatb183dc26bbfaa3/p/bin:$penv{PATH}",
+                "LD_LIBRARY_PATH": "/home/ubuntu/.conan2/p/b/flatb183dc26bbfaa3/p/lib:$penv{LD_LIBRARY_PATH}",
+                "DYLD_LIBRARY_PATH": "/home/ubuntu/.conan2/p/b/flatb183dc26bbfaa3/p/lib:$penv{DYLD_LIBRARY_PATH}"
             },
             "toolchainFile": "conan/conan_toolchain.cmake",
             "binaryDir": "/workspace/build-release"
@@ -39,7 +39,7 @@
             "name": "conan-release",
             "configurePreset": "conan-release",
             "environment": {
-                "OPENSSL_MODULES": "/home/ubuntu/.conan2/p/b/opens0e33b45f7ebec/p/lib/ossl-modules"
+                "OPENSSL_MODULES": "/home/ubuntu/.conan2/p/b/opensb30ca48d628c7/p/lib/ossl-modules"
             }
         }
     ]

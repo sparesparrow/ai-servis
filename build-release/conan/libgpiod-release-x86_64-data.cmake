@@ -12,7 +12,7 @@ endif()
 
 ########### VARIABLES #######################################################################
 #############################################################################################
-set(libgpiod_PACKAGE_FOLDER_RELEASE "/home/ubuntu/.conan2/p/b/libgp34638b5196cb2/p")
+set(libgpiod_PACKAGE_FOLDER_RELEASE "/home/ubuntu/.conan2/p/b/libgp5d681beccc8fc/p")
 set(libgpiod_BUILD_MODULES_PATHS_RELEASE )
 
 

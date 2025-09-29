@@ -13,6 +13,6 @@ do
 done
 
 
-export PATH="/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/bin:$PATH"
-export LD_LIBRARY_PATH="/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/lib:$LD_LIBRARY_PATH"
-export DYLD_LIBRARY_PATH="/home/ubuntu/.conan2/p/b/flatb9a122b150c0cb/p/lib:$DYLD_LIBRARY_PATH"
+export PATH="/home/ubuntu/.conan2/p/b/flatb183dc26bbfaa3/p/bin:$PATH"
+export LD_LIBRARY_PATH="/home/ubuntu/.conan2/p/b/flatb183dc26bbfaa3/p/lib:$LD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="/home/ubuntu/.conan2/p/b/flatb183dc26bbfaa3/p/lib:$DYLD_LIBRARY_PATH"
