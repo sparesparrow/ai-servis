@@ -52,4 +52,4 @@ click==8.1.7
 
 # Edge optimization
 uvloop==0.19.0; sys_platform != "win32"
-orjson==3.9.10
+orjson==3.9.15
