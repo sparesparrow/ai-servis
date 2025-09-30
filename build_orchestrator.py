@@ -2,6 +2,12 @@
 """
 Advanced Build and Deploy Orchestrator for MCP-based microservices
 Integrates Conan, Docker, and MCP for intelligent build automation
+
+Enhanced for automotive AI voice control systems with:
+- Multi-platform container orchestration
+- Real-time monitoring and observability
+- Security scanning and compliance
+- Performance optimization for edge deployment
 """
 
 import asyncio
@@ -10,14 +16,20 @@ import logging
 import os
 import subprocess
 import sys
+import signal
+import tempfile
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any, Callable, Union
 import yaml
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import hashlib
 import time
+import aiohttp
+import docker
+import psutil
+from datetime import datetime, timezone
 
 # Configure logging
 logging.basicConfig(
@@ -28,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 class BuildStatus(Enum):
-    """Build status enumeration"""
+    """Build status enumeration with automotive-specific states"""
     PENDING = "pending"
     BUILDING = "building"
     TESTING = "testing"
@@ -37,6 +49,9 @@ class BuildStatus(Enum):
     SUCCESS = "success"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    SECURITY_SCANNING = "security_scanning"
+    PERFORMANCE_TESTING = "performance_testing"
+    EDGE_OPTIMIZING = "edge_optimizing"
 
 
 @dataclass
@@ -57,7 +72,7 @@ class BuildConfig:
     
 @dataclass
 class BuildResult:
-    """Result of a build operation"""
+    """Result of a build operation with enhanced automotive metrics"""
     component: str
     status: BuildStatus
     duration: float
@@ -65,14 +80,159 @@ class BuildResult:
     logs: str = ""
     error: Optional[str] = None
     metrics: Dict[str, Any] = field(default_factory=dict)
+    security_scan_results: Dict[str, Any] = field(default_factory=dict)
+    performance_metrics: Dict[str, Any] = field(default_factory=dict)
+    resource_usage: Dict[str, Any] = field(default_factory=dict)
+    edge_optimization_score: Optional[float] = None
+    automotive_compliance: Dict[str, bool] = field(default_factory=dict)
+
+
+class SecurityScanner:
+    """Advanced security scanning for automotive AI systems"""
+    
+    def __init__(self):
+        self.docker_client = docker.from_env()
+        
+    async def scan_container_image(self, image_name: str) -> Dict[str, Any]:
+        """Scan container image for vulnerabilities"""
+        try:
+            # Run Trivy scan
+            result = await asyncio.create_subprocess_exec(
+                "trivy", "image", "--format", "json", "--quiet", image_name,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                scan_results = json.loads(stdout.decode())
+                return {
+                    "vulnerabilities": scan_results.get("Results", []),
+                    "total_vulns": len(scan_results.get("Results", [])),
+                    "critical": len([v for v in scan_results.get("Results", []) 
+                                   if v.get("Severity") == "CRITICAL"]),
+                    "high": len([v for v in scan_results.get("Results", []) 
+                               if v.get("Severity") == "HIGH"]),
+                    "scan_timestamp": datetime.now(timezone.utc).isoformat()
+                }
+        except Exception as e:
+            logger.error(f"Security scan failed: {e}")
+            return {"error": str(e), "scan_failed": True}
+        
+        return {"scan_failed": True}
+    
+    async def scan_source_code(self, source_path: Path) -> Dict[str, Any]:
+        """Scan source code for security issues"""
+        results = {}
+        
+        # Bandit for Python - fix bug: glob pattern doesn't work with exists()
+        python_files = list(source_path.glob("**/*.py"))
+        if python_files:
+            try:
+                result = await asyncio.create_subprocess_exec(
+                    "bandit", "-r", str(source_path), "-f", "json",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, stderr = await result.communicate()
+                if result.returncode == 0:
+                    results["bandit"] = json.loads(stdout.decode())
+            except Exception as e:
+                logger.warning(f"Bandit scan failed: {e}")
+        
+        # Semgrep for general security
+        try:
+            result = await asyncio.create_subprocess_exec(
+                "semgrep", "--config=auto", "--json", str(source_path),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            if result.returncode == 0:
+                results["semgrep"] = json.loads(stdout.decode())
+        except Exception as e:
+            logger.warning(f"Semgrep scan failed: {e}")
+        
+        return results
+
+
+class PerformanceMonitor:
+    """Monitor build and runtime performance for automotive edge deployment"""
+    
+    def __init__(self):
+        self.metrics = {}
+        
+    def start_monitoring(self, component: str):
+        """Start monitoring resource usage"""
+        self.metrics[component] = {
+            "start_time": time.time(),
+            "cpu_percent": psutil.cpu_percent(interval=None),
+            "memory_mb": psutil.virtual_memory().used / 1024 / 1024,
+            "disk_io": psutil.disk_io_counters()._asdict() if psutil.disk_io_counters() else {},
+            "network_io": psutil.net_io_counters()._asdict()
+        }
+    
+    def stop_monitoring(self, component: str) -> Dict[str, Any]:
+        """Stop monitoring and return metrics"""
+        if component not in self.metrics:
+            return {}
+            
+        end_metrics = {
+            "end_time": time.time(),
+            "cpu_percent": psutil.cpu_percent(interval=None),
+            "memory_mb": psutil.virtual_memory().used / 1024 / 1024,
+            "disk_io": psutil.disk_io_counters()._asdict() if psutil.disk_io_counters() else {},
+            "network_io": psutil.net_io_counters()._asdict()
+        }
+        
+        start_metrics = self.metrics[component]
+        duration = end_metrics["end_time"] - start_metrics["start_time"]
+        
+        return {
+            "duration": duration,
+            "avg_cpu_percent": (start_metrics["cpu_percent"] + end_metrics["cpu_percent"]) / 2,
+            "peak_memory_mb": max(start_metrics["memory_mb"], end_metrics["memory_mb"]),
+            "memory_delta_mb": end_metrics["memory_mb"] - start_metrics["memory_mb"],
+            "disk_read_mb": (end_metrics["disk_io"].get("read_bytes", 0) - 
+                           start_metrics["disk_io"].get("read_bytes", 0)) / 1024 / 1024,
+            "disk_write_mb": (end_metrics["disk_io"].get("write_bytes", 0) - 
+                            start_metrics["disk_io"].get("write_bytes", 0)) / 1024 / 1024,
+            "network_sent_mb": (end_metrics["network_io"].get("bytes_sent", 0) - 
+                              start_metrics["network_io"].get("bytes_sent", 0)) / 1024 / 1024,
+            "network_recv_mb": (end_metrics["network_io"].get("bytes_recv", 0) - 
+                              start_metrics["network_io"].get("bytes_recv", 0)) / 1024 / 1024
+        }
+    
+    def calculate_edge_score(self, metrics: Dict[str, Any]) -> float:
+        """Calculate edge deployment optimization score (0-100)"""
+        score = 100.0
+        
+        # Penalize high resource usage
+        if metrics.get("peak_memory_mb", 0) > 512:  # > 512MB
+            score -= min(30, (metrics["peak_memory_mb"] - 512) / 10)
+        
+        if metrics.get("avg_cpu_percent", 0) > 50:  # > 50% CPU
+            score -= min(20, (metrics["avg_cpu_percent"] - 50) / 2)
+        
+        # Penalize large artifacts
+        if metrics.get("artifact_size_mb", 0) > 100:  # > 100MB
+            score -= min(25, (metrics["artifact_size_mb"] - 100) / 5)
+        
+        # Reward fast builds
+        if metrics.get("duration", float('inf')) < 60:  # < 1 minute
+            score += 10
+        
+        return max(0, min(100, score))
 
 
 class ConanOrchestrator:
-    """Orchestrates Conan builds with advanced features"""
+    """Orchestrates Conan builds with advanced automotive features"""
     
     def __init__(self, cache_dir: Path = Path.home() / ".conan2"):
         self.cache_dir = cache_dir
         self.executor = ThreadPoolExecutor(max_workers=4)
+        self.security_scanner = SecurityScanner()
+        self.performance_monitor = PerformanceMonitor()
         self._ensure_conan_installed()
         
     def _ensure_conan_installed(self):
@@ -86,11 +246,20 @@ class ConanOrchestrator:
             subprocess.run(["conan", "profile", "detect", "--force"], check=True)
     
     async def build_component(self, config: BuildConfig) -> BuildResult:
-        """Build a single component with Conan"""
+        """Build a single component with enhanced security and performance monitoring"""
         start_time = time.time()
         result = BuildResult(component=config.name, status=BuildStatus.BUILDING)
         
+        # Start performance monitoring
+        self.performance_monitor.start_monitoring(config.name)
+        
         try:
+            # Security scan of source code first
+            result.status = BuildStatus.SECURITY_SCANNING
+            logger.info(f"Security scanning source code for {config.name}")
+            source_scan_results = await self.security_scanner.scan_source_code(config.path)
+            result.security_scan_results["source"] = source_scan_results
+            
             # Create build directory
             build_dir = config.path / "build"
             build_dir.mkdir(exist_ok=True)
@@ -168,14 +337,44 @@ class ConanOrchestrator:
             artifacts = await self._collect_artifacts(build_dir)
             result.artifacts = artifacts
             
+            # Performance testing for automotive requirements
+            result.status = BuildStatus.PERFORMANCE_TESTING
+            logger.info(f"Performance testing {config.name}")
+            
+            # Stop performance monitoring and collect metrics
+            perf_metrics = self.performance_monitor.stop_monitoring(config.name)
+            result.performance_metrics = perf_metrics
+            result.resource_usage = {
+                "peak_memory_mb": perf_metrics.get("peak_memory_mb", 0),
+                "avg_cpu_percent": perf_metrics.get("avg_cpu_percent", 0),
+                "disk_usage_mb": perf_metrics.get("disk_read_mb", 0) + perf_metrics.get("disk_write_mb", 0),
+                "network_usage_mb": perf_metrics.get("network_sent_mb", 0) + perf_metrics.get("network_recv_mb", 0)
+            }
+            
+            # Edge optimization
+            result.status = BuildStatus.EDGE_OPTIMIZING
+            artifact_size_mb = sum(artifact.stat().st_size for artifact in artifacts) / 1024 / 1024
+            perf_metrics["artifact_size_mb"] = artifact_size_mb
+            result.edge_optimization_score = self.performance_monitor.calculate_edge_score(perf_metrics)
+            
+            # Automotive compliance checks
+            result.automotive_compliance = {
+                "memory_constraint": perf_metrics.get("peak_memory_mb", 0) < 1024,  # < 1GB
+                "startup_time": result.duration < 30,  # < 30 seconds
+                "artifact_size": artifact_size_mb < 200,  # < 200MB
+                "security_clean": len(source_scan_results.get("bandit", {}).get("results", [])) == 0,
+                "edge_optimized": result.edge_optimization_score > 70
+            }
+            
             # Calculate build metrics
             result.duration = time.time() - start_time
             result.metrics["build_time"] = result.duration
             result.metrics["artifact_count"] = len(artifacts)
             result.metrics["cache_hits"] = self._calculate_cache_hits(result.logs)
+            result.metrics["total_artifact_size_mb"] = artifact_size_mb
             
             result.status = BuildStatus.SUCCESS
-            logger.info(f"Successfully built {config.name} in {result.duration:.2f}s")
+            logger.info(f"Successfully built {config.name} in {result.duration:.2f}s with edge score {result.edge_optimization_score:.1f}")
             
         except Exception as e:
             result.status = BuildStatus.FAILED

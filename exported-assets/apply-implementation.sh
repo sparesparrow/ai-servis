@@ -158,7 +158,7 @@ psycopg2-binary==2.9.9
 redis==5.0.1
 python-dotenv==1.0.0
 PyJWT==2.8.0
-cryptography==41.0.8
+cryptography==43.0.1
 sqlalchemy==2.0.25
 alembic==1.13.1
 tenacity==8.2.3

@@ -1,0 +1,52 @@
+# CodeQL configuration for AI-SERVIS Universal
+name: "AI-SERVIS CodeQL Config"
+
+# Disable default queries and use only security queries
+disable-default-queries: false
+
+# Additional queries to run
+queries:
+  - name: security-extended
+    uses: security-extended
+  - name: security-and-quality
+    uses: security-and-quality
+
+# Paths to include in analysis
+paths:
+  - modules/
+  - platforms/
+  - scripts/
+  - build_orchestrator.py
+  - mcp_integration_example.py
+
+# Paths to exclude from analysis  
+paths-ignore:
+  - "**/test/**"
+  - "**/tests/**"
+  - "**/node_modules/**"
+  - "**/build/**"
+  - "**/dist/**"
+  - "**/*.min.js"
+  - "site/**"
+  - "exported-assets/**"
+
+# Language-specific configuration
+python:
+  # Include additional Python libraries
+  setup-python-dependencies: true
+  
+cpp:
+  # Specify build command for C++ analysis
+  after-prepare: |
+    # Install Conan dependencies
+    pip install conan
+    conan profile detect --force
+    
+    # Build C++ components for analysis
+    cd platforms/cpp
+    conan install ../.. --profile ../../profiles/linux-release --build missing
+    cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+    
+javascript:
+  # Include TypeScript files
+  typescript: true
