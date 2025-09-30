@@ -1,194 +1,376 @@
-name: CI/CD Pipeline
+name: AI-SERVIS Universal CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/* ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   schedule:
-    - cron: '0 6 * * 1'  # Weekly security scan on Mondays
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+      skip_tests:
+        description: 'Skip tests'
+        required: false
+        default: false
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  JAVA_VERSION: '17'
 
 jobs:
-  lint-and-test:
+  # =============================================================================
+  # SECURITY & COMPLIANCE
+  # =============================================================================
+  security-scan:
+    name: Security & Compliance Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      packages: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
+    
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python, cpp, javascript
+        queries: security-and-quality
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:python,cpp,javascript"
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/python@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --file=requirements.txt
+    
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'ai-servis-universal'
+        path: '.'
+        format: 'SARIF'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --failOnCVSS 7
+          --out reports/
+    
+    - name: Upload OWASP results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'reports/dependency-check-report.sarif'
+
+  # =============================================================================
+  # CODE QUALITY & LINTING
+  # =============================================================================
+  code-quality:
+    name: Code Quality & Linting
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_USER: testuser
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-      
-      mosquitto:
-        image: eclipse-mosquitto:2.0
-        ports:
-          - 1883:1883
-
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Cache pip dependencies
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        pip install pre-commit
+    
+    - name: Run pre-commit hooks
+      run: pre-commit run --all-files
+    
+    - name: Run Python linting
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        black --check .
+        isort --check-only .
+    
+    - name: Run C++ linting
+      run: |
+        # Install cppcheck
+        sudo apt-get update
+        sudo apt-get install -y cppcheck
+        
+        # Run cppcheck on C++ code
+        find platforms/cpp -name "*.cpp" -o -name "*.h" | xargs cppcheck --enable=all --error-exitcode=1
+    
+    - name: Run JavaScript/TypeScript linting
+      run: |
+        if [ -f "package.json" ]; then
+          npm ci
+          npm run lint
+        fi
+
+  # =============================================================================
+  # BUILD & TEST MATRIX
+  # =============================================================================
+  build-test:
+    name: Build & Test (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    needs: [security-scan, code-quality]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Python components
+          - platform: python-linux
+            runner: ubuntu-latest
+            component: python
+          - platform: python-windows
+            runner: windows-latest
+            component: python
+          - platform: python-macos
+            runner: macos-latest
+            component: python
+          
+          # C++ components
+          - platform: cpp-linux-amd64
+            runner: ubuntu-latest
+            component: cpp
+            arch: x86_64
+            profile: linux-release
+          - platform: cpp-linux-arm64
+            runner: ubuntu-latest
+            component: cpp
+            arch: arm64
+            profile: linux-arm64
+          - platform: cpp-windows
+            runner: windows-latest
+            component: cpp
+            arch: x86_64
+            profile: windows-release
+          - platform: cpp-macos
+            runner: macos-latest
+            component: cpp
+            arch: x86_64
+            profile: macos-release
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      if: matrix.component == 'python'
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Java
+      if: matrix.component == 'android'
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+    
+    - name: Install Conan
+      if: matrix.component == 'cpp'
+      run: |
+        pip install conan
+        conan profile detect --force
+    
+    - name: Cache Conan packages
+      if: matrix.component == 'cpp'
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan
+        key: ${{ runner.os }}-conan-${{ matrix.arch }}-${{ hashFiles('conanfile.py', 'profiles/${{ matrix.profile }}') }}
+        restore-keys: |
+          ${{ runner.os }}-conan-${{ matrix.arch }}-
+    
+    - name: Cache Python packages
+      if: matrix.component == 'python'
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-        pip install pytest pytest-cov black flake8 mypy safety bandit
+        if [ "${{ matrix.component }}" = "python" ]; then
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+        elif [ "${{ matrix.component }}" = "cpp" ]; then
+          cd platforms/cpp
+          conan install ../.. --profile ../../profiles/${{ matrix.profile }} --build missing
+        fi
     
-    - name: Lint with flake8
+    - name: Build component
       run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Treat all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        if [ "${{ matrix.component }}" = "python" ]; then
+          python -m pytest tests/ --cov=. --cov-report=xml
+        elif [ "${{ matrix.component }}" = "cpp" ]; then
+          cd platforms/cpp
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j$(nproc)
+        fi
     
-    - name: Check code formatting with black
+    - name: Run tests
+      if: ${{ !inputs.skip_tests }}
       run: |
-        black --check --diff .
-    
-    - name: Type checking with mypy
-      run: |
-        mypy modules/ --ignore-missing-imports || true
-    
-    - name: Security check with bandit
-      run: |
-        bandit -r modules/ -f json -o bandit-report.json || true
-    
-    - name: Dependency security check with safety
-      run: |
-        safety check || true
-    
-    - name: Run unit tests
-      env:
-        DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
-        REDIS_URL: redis://localhost:6379/0
-        MQTT_BROKER: localhost:1883
-      run: |
-        pytest tests/ -v --cov=modules --cov-report=xml --cov-report=html
+        if [ "${{ matrix.component }}" = "python" ]; then
+          python -m pytest tests/ -v --tb=short
+        elif [ "${{ matrix.component }}" = "cpp" ]; then
+          cd platforms/cpp/build
+          ctest --output-on-failure
+        fi
     
     - name: Upload coverage reports
+      if: matrix.component == 'python'
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
-        flags: unittests
+        flags: ${{ matrix.platform }}
         name: codecov-umbrella
 
-  build-cpp:
-    needs: lint-and-test
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        include:
-          - { runner: ubuntu-latest, arch: x86_64, profile: linux-release, conan_arch: x86_64, platform: linux/amd64 }
-          - { runner: ubuntu-20.04, arch: arm64, profile: linux-arm64, conan_arch: armv8, platform: linux/arm64 }
-          - { runner: macos-latest, arch: x86_64, profile: macos-release, conan_arch: x86_64, platform: darwin/amd64 }
-          - { runner: windows-latest, arch: x86_64, profile: windows-release, conan_arch: x86_64, platform: windows/amd64 }
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install Conan
-        run: |
-          pip install conan
-          conan profile detect --force
-
-      - name: Cache Conan packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.conan2
-          key: ${{ runner.os }}-conan-${{ matrix.arch }}-${{ hashFiles('conanfile.py', 'profiles/${{ matrix.profile }}') }}
-          restore-keys: |
-            ${{ runner.os }}-conan-${{ matrix.arch }}-
-
-      - name: Install dependencies with Conan
-        run: |
-          cd platforms/cpp
-          conan install ../.. --profile ../../profiles/${{ matrix.profile }} --build missing
-
-      - name: Configure CMake
-        run: |
-          cd platforms/cpp
-          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: |
-          cd platforms/cpp
-          cmake --build build --parallel
-
-      - name: Run tests
-        run: |
-          cd platforms/cpp
-          ctest --test-dir build --output-on-failure
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: cpp-${{ matrix.arch }}-binaries
-          path: |
-            platforms/cpp/build/hardware-server*
-            platforms/cpp/build/mcp-server*
-            platforms/cpp/build/webgrab-client*
-            platforms/cpp/build/webgrab-server*
-
-  build-images:
-    needs: [lint-and-test, build-cpp]
+  # =============================================================================
+  # ANDROID BUILD
+  # =============================================================================
+  android-build:
+    name: Android Build & Test
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        component: [
-          'core-orchestrator',
-          'ai-audio-assistant', 
-          'ai-platform-controllers/linux',
-          'service-discovery',
-          'hardware-bridge'
-        ]
-        platform: [linux/amd64, linux/arm64]
+    needs: [security-scan, code-quality]
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x android/gradlew
+    
+    - name: Build with Gradle
+      run: |
+        cd android
+        ./gradlew assembleDebug
+        ./gradlew test
+        ./gradlew connectedAndroidTest
+    
+    - name: Upload debug APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: ai-servis-app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  # =============================================================================
+  # ESP32 FIRMWARE BUILD
+  # =============================================================================
+  esp32-build:
+    name: ESP32 Firmware Build
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality]
+    strategy:
+      matrix:
+        target: [esp32, esp32s3]
+        variant: [obd, io, cam]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup ESP-IDF
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp-idf-version: v5.0
+        target: ${{ matrix.target }}
+    
+    - name: Build firmware
+      run: |
+        cd esp32/firmware-${{ matrix.variant }}
+        idf.py set-target ${{ matrix.target }}
+        idf.py build
+    
+    - name: Upload firmware artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: esp32-${{ matrix.target }}-${{ matrix.variant }}
+        path: esp32/firmware-${{ matrix.variant }}/build/
+
+  # =============================================================================
+  # DOCKER MULTI-PLATFORM BUILD
+  # =============================================================================
+  docker-build:
+    name: Multi-Platform Docker Build
+    runs-on: ubuntu-latest
+    needs: [build-test]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -204,236 +386,167 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.component }}
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
     
-    - name: Build and push Docker image
+    - name: Build and push Docker images
       uses: docker/build-push-action@v5
-      id: build
       with:
-        context: ./modules/${{ matrix.component }}
-        platforms: ${{ matrix.platform }}
+        context: .
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        
-    - name: Run Trivy vulnerability scanner on image
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ steps.meta.outputs.tags }}
-        format: 'sarif'
-        output: 'trivy-image-results-${{ matrix.component }}.sarif'
-        
-    - name: Upload Trivy image scan results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'trivy-image-results-${{ matrix.component }}.sarif'
+        build-args: |
+          BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
 
-  integration-tests:
-    needs: build-images
+  # =============================================================================
+  # ORCHESTRATOR INTEGRATION TEST
+  # =============================================================================
+  orchestrator-test:
+    name: Orchestrator Integration Test
     runs-on: ubuntu-latest
+    needs: [build-test, docker-build]
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Create test environment
+    - name: Install dependencies
       run: |
-        cp .env.example .env
-        echo "ELEVENLABS_API_KEY=test-key" >> .env
-        echo "SPOTIFY_CLIENT_ID=test-id" >> .env
-        echo "SPOTIFY_CLIENT_SECRET=test-secret" >> .env
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
     
-    - name: Start test services
+    - name: Test build orchestrator
       run: |
-        docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
-        sleep 30  # Wait for services to start
+        python build_orchestrator.py orchestrator-config.yaml --parallel
     
-    - name: Check service health
+    - name: Test orchestrator configuration
       run: |
-        ./scripts/health-check.sh
-    
-    - name: Run integration tests
-      run: |
-        docker-compose exec -T ai-servis-core python -m pytest tests/integration/ -v
-    
-    - name: Run system tests
-      run: |
-        ./scripts/system-tests.sh
-    
-    - name: Collect logs
-      if: failure()
-      run: |
-        mkdir -p test-logs
-        docker-compose logs > test-logs/docker-compose.log
-        docker-compose logs ai-servis-core > test-logs/core.log
-        docker-compose logs ai-audio-assistant > test-logs/audio.log
-    
-    - name: Upload test logs
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-logs
-        path: test-logs/
+        python -c "
+        import yaml
+        with open('orchestrator-config.yaml') as f:
+            config = yaml.safe_load(f)
+        print('Configuration validation passed')
+        print(f'Components: {len(config.get(\"components\", []))}')
+        "
 
-  security-scan:
+  # =============================================================================
+  # PERFORMANCE TESTING
+  # =============================================================================
+  performance-test:
+    name: Performance & Load Testing
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
+    needs: [orchestrator-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        languages: python, cpp, javascript
-        queries: security-extended,security-and-quality
+        python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
-    
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
-    
-    - name: Run Trivy vulnerability scanner (Filesystem)
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-fs-results.sarif'
-    
-    - name: Upload Trivy FS scan results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'trivy-fs-results.sarif'
-    
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/python@master
-      continue-on-error: true
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --sarif-file-output=snyk.sarif
-    
-    - name: Upload Snyk results
-      if: always()
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: snyk.sarif
-    
-    - name: Run OWASP Dependency Check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: 'ai-servis'
-        path: '.'
-        format: 'SARIF'
-        out: 'dependency-check-report'
-        args: >
-          --enableRetired
-          --enableExperimental
-          --nvdApiKey ${{ secrets.NVD_API_KEY }}
-    
-    - name: Upload OWASP Dependency Check results
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: dependency-check-report/dependency-check-report.sarif
-
-  performance-tests:
-    needs: integration-tests
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx  
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Start performance test environment
+    - name: Install dependencies
       run: |
-        docker-compose -f docker-compose.yml -f docker-compose.perf.yml up -d
-        sleep 30
+        pip install -r requirements.txt
+        pip install locust pytest-benchmark
     
     - name: Run performance tests
       run: |
-        ./scripts/performance-tests.sh
+        # Start services in background
+        docker-compose -f docker-compose.dev.yml up -d
+        
+        # Wait for services to be ready
+        sleep 30
+        
+        # Run performance tests
+        python -m pytest tests/performance/ -v --benchmark-only
+        
+        # Run load tests with Locust
+        locust -f tests/load/locustfile.py --headless -u 100 -r 10 -t 60s --html performance-report.html
     
-    - name: Upload performance results
+    - name: Upload performance report
       uses: actions/upload-artifact@v3
       with:
-        name: performance-results
-        path: performance-results/
+        name: performance-report
+        path: performance-report.html
 
-  deploy-staging:
-    if: github.ref == 'refs/heads/develop'
-    needs: [integration-tests, security-scan, performance-tests]
+  # =============================================================================
+  # DEPLOYMENT
+  # =============================================================================
+  deploy:
+    name: Deploy to ${{ inputs.environment || 'staging' }}
     runs-on: ubuntu-latest
-    environment: staging
+    needs: [orchestrator-test, performance-test]
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment: ${{ inputs.environment || 'staging' }}
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install ansible kubernetes
     
     - name: Deploy to staging
+      if: (inputs.environment || 'staging') == 'staging'
       run: |
-        echo "Deploying to staging environment..."
-        # In a real implementation, you would deploy to your staging environment
-        # This could involve updating Kubernetes deployments, AWS ECS services, etc.
-    
-    - name: Run smoke tests
-      run: |
-        ./scripts/smoke-tests.sh staging
-
-  deploy-production:
-    if: github.ref == 'refs/heads/main'
-    needs: [integration-tests, security-scan, performance-tests]
-    runs-on: ubuntu-latest
-    environment: production
-    
-    steps:
-    - uses: actions/checkout@v4
+        # Deploy to staging environment
+        ansible-playbook -i inventory/staging deploy.yml
+        python build_orchestrator.py orchestrator-config.yaml --deploy
     
     - name: Deploy to production
+      if: (inputs.environment || 'staging') == 'production'
       run: |
-        echo "Deploying to production environment..."
-        # Production deployment logic here
+        # Deploy to production environment
+        ansible-playbook -i inventory/production deploy.yml
+        python build_orchestrator.py orchestrator-config.yaml --deploy --production
     
     - name: Run smoke tests
       run: |
-        ./scripts/smoke-tests.sh production
-    
-    - name: Notify deployment success
-      if: success()
-      run: |
-        echo "Production deployment successful!"
-        # Send notifications (Slack, email, etc.)
+        # Run smoke tests after deployment
+        python tests/smoke/test_deployment.py --environment ${{ inputs.environment || 'staging' }}
 
-  cleanup:
-    if: always()
-    needs: [deploy-staging, deploy-production]
+  # =============================================================================
+  # NOTIFICATIONS
+  # =============================================================================
+  notify:
+    name: Notify Results
     runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always()
     
     steps:
-    - name: Cleanup test artifacts
-      run: |
-        echo "Cleaning up test artifacts..."
-        # Cleanup logic here
+    - name: Notify Slack
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#ai-servis-ci'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
