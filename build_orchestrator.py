@@ -26,10 +26,32 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import hashlib
 import time
-import aiohttp
-import docker
-import psutil
 from datetime import datetime, timezone
+
+# Optional dependencies with graceful degradation
+try:
+    import aiohttp
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    AIOHTTP_AVAILABLE = False
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning("aiohttp not available - HTTP features will be limited")
+
+try:
+    import docker
+    DOCKER_AVAILABLE = True
+except ImportError:
+    DOCKER_AVAILABLE = False
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning("docker not available - container builds will be limited")
+
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    logger_temp = logging.getLogger(__name__)
+    logger_temp.warning("psutil not available - performance monitoring disabled")
 
 # Configure logging
 logging.basicConfig(
@@ -91,7 +113,18 @@ class SecurityScanner:
     """Advanced security scanning for automotive AI systems"""
     
     def __init__(self):
-        self.docker_client = docker.from_env()
+        if DOCKER_AVAILABLE:
+            try:
+                self.docker_client = docker.from_env()
+                self.docker_enabled = True
+            except Exception as e:
+                logger.warning(f"Docker client initialization failed: {e}")
+                self.docker_client = None
+                self.docker_enabled = False
+        else:
+            self.docker_client = None
+            self.docker_enabled = False
+            logger.info("Docker not available - container scanning disabled")
         
     async def scan_container_image(self, image_name: str) -> Dict[str, Any]:
         """Scan container image for vulnerabilities"""
@@ -161,9 +194,19 @@ class PerformanceMonitor:
     
     def __init__(self):
         self.metrics = {}
+        self.enabled = PSUTIL_AVAILABLE
+        if not self.enabled:
+            logger.info("Performance monitoring disabled - psutil not available")
         
     def start_monitoring(self, component: str):
         """Start monitoring resource usage"""
+        if not self.enabled:
+            self.metrics[component] = {
+                "start_time": time.time(),
+                "enabled": False
+            }
+            return
+            
         self.metrics[component] = {
             "start_time": time.time(),
             "cpu_percent": psutil.cpu_percent(interval=None),
@@ -176,6 +219,15 @@ class PerformanceMonitor:
         """Stop monitoring and return metrics"""
         if component not in self.metrics:
             return {}
+        
+        start_metrics = self.metrics[component]
+        
+        # If monitoring was disabled, return minimal metrics
+        if not self.enabled or not start_metrics.get("enabled", True):
+            return {
+                "duration": time.time() - start_metrics["start_time"],
+                "monitoring_enabled": False
+            }
             
         end_metrics = {
             "end_time": time.time(),
@@ -185,11 +237,11 @@ class PerformanceMonitor:
             "network_io": psutil.net_io_counters()._asdict()
         }
         
-        start_metrics = self.metrics[component]
         duration = end_metrics["end_time"] - start_metrics["start_time"]
         
         return {
             "duration": duration,
+            "monitoring_enabled": True,
             "avg_cpu_percent": (start_metrics["cpu_percent"] + end_metrics["cpu_percent"]) / 2,
             "peak_memory_mb": max(start_metrics["memory_mb"], end_metrics["memory_mb"]),
             "memory_delta_mb": end_metrics["memory_mb"] - start_metrics["memory_mb"],
