@@ -9,6 +9,8 @@ class GonzoMadnessController {
         this.panicMode = false;
         this.countdownInterval = null;
         this.randomEvents = [];
+        this.backgroundMusic = null;
+        this.isMusicPlaying = false;
 
         this.init();
     }
@@ -20,6 +22,7 @@ class GonzoMadnessController {
         this.setupScrollEffects();
         this.setupRandomMadness();
         this.setupEasterEggs();
+        this.setupAudio();
         this.startMadness();
 
         console.log("%c🔥 GONZO MODE ACTIVATED 🔥", "color: #ff0040; font-size: 20px; font-weight: bold;");
@@ -153,6 +156,11 @@ class GonzoMadnessController {
         document.getElementById('paranoia-fill').style.width = '100%';
         document.querySelector('.meter-value').textContent = '100%';
 
+        // Pause background music during panic mode
+        if (this.isMusicPlaying) {
+            this.pauseBackgroundMusic();
+        }
+
         let countdown = 10;
         countdownEl.textContent = countdown;
 
@@ -251,7 +259,7 @@ class GonzoMadnessController {
                     entry.target.style.animation = 'gonzo-reveal 0.8s ease-out forwards';
 
                     // Increase paranoia when entering certain sections
-                    if (entry.target.classList.contains('weapon-card') || 
+                    if (entry.target.classList.contains('weapon-card') ||
                         entry.target.classList.contains('story-card')) {
                         this.paranoiaLevel += 5;
                     }
@@ -442,8 +450,8 @@ class GonzoMadnessController {
                 <h4 style="color: #ff0040; margin-bottom: 10px;">🕵️ CLASSIFIED INFO:</h4>
                 <p>You've discovered the secret gonzo mode!</p>
                 <p style="margin-top: 10px; font-size: 0.8rem; color: #ffff00;">
-                    "The music business is a cruel and shallow money trench, a long plastic 
-                    hallway where thieves and pimps run free, and good men die like dogs." 
+                    "The music business is a cruel and shallow money trench, a long plastic
+                    hallway where thieves and pimps run free, and good men die like dogs."
                     - Hunter S. Thompson
                 </p>
                 <button onclick="this.parentElement.remove()" style="
@@ -495,6 +503,93 @@ class GonzoMadnessController {
         }
     }
 
+    setupAudio() {
+        this.backgroundMusic = document.getElementById('background-music');
+        
+        if (!this.backgroundMusic) {
+            console.log("Background music element not found");
+            return;
+        }
+        
+        // Set volume to a reasonable level (25% for gonzo atmosphere)
+        this.backgroundMusic.volume = 0.25;
+        
+        // Try to autoplay when user first interacts with the page
+        document.addEventListener('click', () => {
+            if (!this.isMusicPlaying && this.backgroundMusic.paused) {
+                this.playBackgroundMusic();
+            }
+        }, { once: true });
+        
+        // Handle audio toggle button
+        const audioToggle = document.getElementById('audio-toggle');
+        if (audioToggle) {
+            audioToggle.addEventListener('click', () => this.toggleBackgroundMusic());
+        }
+        
+        // Update button state based on audio state
+        this.updateAudioButtonState();
+        
+        // Try autoplay on page load (may be blocked by browser)
+        setTimeout(() => {
+            this.playBackgroundMusic();
+        }, 1000);
+    }
+
+    playBackgroundMusic() {
+        if (this.backgroundMusic && this.backgroundMusic.paused) {
+            this.backgroundMusic.play().then(() => {
+                this.isMusicPlaying = true;
+                this.updateAudioButtonState();
+                console.log('🔥 Gonzo background music started');
+                this.showParanoidMessage("🎵 Digital resistance soundtrack activated");
+            }).catch(error => {
+                console.log('Autoplay prevented by browser:', error);
+                // Show a subtle indicator that music is available
+                const audioToggle = document.getElementById('audio-toggle');
+                if (audioToggle) {
+                    audioToggle.style.opacity = '0.7';
+                    audioToggle.title = 'Click to start gonzo soundtrack';
+                }
+            });
+        }
+    }
+
+    pauseBackgroundMusic() {
+        if (this.backgroundMusic && !this.backgroundMusic.paused) {
+            this.backgroundMusic.pause();
+            this.isMusicPlaying = false;
+            this.updateAudioButtonState();
+            console.log('Background music paused');
+            this.showParanoidMessage("🔇 Soundtrack silenced");
+        }
+    }
+
+    toggleBackgroundMusic() {
+        if (this.isMusicPlaying) {
+            this.pauseBackgroundMusic();
+        } else {
+            this.playBackgroundMusic();
+        }
+    }
+
+    updateAudioButtonState() {
+        const audioToggle = document.getElementById('audio-toggle');
+        if (!audioToggle) return;
+        
+        if (this.isMusicPlaying) {
+            audioToggle.textContent = '🔊';
+            audioToggle.title = 'Pause gonzo soundtrack';
+            audioToggle.style.opacity = '1';
+            audioToggle.classList.add('playing');
+        } else {
+            audioToggle.textContent = '🎵';
+            audioToggle.title = 'Play gonzo soundtrack';
+            audioToggle.style.opacity = '0.7';
+            audioToggle.classList.remove('playing');
+        }
+    }
+
     startMadness() {
         // Add dynamic styles
         const dynamicStyles = document.createElement('style');
@@ -536,13 +631,13 @@ class GonzoMadnessController {
             }
 
             @keyframes secret-fade-in {
-                from { 
-                    opacity: 0; 
-                    transform: translateX(100px); 
+                from {
+                    opacity: 0;
+                    transform: translateX(100px);
                 }
-                to { 
-                    opacity: 1; 
-                    transform: translateX(0); 
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
                 }
             }
 
@@ -605,7 +700,7 @@ function setupPriceCards() {
     document.querySelectorAll('.price-card').forEach(card => {
         card.addEventListener('click', () => {
             // Remove previous selections
-            document.querySelectorAll('.price-card').forEach(c => 
+            document.querySelectorAll('.price-card').forEach(c =>
                 c.classList.remove('selected'));
 
             // Add selection
@@ -619,7 +714,7 @@ function setupPriceCards() {
                 );
             }
 
-            console.log('Resistance package selected:', 
+            console.log('Resistance package selected:',
                 card.querySelector('h3').textContent);
         });
     });
