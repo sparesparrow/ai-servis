@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://sparesparrow.github.io/ai-servis-universal/architecture/hybrid-messaging/">
+        <link rel="canonical" href="https://sparesparrow.github.io/ai-servis-universal/getting-started/QUICK_START/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>Hybrid Messaging Architecture: MQP + MQTT Integration - AI-SERVIS Documentation</title>
+        <title>AI-SERVIS Universal - Quick Start Guide - AI-SERVIS Documentation</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#hybrid-messaging-architecture-mqp-mqtt-integration" class="md-skip">
+        <a href="#ai-servis-universal-quick-start-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Hybrid Messaging Architecture: MQP + MQTT Integration
+              AI-SERVIS Universal - Quick Start Guide
             
           </span>
         </div>
@@ -230,7 +230,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../overview/" class="md-tabs__link">
+        <a href="../../architecture/overview/" class="md-tabs__link">
           
   
   
@@ -471,7 +471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../overview/" class="md-nav__link">
+      <a href="../../architecture/overview/" class="md-nav__link">
         
   
   
@@ -494,7 +494,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../diagrams/" class="md-nav__link">
+      <a href="../../architecture/diagrams/" class="md-nav__link">
         
   
   
@@ -969,37 +969,46 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#what-youll-learn" class="md-nav__link">
     <span class="md-ellipsis">
-      Overview
+      🎯 What You'll Learn
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture-flow" class="md-nav__link">
+  <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
-      Architecture Flow
+      📋 Prerequisites
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Architecture Flow">
+    <nav class="md-nav" aria-label="📋 Prerequisites">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#primary-communication-path" class="md-nav__link">
+  <a href="#required" class="md-nav__link">
     <span class="md-ellipsis">
-      Primary Communication Path
+      Required
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#detailed-flow" class="md-nav__link">
+  <a href="#optional-for-full-features" class="md-nav__link">
     <span class="md-ellipsis">
-      Detailed Flow
+      Optional (for full features)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-your-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Your System
     </span>
   </a>
   
@@ -1011,37 +1020,94 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#component-integration" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
-      Component Integration
+      🚀 Installation
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Component Integration">
+    <nav class="md-nav" aria-label="🚀 Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#messagequeueprocessor-mqp-enhancements" class="md-nav__link">
+  <a href="#step-1-clone-the-repository" class="md-nav__link">
     <span class="md-ellipsis">
-      MessageQueueProcessor (MQP) Enhancements
+      Step 1: Clone the Repository
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#mqtt-bridge-implementation" class="md-nav__link">
+  <a href="#step-2-choose-your-installation-method" class="md-nav__link">
     <span class="md-ellipsis">
-      MQTT Bridge Implementation
+      Step 2: Choose Your Installation Method
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Choose Your Installation Method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-minimal-installation-recommended-for-getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option A: Minimal Installation (Recommended for Getting Started)
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#flatbuffers-schema-extensions" class="md-nav__link">
+  <a href="#option-b-full-installation" class="md-nav__link">
     <span class="md-ellipsis">
-      FlatBuffers Schema Extensions
+      Option B: Full Installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-docker-easiest-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option C: Docker (Easiest for Production)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ Verify Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="✅ Verify Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#test-1-simple-orchestrator-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test 1: Simple Orchestrator Test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-2-check-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test 2: Check Configuration
     </span>
   </a>
   
@@ -1053,46 +1119,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#benefits-of-hybrid-approach" class="md-nav__link">
+  <a href="#your-first-commands" class="md-nav__link">
     <span class="md-ellipsis">
-      Benefits of Hybrid Approach
+      🎮 Your First Commands
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Benefits of Hybrid Approach">
+    <nav class="md-nav" aria-label="🎮 Your First Commands">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#performance-optimization" class="md-nav__link">
+  <a href="#start-the-core-orchestrator" class="md-nav__link">
     <span class="md-ellipsis">
-      Performance Optimization
+      Start the Core Orchestrator
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Start the Core Orchestrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#method-1-simple-python-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 1: Simple Python Script
     </span>
   </a>
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#backward-compatibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      Backward Compatibility
-    </span>
-  </a>
+      </ul>
+    </nav>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#reliability" class="md-nav__link">
+  <a href="#try-different-commands" class="md-nav__link">
     <span class="md-ellipsis">
-      Reliability
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scalability" class="md-nav__link">
-    <span class="md-ellipsis">
-      Scalability
+      Try Different Commands
     </span>
   </a>
   
@@ -1104,28 +1167,28 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-details" class="md-nav__link">
+  <a href="#explore-the-architecture" class="md-nav__link">
     <span class="md-ellipsis">
-      Implementation Details
+      🏗️ Explore the Architecture
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Implementation Details">
+    <nav class="md-nav" aria-label="🏗️ Explore the Architecture">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mqtt-topic-structure" class="md-nav__link">
+  <a href="#view-project-structure" class="md-nav__link">
     <span class="md-ellipsis">
-      MQTT Topic Structure
+      View Project Structure
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#message-processing-pipeline" class="md-nav__link">
+  <a href="#key-directories" class="md-nav__link">
     <span class="md-ellipsis">
-      Message Processing Pipeline
+      Key Directories
     </span>
   </a>
   
@@ -1137,28 +1200,70 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
+  <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
-      Configuration
+      📚 Next Steps
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Configuration">
+    <nav class="md-nav" aria-label="📚 Next Steps">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mqtt-settings" class="md-nav__link">
+  <a href="#learn-more" class="md-nav__link">
     <span class="md-ellipsis">
-      MQTT Settings
+      Learn More
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#python-client-configuration" class="md-nav__link">
+  <a href="#try-advanced-features" class="md-nav__link">
     <span class="md-ellipsis">
-      Python Client Configuration
+      Try Advanced Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Try Advanced Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-run-with-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Run with Docker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-build-c-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Build C++ Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-run-android-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Run Android App
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customize-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Customize Configuration
     </span>
   </a>
   
@@ -1170,37 +1275,70 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#testing-strategy" class="md-nav__link">
+  <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
-      Testing Strategy
+      🐛 Troubleshooting
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Testing Strategy">
+    <nav class="md-nav" aria-label="🐛 Troubleshooting">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#unit-tests" class="md-nav__link">
+  <a href="#common-issues" class="md-nav__link">
     <span class="md-ellipsis">
-      Unit Tests
+      Common Issues
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-1-module-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 1: Module Not Found
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#integration-tests" class="md-nav__link">
+  <a href="#issue-2-configuration-error" class="md-nav__link">
     <span class="md-ellipsis">
-      Integration Tests
+      Issue 2: Configuration Error
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#performance-benchmarks" class="md-nav__link">
+  <a href="#issue-3-import-errors" class="md-nav__link">
     <span class="md-ellipsis">
-      Performance Benchmarks
+      Issue 3: Import Errors
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-4-permission-denied" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue 4: Permission Denied
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
     </span>
   </a>
   
@@ -1212,37 +1350,37 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deployment-considerations" class="md-nav__link">
+  <a href="#learning-path" class="md-nav__link">
     <span class="md-ellipsis">
-      Deployment Considerations
+      🎓 Learning Path
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Deployment Considerations">
+    <nav class="md-nav" aria-label="🎓 Learning Path">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#single-machine" class="md-nav__link">
+  <a href="#beginner" class="md-nav__link">
     <span class="md-ellipsis">
-      Single Machine
+      Beginner
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#distributed-deployment" class="md-nav__link">
+  <a href="#intermediate" class="md-nav__link">
     <span class="md-ellipsis">
-      Distributed Deployment
+      Intermediate
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#docker-integration" class="md-nav__link">
+  <a href="#advanced" class="md-nav__link">
     <span class="md-ellipsis">
-      Docker Integration
+      Advanced
     </span>
   </a>
   
@@ -1254,37 +1392,37 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#future-extensions" class="md-nav__link">
+  <a href="#quick-reference" class="md-nav__link">
     <span class="md-ellipsis">
-      Future Extensions
+      📊 Quick Reference
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Future Extensions">
+    <nav class="md-nav" aria-label="📊 Quick Reference">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#websocket-transport" class="md-nav__link">
+  <a href="#useful-commands" class="md-nav__link">
     <span class="md-ellipsis">
-      WebSocket Transport
+      Useful Commands
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#protocol-buffers" class="md-nav__link">
+  <a href="#important-files" class="md-nav__link">
     <span class="md-ellipsis">
-      Protocol Buffers
+      Important Files
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#advanced-routing" class="md-nav__link">
+  <a href="#key-ports" class="md-nav__link">
     <span class="md-ellipsis">
-      Advanced Routing
+      Key Ports
     </span>
   </a>
   
@@ -1296,28 +1434,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#monitoring-and-debugging" class="md-nav__link">
+  <a href="#congratulations" class="md-nav__link">
     <span class="md-ellipsis">
-      Monitoring and Debugging
+      🎉 Congratulations!
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Monitoring and Debugging">
+    <nav class="md-nav" aria-label="🎉 Congratulations!">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mqtt-debugging" class="md-nav__link">
+  <a href="#whats-next" class="md-nav__link">
     <span class="md-ellipsis">
-      MQTT Debugging
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mqp-debugging" class="md-nav__link">
-    <span class="md-ellipsis">
-      MQP Debugging
+      What's Next?
     </span>
   </a>
   
@@ -1325,6 +1454,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-links" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔗 Quick Links
+    </span>
+  </a>
   
 </li>
       
@@ -1344,7 +1482,7 @@
 
 
   
-    <a href="https://github.com/sparesparrow/ai-servis-universal/edit/master/docs/architecture/hybrid-messaging.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/sparesparrow/ai-servis-universal/edit/master/docs/getting-started/QUICK_START.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1352,259 +1490,454 @@
   
 
 
-<h1 id="hybrid-messaging-architecture-mqp-mqtt-integration">Hybrid Messaging Architecture: MQP + MQTT Integration</h1>
-<h2 id="overview">Overview</h2>
-<p>The AI-SERVIS system implements a hybrid messaging architecture that combines the <strong>Message Queue Processor (MQP)</strong> for in-process operations with <strong>MQTT</strong> for cross-process communication. This approach provides optimal performance for local operations while enabling distributed communication.</p>
-<h2 id="architecture-flow">Architecture Flow</h2>
-<h3 id="primary-communication-path">Primary Communication Path</h3>
-<div class="highlight"><pre><span></span><code>Python AI Assistant → MQTT → MQP → C++ Hardware Server → MQP → GPIO Control
+<h1 id="ai-servis-universal-quick-start-guide">AI-SERVIS Universal - Quick Start Guide</h1>
+<p><strong>Get up and running in 10 minutes!</strong></p>
+<h2 id="what-youll-learn">🎯 What You'll Learn</h2>
+<p>In this guide, you'll:
+1. Install AI-SERVIS Universal
+2. Run your first test
+3. Start the core orchestrator
+4. Send your first voice command
+5. Explore the system</p>
+<p><strong>Time Required</strong>: 10-15 minutes</p>
+<hr />
+<h2 id="prerequisites">📋 Prerequisites</h2>
+<h3 id="required">Required</h3>
+<ul>
+<li><strong>Operating System</strong>: Linux, macOS, or Windows with WSL</li>
+<li><strong>Python</strong>: 3.11 or higher</li>
+<li><strong>Git</strong>: Latest version</li>
+</ul>
+<h3 id="optional-for-full-features">Optional (for full features)</h3>
+<ul>
+<li><strong>Docker</strong>: 20.10 or higher</li>
+<li><strong>Node.js</strong>: 18 or higher (for web UI)</li>
+<li><strong>Android Studio</strong>: For mobile app development</li>
+</ul>
+<h3 id="check-your-system">Check Your System</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check Python version</span>
+python3<span class="w"> </span>--version<span class="w">  </span><span class="c1"># Should be 3.11 or higher</span>
+
+<span class="c1"># Check Git</span>
+git<span class="w"> </span>--version
+
+<span class="c1"># Optional: Check Docker</span>
+docker<span class="w"> </span>--version
 </code></pre></div>
-<h3 id="detailed-flow">Detailed Flow</h3>
+<hr />
+<h2 id="installation">🚀 Installation</h2>
+<h3 id="step-1-clone-the-repository">Step 1: Clone the Repository</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Clone the repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sparesparrow/ai-servis.git
+<span class="nb">cd</span><span class="w"> </span>ai-servis
+</code></pre></div>
+<h3 id="step-2-choose-your-installation-method">Step 2: Choose Your Installation Method</h3>
+<h4 id="option-a-minimal-installation-recommended-for-getting-started">Option A: Minimal Installation (Recommended for Getting Started)</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install minimal dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-minimal.txt
+
+<span class="c1"># Or just the essentials</span>
+pip<span class="w"> </span>install<span class="w"> </span>pyyaml<span class="w"> </span>python-dotenv
+</code></pre></div>
+<p><strong>What you get</strong>:
+- Core orchestrator NLP engine
+- Configuration management
+- Basic functionality</p>
+<p><strong>What you don't get</strong>:
+- Build orchestrator features
+- Performance monitoring
+- Container management</p>
+<h4 id="option-b-full-installation">Option B: Full Installation</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install all dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c1"># This includes: aiohttp, docker, psutil, and more</span>
+</code></pre></div>
+<p><strong>What you get</strong>:
+- Everything in minimal installation
+- Build orchestrator
+- Performance monitoring
+- Security scanning
+- Full feature set</p>
+<h4 id="option-c-docker-easiest-for-production">Option C: Docker (Easiest for Production)</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start all services with Docker Compose</span>
+docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+
+<span class="c1"># Check services are running</span>
+docker-compose<span class="w"> </span>ps
+</code></pre></div>
+<hr />
+<h2 id="verify-installation">✅ Verify Installation</h2>
+<h3 id="test-1-simple-orchestrator-test">Test 1: Simple Orchestrator Test</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run the simple test suite</span>
+python3<span class="w"> </span>test_orchestrator_simple.py
+</code></pre></div>
+<p><strong>Expected Output</strong>:
+<div class="highlight"><pre><span></span><code>🎉 All tests passed! The Core Orchestrator NLP engine is working correctly.
+
+Results: 4 passed, 0 failed
+Total time: 0.04s
+</code></pre></div></p>
+<p><strong>If tests pass</strong>: ✅ Your installation is working!</p>
+<h3 id="test-2-check-configuration">Test 2: Check Configuration</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verify configuration is valid</span>
+python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<span class="s2">import yaml</span>
+<span class="s2">from pathlib import Path</span>
+
+<span class="s2">config = yaml.safe_load(open(&#39;orchestrator-config.yaml&#39;))</span>
+<span class="s2">print(f&#39;✅ Configuration loaded: {len(config.get(\&quot;components\&quot;, []))} components&#39;)</span>
+<span class="s2">&quot;</span>
+</code></pre></div>
+<p><strong>Expected Output</strong>:
+<div class="highlight"><pre><span></span><code>✅ Configuration loaded: 7 components
+</code></pre></div></p>
+<hr />
+<h2 id="your-first-commands">🎮 Your First Commands</h2>
+<h3 id="start-the-core-orchestrator">Start the Core Orchestrator</h3>
+<h4 id="method-1-simple-python-script">Method 1: Simple Python Script</h4>
+<p>Create a file called <code>test_commands.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+
+<span class="c1"># Import from test file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">test_orchestrator_simple</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNLPProcessor</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Create NLP processor</span>
+    <span class="n">nlp</span> <span class="o">=</span> <span class="n">SimpleNLPProcessor</span><span class="p">()</span>
+
+    <span class="c1"># Test commands</span>
+    <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;Play jazz music by Miles Davis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Set volume to 75&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Turn on GPIO pin 18&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Switch to headphones&quot;</span>
+    <span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🎤 Testing Voice Commands</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">nlp</span><span class="o">.</span><span class="n">parse_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Command: &#39;</span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Confidence: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">confidence</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Parameters: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">parameters</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+<p>Run it:</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test_commands.py
+</code></pre></div>
+<p><strong>Expected Output</strong>:
+<div class="highlight"><pre><span></span><code>🎤 Testing Voice Commands
+
+Command: &#39;Play jazz music by Miles Davis&#39;
+  Intent: play_music
+  Confidence: 0.39
+  Parameters: {&#39;artist&#39;: &#39;miles davis&#39;, &#39;genre&#39;: &#39;jazz&#39;}
+
+Command: &#39;Set volume to 75&#39;
+  Intent: control_volume
+  Confidence: 0.26
+  Parameters: {&#39;level&#39;: &#39;75&#39;}
+...
+</code></pre></div></p>
+<h3 id="try-different-commands">Try Different Commands</h3>
+<p>Edit <code>test_commands.py</code> and try your own commands:</p>
+<div class="highlight"><pre><span></span><code><span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;Play rock music&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Make it louder&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Open Firefox browser&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Turn on living room lights&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Read sensor on pin 21&quot;</span>
+<span class="p">]</span>
+</code></pre></div>
+<hr />
+<h2 id="explore-the-architecture">🏗️ Explore the Architecture</h2>
+<h3 id="view-project-structure">View Project Structure</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># See all modules</span>
+ls<span class="w"> </span>-la<span class="w"> </span>modules/
+
+<span class="c1"># See platform components</span>
+ls<span class="w"> </span>-la<span class="w"> </span>platforms/
+
+<span class="c1"># View configuration</span>
+cat<span class="w"> </span>orchestrator-config.yaml
+
+<span class="c1"># Check documentation</span>
+ls<span class="w"> </span>-la<span class="w"> </span>docs/
+</code></pre></div>
+<h3 id="key-directories">Key Directories</h3>
+<div class="highlight"><pre><span></span><code>ai-servis/
+├── modules/              # Python modules (MCP servers)
+│   ├── core-orchestrator/
+│   ├── ai-audio-assistant/
+│   ├── ai-communications/
+│   └── ...
+├── platforms/            # Platform-specific code
+│   ├── cpp/             # C++ components
+│   └── ...
+├── docs/                # Documentation
+├── tests/               # Test suites
+└── .github/workflows/   # CI/CD pipelines
+</code></pre></div>
+<hr />
+<h2 id="next-steps">📚 Next Steps</h2>
+<h3 id="learn-more">Learn More</h3>
 <ol>
-<li><strong>Python Orchestrator</strong> (AI Assistant)</li>
-<li>Receives voice commands or API requests</li>
-<li>Translates to MCP protocol messages</li>
-<li>
-<p>Publishes to MQTT topics</p>
-</li>
-<li>
-<p><strong>MQTT Transport Layer</strong></p>
-</li>
-<li>Topic-based routing: <code>hardware/gpio/control</code>, <code>webgrab/download/request</code></li>
-<li>QoS 1 (at least once delivery) for reliability</li>
-<li>
-<p>Retained messages for state synchronization</p>
-</li>
-<li>
-<p><strong>C++ Message Queue Processor (MQP)</strong></p>
-</li>
-<li>Receives MQTT messages via MQTTReader</li>
-<li>Processes requests through existing MQP job queue</li>
-<li>Manages GPIO operations and download jobs</li>
-<li>
-<p>Thread-safe, low-latency processing</p>
-</li>
-<li>
-<p><strong>Hardware Control Server</strong></p>
-</li>
-<li>Executes GPIO operations via libgpiod</li>
-<li>Manages download jobs and file operations</li>
-<li>Sends responses back through MQP → MQTT</li>
+<li><strong>Read the Architecture</strong> → <a href="../../architecture/overview/"><code>docs/architecture/overview.md</code></a></li>
+<li><strong>Explore Modules</strong> → <a href="../modules/"><code>docs/modules/</code></a></li>
+<li><strong>Check API Docs</strong> → <a href="../api/"><code>docs/api/</code></a></li>
+<li><strong>Setup Development</strong> → <a href="../../DEVELOPMENT.md"><code>../DEVELOPMENT.md</code></a></li>
 </ol>
-<h2 id="component-integration">Component Integration</h2>
-<h3 id="messagequeueprocessor-mqp-enhancements">MessageQueueProcessor (MQP) Enhancements</h3>
-<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MessageQueueProcessor</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">IRequestReader</span><span class="p">,</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">IResponseWriter</span><span class="w"> </span><span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-<span class="w">    </span><span class="c1">// MQTT integration</span>
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">enableMQTT</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">isMQTTEnabled</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<h3 id="try-advanced-features">Try Advanced Features</h3>
+<h4 id="1-run-with-docker">1. Run with Docker</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start all services</span>
+docker-compose<span class="w"> </span>-f<span class="w"> </span>docker-compose.dev.yml<span class="w"> </span>up<span class="w"> </span>-d
 
-<span class="w">    </span><span class="c1">// Existing MQP interface maintained</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">next</span><span class="p">(</span><span class="n">RequestEnvelope</span><span class="o">&amp;</span><span class="w"> </span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DownloadResponse</span><span class="o">&amp;</span><span class="w"> </span><span class="n">resp</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="p">;</span>
+<span class="c1"># Check logs</span>
+docker-compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>core-orchestrator
 
-<span class="k">private</span><span class="o">:</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">MQTTReader</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mqtt_reader_</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">MQTTWriter</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mqtt_writer_</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="w"> </span><span class="n">mqtt_processor_thread_</span><span class="p">;</span>
-<span class="p">};</span>
+<span class="c1"># Stop services</span>
+docker-compose<span class="w"> </span>down
 </code></pre></div>
-<h3 id="mqtt-bridge-implementation">MQTT Bridge Implementation</h3>
-<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MQTTBridge</span><span class="w"> </span><span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-<span class="w">    </span><span class="n">MQTTBridge</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">host</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">port</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">client_id</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">topic</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">payload</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">setMessageCallback</span><span class="p">(</span><span class="n">MessageCallback</span><span class="w"> </span><span class="n">callback</span><span class="p">);</span>
-<span class="p">};</span>
-</code></pre></div>
-<h3 id="flatbuffers-schema-extensions">FlatBuffers Schema Extensions</h3>
-<div class="highlight"><pre><span></span><code>// GPIO Control Messages
-table GPIOConfigureRequest {
-  pin:int32;
-  direction:string;
-}
+<h4 id="2-build-c-components">2. Build C++ Components</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install Conan</span>
+pip<span class="w"> </span>install<span class="w"> </span>conan
 
-table GPIOStatusResponse {
-  pins:[GPIOPinStatus];
-}
+<span class="c1"># Build hardware server</span>
+./scripts/build-hardware-server.sh
 
-// MQTT Transport Envelope
-table MQTTEnvelope {
-  message_id:string;
-  timestamp:uint64;
-  source:string;
-  target:string;
-  payload:Message;
-}
+<span class="c1"># Or manually</span>
+<span class="nb">cd</span><span class="w"> </span>platforms/cpp
+conan<span class="w"> </span>install<span class="w"> </span>..<span class="w"> </span>--build<span class="w"> </span>missing
+cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build
+cmake<span class="w"> </span>--build<span class="w"> </span>build
 </code></pre></div>
-<h2 id="benefits-of-hybrid-approach">Benefits of Hybrid Approach</h2>
-<h3 id="performance-optimization">Performance Optimization</h3>
-<ul>
-<li><strong>MQP</strong>: Microsecond latency for in-process operations</li>
-<li><strong>MQTT</strong>: Millisecond latency for cross-process communication</li>
-<li><strong>Combined</strong>: Optimal performance for each use case</li>
-</ul>
-<h3 id="backward-compatibility">Backward Compatibility</h3>
-<ul>
-<li>Existing MQP code unchanged</li>
-<li>TCP interface still available for direct hardware access</li>
-<li>Gradual migration path</li>
-</ul>
-<h3 id="reliability">Reliability</h3>
-<ul>
-<li><strong>MQP</strong>: Guaranteed delivery within process</li>
-<li><strong>MQTT</strong>: QoS levels for network communication</li>
-<li><strong>Combined</strong>: End-to-end reliability</li>
-</ul>
-<h3 id="scalability">Scalability</h3>
-<ul>
-<li><strong>MQP</strong>: Efficient for high-frequency operations</li>
-<li><strong>MQTT</strong>: Scales across multiple processes/machines</li>
-<li><strong>Combined</strong>: Handles both local and distributed workloads</li>
-</ul>
-<h2 id="implementation-details">Implementation Details</h2>
-<h3 id="mqtt-topic-structure">MQTT Topic Structure</h3>
-<div class="highlight"><pre><span></span><code>hardware/
-├── gpio/
-│   ├── control      # GPIO commands from Python
-│   ├── response/+   # GPIO responses to Python
-│   └── status       # GPIO status broadcasts
-├── download/
-│   ├── request      # Download commands
-│   ├── response/+   # Download status responses
-│   └── abort/+      # Abort download commands
-webgrab/
-├── status           # System status queries
-└── control          # System control commands
+<h4 id="3-run-android-app">3. Run Android App</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Navigate to Android directory</span>
+<span class="nb">cd</span><span class="w"> </span>android
+
+<span class="c1"># Build debug APK</span>
+./gradlew<span class="w"> </span>assembleDebug
+
+<span class="c1"># Install on device</span>
+adb<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>app/build/outputs/apk/debug/app-debug.apk
 </code></pre></div>
-<h3 id="message-processing-pipeline">Message Processing Pipeline</h3>
+<h3 id="customize-configuration">Customize Configuration</h3>
+<p>Edit <code>orchestrator-config.yaml</code> to customize:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add your own component</span>
+<span class="nt">components</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-custom-module</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./modules/my-custom-module</span>
+<span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">    </span><span class="nt">deploy</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker</span>
+<span class="w">      </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8090:8090&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="troubleshooting">🐛 Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<h4 id="issue-1-module-not-found">Issue 1: Module Not Found</h4>
+<p><strong>Error</strong>: <code>ModuleNotFoundError: No module named 'xyz'</code></p>
+<p><strong>Solution</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># Install missing dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>aiohttp<span class="w"> </span>docker<span class="w"> </span>psutil
+
+<span class="c1"># Or install full requirements</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</code></pre></div></p>
+<h4 id="issue-2-configuration-error">Issue 2: Configuration Error</h4>
+<p><strong>Error</strong>: <code>Configuration file not found</code></p>
+<p><strong>Solution</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># Make sure you&#39;re in the project root</span>
+<span class="nb">cd</span><span class="w"> </span>/path/to/ai-servis
+
+<span class="c1"># Verify file exists</span>
+ls<span class="w"> </span>orchestrator-config.yaml
+</code></pre></div></p>
+<h4 id="issue-3-import-errors">Issue 3: Import Errors</h4>
+<p><strong>Error</strong>: <code>ImportError: attempted relative import with no known parent package</code></p>
+<p><strong>Solution</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># Run from project root</span>
+<span class="nb">cd</span><span class="w"> </span>/path/to/ai-servis
+
+<span class="c1"># Use python3 -m</span>
+python3<span class="w"> </span>-m<span class="w"> </span>test_orchestrator_simple
+</code></pre></div></p>
+<h4 id="issue-4-permission-denied">Issue 4: Permission Denied</h4>
+<p><strong>Error</strong>: <code>Permission denied: '/some/path'</code></p>
+<p><strong>Solution</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># Make scripts executable</span>
+chmod<span class="w"> </span>+x<span class="w"> </span>scripts/*.sh
+
+<span class="c1"># Or run with python</span>
+python3<span class="w"> </span>script_name.py
+</code></pre></div></p>
+<h3 id="getting-help">Getting Help</h3>
+<ul>
+<li><strong>Documentation</strong>: <a href="../"><code>docs/</code></a></li>
+<li><strong>Troubleshooting Guide</strong>: <a href="../../troubleshooting/"><code>docs/troubleshooting.md</code></a></li>
+<li><strong>GitHub Issues</strong>: <a href="https://github.com/sparesparrow/ai-servis/issues">Create an issue</a></li>
+<li><strong>Discord</strong>: <a href="https://discord.gg/ai-servis">AI-SERVIS Community</a></li>
+</ul>
+<hr />
+<h2 id="learning-path">🎓 Learning Path</h2>
+<h3 id="beginner">Beginner</h3>
 <ol>
-<li>
-<p><strong>MQTT Message Reception</strong>
-   <div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MQTTReader::handle_message</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">topic</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">payload</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">// Parse JSON payload</span>
-<span class="w">    </span><span class="c1">// Create appropriate RequestEnvelope</span>
-<span class="w">    </span><span class="c1">// Queue for MQP processing</span>
-<span class="p">}</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>MQP Job Processing</strong>
-   <div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MessageQueueProcessor::enqueueJob</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">IResponseWriter</span><span class="o">*</span><span class="w"> </span><span class="n">writer</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">// Create DownloadJob</span>
-<span class="w">    </span><span class="c1">// Add to thread-safe queue</span>
-<span class="w">    </span><span class="c1">// Process asynchronously</span>
-<span class="p">}</span>
-</code></pre></div></p>
-</li>
-<li>
-<p><strong>Response Routing</strong>
-   <div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">MQTTWriter::write</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">GPIOStatusResponse</span><span class="o">&amp;</span><span class="w"> </span><span class="n">resp</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">// Serialize to JSON</span>
-<span class="w">    </span><span class="c1">// Publish to appropriate MQTT topic</span>
-<span class="p">}</span>
-</code></pre></div></p>
-</li>
+<li>✅ <strong>Complete this Quick Start</strong> ← You are here</li>
+<li>📖 Read <a href="../../architecture/overview/">Architecture Overview</a></li>
+<li>🧪 Run more tests: <code>python3 test_orchestrator.py</code></li>
+<li>📝 Read <a href="../modules/">Module Documentation</a></li>
 </ol>
-<h2 id="configuration">Configuration</h2>
-<h3 id="mqtt-settings">MQTT Settings</h3>
-<div class="highlight"><pre><span></span><code><span class="c1">// Hardware server configuration</span>
-<span class="n">HardwareControlServer</span><span class="w"> </span><span class="n">server</span><span class="p">(</span>
-<span class="w">    </span><span class="mi">8081</span><span class="p">,</span><span class="w">  </span><span class="c1">// TCP port</span>
-<span class="w">    </span><span class="s">&quot;localhost&quot;</span><span class="p">,</span><span class="w">  </span><span class="c1">// MQTT host</span>
-<span class="w">    </span><span class="mi">1883</span><span class="w">   </span><span class="c1">// MQTT port</span>
-<span class="p">);</span>
-</code></pre></div>
-<h3 id="python-client-configuration">Python Client Configuration</h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Hardware bridge configuration</span>
-<span class="n">bridge</span> <span class="o">=</span> <span class="n">MCPBridge</span><span class="p">(</span>
-    <span class="n">mqtt_broker</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
-    <span class="n">mqtt_port</span><span class="o">=</span><span class="mi">1883</span><span class="p">,</span>
-    <span class="n">hardware_host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
-    <span class="n">hardware_port</span><span class="o">=</span><span class="mi">8081</span>
-<span class="p">)</span>
-</code></pre></div>
-<h2 id="testing-strategy">Testing Strategy</h2>
-<h3 id="unit-tests">Unit Tests</h3>
-<ul>
-<li>MQP functionality (existing tests)</li>
-<li>MQTT message parsing/serialization</li>
-<li>GPIO operation validation</li>
-</ul>
-<h3 id="integration-tests">Integration Tests</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_hybrid_messaging</span><span class="p">():</span>
-    <span class="c1"># Start C++ hardware server with MQTT</span>
-    <span class="c1"># Send MQTT command from Python</span>
-    <span class="c1"># Verify GPIO state via MQP</span>
-    <span class="c1"># Check MQTT response</span>
-    <span class="k">pass</span>
-</code></pre></div>
-<h3 id="performance-benchmarks">Performance Benchmarks</h3>
-<ul>
-<li>MQP latency: &lt; 100μs</li>
-<li>MQTT round-trip: &lt; 5ms</li>
-<li>Combined operations: &lt; 10ms</li>
-</ul>
-<h2 id="deployment-considerations">Deployment Considerations</h2>
-<h3 id="single-machine">Single Machine</h3>
-<ul>
-<li>All components on same host</li>
-<li>MQTT over localhost</li>
-<li>Direct memory sharing where possible</li>
-</ul>
-<h3 id="distributed-deployment">Distributed Deployment</h3>
-<ul>
-<li>Hardware server on edge device (Raspberry Pi)</li>
-<li>Python orchestrator on main server</li>
-<li>MQTT over network with TLS</li>
-</ul>
-<h3 id="docker-integration">Docker Integration</h3>
-<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">hardware-server</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ai-servis-cpp:latest</span>
-<span class="w">    </span><span class="nt">devices</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/gpiomem</span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MQTT_BROKER=mosquitto</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MQTT_PORT=1883</span>
+<h3 id="intermediate">Intermediate</h3>
+<ol>
+<li>🏗️ Explore module code in <code>modules/</code></li>
+<li>🔧 Build C++ components</li>
+<li>🐳 Deploy with Docker</li>
+<li>🧩 Create a custom module</li>
+</ol>
+<h3 id="advanced">Advanced</h3>
+<ol>
+<li>🚀 Set up CI/CD pipeline</li>
+<li>📱 Build Android app</li>
+<li>🔌 Work with ESP32 firmware</li>
+<li>🌐 Deploy to production</li>
+</ol>
+<hr />
+<h2 id="quick-reference">📊 Quick Reference</h2>
+<h3 id="useful-commands">Useful Commands</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run tests</span>
+python3<span class="w"> </span>test_orchestrator_simple.py
+python3<span class="w"> </span>test_orchestrator.py
 
-<span class="w">  </span><span class="nt">python-orchestrator</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MQTT_BROKER=mosquitto</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">HARDWARE_HOST=hardware-server</span>
-</code></pre></div>
-<h2 id="future-extensions">Future Extensions</h2>
-<h3 id="websocket-transport">WebSocket Transport</h3>
-<ul>
-<li>Alternative to MQTT for web clients</li>
-<li>Lower latency for browser-based interfaces</li>
-</ul>
-<h3 id="protocol-buffers">Protocol Buffers</h3>
-<ul>
-<li>Alternative to FlatBuffers for specific use cases</li>
-<li>Better language support for some platforms</li>
-</ul>
-<h3 id="advanced-routing">Advanced Routing</h3>
-<ul>
-<li>Message filtering and transformation</li>
-<li>Load balancing across multiple hardware servers</li>
-<li>Geographic routing for distributed deployments</li>
-</ul>
-<h2 id="monitoring-and-debugging">Monitoring and Debugging</h2>
-<h3 id="mqtt-debugging">MQTT Debugging</h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Subscribe to all messages</span>
-mosquitto_sub<span class="w"> </span>-h<span class="w"> </span>localhost<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span>-v
+<span class="c1"># Check configuration</span>
+python3<span class="w"> </span>build_orchestrator.py<span class="w"> </span>orchestrator-config.yaml<span class="w"> </span>--help
 
-<span class="c1"># Publish test message</span>
-mosquitto_pub<span class="w"> </span>-h<span class="w"> </span>localhost<span class="w"> </span>-t<span class="w"> </span><span class="s2">&quot;hardware/gpio/control&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;{&quot;pin&quot;:17,&quot;direction&quot;:&quot;output&quot;}&#39;</span>
+<span class="c1"># View logs (Docker)</span>
+docker-compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span><span class="o">[</span>service-name<span class="o">]</span>
+
+<span class="c1"># Build C++ components</span>
+./scripts/build-hardware-server.sh
+
+<span class="c1"># Format code</span>
+black<span class="w"> </span>.
+isort<span class="w"> </span>.
+
+<span class="c1"># Lint code</span>
+flake8<span class="w"> </span>.
+mypy<span class="w"> </span>.
 </code></pre></div>
-<h3 id="mqp-debugging">MQP Debugging</h3>
+<h3 id="important-files">Important Files</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>orchestrator-config.yaml</code></td>
+<td>Main configuration</td>
+</tr>
+<tr>
+<td><code>requirements.txt</code></td>
+<td>Python dependencies</td>
+</tr>
+<tr>
+<td><code>requirements-minimal.txt</code></td>
+<td>Minimal dependencies</td>
+</tr>
+<tr>
+<td><code>docker-compose.yml</code></td>
+<td>Docker services</td>
+</tr>
+<tr>
+<td><code>test_orchestrator_simple.py</code></td>
+<td>Simple test suite</td>
+</tr>
+<tr>
+<td><code>build_orchestrator.py</code></td>
+<td>Build automation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-ports">Key Ports</h3>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8080</td>
+<td>Core Orchestrator</td>
+</tr>
+<tr>
+<td>8081</td>
+<td>Audio Assistant</td>
+</tr>
+<tr>
+<td>8082</td>
+<td>Security Module</td>
+</tr>
+<tr>
+<td>5555</td>
+<td>Hardware Server</td>
+</tr>
+<tr>
+<td>1883</td>
+<td>MQTT Broker</td>
+</tr>
+<tr>
+<td>9090</td>
+<td>Prometheus</td>
+</tr>
+<tr>
+<td>3000</td>
+<td>Grafana</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="congratulations">🎉 Congratulations!</h2>
+<p>You've successfully:
+- ✅ Installed AI-SERVIS Universal
+- ✅ Ran your first tests
+- ✅ Tested voice commands
+- ✅ Explored the architecture
+- ✅ Learned the basics</p>
+<h3 id="whats-next">What's Next?</h3>
+<p>Choose your path:</p>
+<p><strong>For Developers</strong>:
+→ Start with <a href="../modules/README.md">Module Development</a></p>
+<p><strong>For DevOps</strong>:
+→ Continue to <a href="../../deployment/">Deployment Guide</a></p>
+<p><strong>For Researchers</strong>:
+→ Explore <a href="../../architecture/overview/">Architecture Deep Dive</a></p>
+<p><strong>For Contributors</strong>:
+→ Read <a href="../../CONTRIBUTING.md">Contributing Guide</a> (coming soon)</p>
+<hr />
+<h2 id="quick-links">🔗 Quick Links</h2>
 <ul>
-<li>Thread-safe logging integration</li>
-<li>Job queue status monitoring</li>
-<li>Performance profiling hooks</li>
+<li><strong>Main README</strong>: <a href="../../README.md">README.md</a></li>
+<li><strong>Architecture</strong>: <a href="../architecture/">docs/architecture/</a></li>
+<li><strong>API Docs</strong>: <a href="../api/">docs/api/</a></li>
+<li><strong>Modules</strong>: <a href="../modules/">docs/modules/</a></li>
+<li><strong>Troubleshooting</strong>: <a href="../../troubleshooting/">docs/troubleshooting.md</a></li>
+<li><strong>GitHub</strong>: <a href="https://github.com/sparesparrow/ai-servis">github.com/sparesparrow/ai-servis</a></li>
 </ul>
-<p>This hybrid architecture provides the foundation for scalable, reliable communication between the Python AI orchestrator and C++ hardware components while maintaining optimal performance and backward compatibility.</p>
+<hr />
+<p><strong>Happy Coding! 🚀</strong></p>
+<p><em>Last Updated: October 1, 2025</em></p>
 
 
 
