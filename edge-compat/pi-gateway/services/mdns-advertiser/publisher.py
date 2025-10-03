@@ -42,5 +42,3 @@ finally:
     except Exception:
         pass
     z.close()
-
-

@@ -15,11 +15,11 @@ std::unique_ptr<UIManager> g_uiManager;
 
 void signalHandler(int signal) {
     std::cout << "\nReceived signal " << signal << ", shutting down..." << std::endl;
-    
+
     if (g_uiManager) {
         g_uiManager->stopAll();
     }
-    
+
     if (g_orchestrator) {
         g_orchestrator->stop();
     }
@@ -71,10 +71,10 @@ struct Config {
 
 Config parseArguments(int argc, char* argv[]) {
     Config config;
-    
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        
+
         if (arg == "--help") {
             config.showHelp = true;
         }
@@ -112,26 +112,26 @@ Config parseArguments(int argc, char* argv[]) {
             std::cerr << "Unknown argument: " << arg << std::endl;
         }
     }
-    
+
     return config;
 }
 
 int main(int argc, char* argv[]) {
     printBanner();
-    
+
     Config config = parseArguments(argc, argv);
-    
+
     if (config.showHelp) {
         printHelp(argv[0]);
         return 0;
     }
-    
+
     // Default to text interface if none specified
     if (!config.enableVoice && !config.enableText && !config.enableWeb && !config.enableMobile) {
         config.enableText = true;
         std::cout << "No interfaces specified, enabling text interface by default" << std::endl;
     }
-    
+
     std::cout << "Configuration:" << std::endl;
     std::cout << "  Server Port: " << config.serverPort << std::endl;
     std::cout << "  Working Directory: " << config.workingDir << std::endl;
@@ -143,80 +143,80 @@ int main(int argc, char* argv[]) {
     if (config.enableWeb) std::cout << "Web ";
     if (config.enableMobile) std::cout << "Mobile ";
     std::cout << std::endl << std::endl;
-    
+
     // Setup signal handlers
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
-    
+
     try {
         // Create core orchestrator
         std::cout << "Initializing Core Orchestrator..." << std::endl;
         g_orchestrator = std::make_unique<CoreOrchestrator>(config.serverPort, config.workingDir);
-        
+
         // Register example services
         std::cout << "Registering services..." << std::endl;
-        
+
         std::vector<std::string> audioCapabilities = {"audio", "music", "voice", "streaming", "volume", "playback"};
         g_orchestrator->registerService("ai-audio-assistant", "localhost", 8082, audioCapabilities);
-        
+
         std::vector<std::string> platformCapabilities = {"system", "process", "file", "command", "application"};
         g_orchestrator->registerService("ai-platform-linux", "localhost", 8083, platformCapabilities);
-        
+
         std::vector<std::string> hardwareCapabilities = {"gpio", "sensor", "actuator", "pwm", "i2c", "spi"};
         g_orchestrator->registerService("hardware-bridge", "localhost", 8084, hardwareCapabilities);
-        
+
         std::vector<std::string> homeCapabilities = {"lights", "temperature", "security", "automation"};
         g_orchestrator->registerService("ai-home-automation", "localhost", 8085, homeCapabilities);
-        
+
         // Create UI Manager
         std::cout << "Initializing UI Manager..." << std::endl;
         g_uiManager = std::make_unique<UIManager>(g_orchestrator.get());
-        
+
         // Register enabled UI adapters
         if (config.enableVoice) {
             std::cout << "Registering Voice UI Adapter..." << std::endl;
             auto voiceAdapter = std::make_unique<VoiceUIAdapter>();
             g_uiManager->registerAdapter(std::move(voiceAdapter));
         }
-        
+
         if (config.enableText) {
             std::cout << "Registering Text UI Adapter..." << std::endl;
             auto textAdapter = std::make_unique<TextUIAdapter>();
             g_uiManager->registerAdapter(std::move(textAdapter));
         }
-        
+
         if (config.enableWeb) {
             std::cout << "Registering Web UI Adapter..." << std::endl;
             auto webAdapter = std::make_unique<WebUIAdapter>(config.webPort);
             g_uiManager->registerAdapter(std::move(webAdapter));
         }
-        
+
         if (config.enableMobile) {
             std::cout << "Registering Mobile UI Adapter..." << std::endl;
             auto mobileAdapter = std::make_unique<MobileUIAdapter>();
             g_uiManager->registerAdapter(std::move(mobileAdapter));
         }
-        
+
         // Start core orchestrator
         std::cout << "Starting Core Orchestrator..." << std::endl;
         if (!g_orchestrator->start()) {
             std::cerr << "Failed to start Core Orchestrator" << std::endl;
             return 1;
         }
-        
+
         // Start all UI adapters
         std::cout << "Starting UI Adapters..." << std::endl;
         if (!g_uiManager->startAll()) {
             std::cerr << "Failed to start all UI adapters" << std::endl;
             return 1;
         }
-        
+
         std::cout << std::endl;
         std::cout << "╔══════════════════════════════════════════════════════════════╗" << std::endl;
         std::cout << "║                    SYSTEM READY                             ║" << std::endl;
         std::cout << "╚══════════════════════════════════════════════════════════════╝" << std::endl;
         std::cout << std::endl;
-        
+
         // Display service status
         auto services = g_orchestrator->listServices();
         std::cout << "Registered Services (" << services.size() << "):" << std::endl;
@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
         }
         std::cout << std::endl;
-        
+
         // Display interface information
         std::cout << "Active Interfaces:" << std::endl;
         if (config.enableVoice) {
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
             std::cout << "  ✓ Mobile API - http://localhost:" << config.mobilePort << "/api" << std::endl;
         }
         std::cout << std::endl;
-        
+
         // Display example commands
         std::cout << "Example Commands:" << std::endl;
         std::cout << "  Audio Control:" << std::endl;
@@ -269,28 +269,28 @@ int main(int argc, char* argv[]) {
         std::cout << "    • 'set temperature to 22'       → Routes to home automation" << std::endl;
         std::cout << "    • 'lock front door'             → Routes to home automation" << std::endl;
         std::cout << std::endl;
-        
+
         if (config.enableText) {
             std::cout << "Type 'help' for more commands, 'quit' to exit" << std::endl;
         }
         std::cout << "Press Ctrl+C to stop the system" << std::endl;
         std::cout << std::endl;
-        
+
         // Main loop
         while (true) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            
+
             // Periodic tasks could be added here
             // - Health checks
             // - Service discovery
             // - Performance monitoring
         }
-        
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
-    
+
     std::cout << std::endl;
     std::cout << "AI-SERVIS Core Orchestrator shutdown complete" << std::endl;
     return 0;

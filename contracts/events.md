@@ -135,7 +135,6 @@ All events use JSON format with the following structure:
 
 ## Event Retention
 - Critical/High: 30 days
-- Normal: 7 days  
+- Normal: 7 days
 - Low: 24 hours
 - All events are hashed for privacy compliance
-

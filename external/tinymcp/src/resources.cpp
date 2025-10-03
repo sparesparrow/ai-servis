@@ -2,22 +2,22 @@
 
 namespace tinymcp {
 
-Resource::Resource(const std::string& uri, const std::string& name) 
+Resource::Resource(const std::string& uri, const std::string& name)
     : uri(uri), name(name) {}
 
 Json::Value Resource::toJson() const {
     Json::Value json;
     json["uri"] = uri;
     json["name"] = name;
-    
+
     if (!description.empty()) {
         json["description"] = description;
     }
-    
+
     if (!mimeType.empty()) {
         json["mimeType"] = mimeType;
     }
-    
+
     return json;
 }
 

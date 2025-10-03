@@ -15,20 +15,20 @@ class Message;
 class ITransport {
 public:
     virtual ~ITransport() = default;
-    
+
     // Connection management
     virtual void connect(const std::string& endpoint) = 0;
     virtual void disconnect() = 0;
     virtual bool isConnected() const = 0;
-    
+
     // Message handling
     virtual void send(const std::string& data) = 0;
     virtual std::string receive() = 0;
-    
+
     // Event handlers
     using MessageHandler = std::function<void(const std::string&)>;
     using ErrorHandler = std::function<void(const std::string&)>;
-    
+
     virtual void setOnMessage(MessageHandler handler) = 0;
     virtual void setOnError(ErrorHandler handler) = 0;
 };
@@ -40,17 +40,17 @@ class StdioTransport : public ITransport {
 public:
     StdioTransport();
     ~StdioTransport() override;
-    
+
     void connect(const std::string& endpoint) override;
     void disconnect() override;
     bool isConnected() const override;
-    
+
     void send(const std::string& data) override;
     std::string receive() override;
-    
+
     void setOnMessage(MessageHandler handler) override;
     void setOnError(ErrorHandler handler) override;
-    
+
 private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
@@ -63,17 +63,17 @@ class TcpTransport : public ITransport {
 public:
     TcpTransport();
     ~TcpTransport() override;
-    
+
     void connect(const std::string& endpoint) override;
     void disconnect() override;
     bool isConnected() const override;
-    
+
     void send(const std::string& data) override;
     std::string receive() override;
-    
+
     void setOnMessage(MessageHandler handler) override;
     void setOnError(ErrorHandler handler) override;
-    
+
 private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
@@ -89,7 +89,7 @@ public:
         Tcp,
         WebSocket
     };
-    
+
     static std::unique_ptr<ITransport> create(Type type);
     static std::unique_ptr<ITransport> createFromUri(const std::string& uri);
 };

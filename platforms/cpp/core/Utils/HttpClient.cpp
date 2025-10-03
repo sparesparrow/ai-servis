@@ -27,7 +27,7 @@ size_t HttpClient::WriteCallback(void* contents, size_t size, size_t nmemb, void
     return total_size;
 }
 
-int HttpClient::ProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, 
+int HttpClient::ProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow,
                                 curl_off_t ultotal, curl_off_t ulnow) {
     HttpClient* client = static_cast<HttpClient*>(clientp);
 

@@ -12,7 +12,7 @@ build_settings:
   cache_directory: ~/.conan2
   artifact_directory: ./artifacts
   log_level: INFO
-  
+
 # Conan profiles
 profiles:
   linux-release:
@@ -23,7 +23,7 @@ profiles:
     compiler.libcxx: libstdc++11
     compiler.cppstd: 20
     build_type: Release
-    
+
   linux-debug:
     os: Linux
     arch: x86_64
@@ -32,7 +32,7 @@ profiles:
     compiler.libcxx: libstdc++11
     compiler.cppstd: 20
     build_type: Debug
-    
+
   raspberry-pi:
     os: Linux
     arch: armv8
@@ -59,7 +59,7 @@ components:
     deploy:
       type: library
       version: 0.2.0
-      
+
   # MCP C++ Bridge - Extended implementation with TinyMCP
   - name: mcp-cpp-bridge
     path: ./mcp-cpp-bridge
@@ -81,7 +81,7 @@ components:
     deploy:
       type: library
       version: 1.0.0
-      
+
   # Core Orchestrator
   - name: core-orchestrator
     path: ./modules/core-orchestrator
@@ -110,7 +110,7 @@ components:
                 enum: [start, stop, restart, status]
               service:
                 type: string
-                
+
   # Hardware Bridge (C++)
   - name: hardware-bridge
     path: ./platforms/cpp
@@ -142,7 +142,7 @@ components:
                 enum: [read, write, configure]
               value:
                 type: boolean
-                
+
   # Audio Assistant
   - name: ai-audio-assistant
     path: ./modules/ai-audio-assistant
@@ -182,7 +182,7 @@ components:
                 type: integer
                 minimum: 0
                 maximum: 100
-                
+
   # Platform Controllers
   - name: platform-controller-linux
     path: ./modules/ai-platform-controllers/linux
@@ -193,7 +193,7 @@ components:
       type: systemd
       version: 1.0.0
       service_name: ai-servis-platform-linux
-      
+
   # Security Module
   - name: ai-security
     path: ./modules/ai-security
@@ -211,7 +211,7 @@ components:
       env:
         ENABLE_ANPR: true
         PRIVACY_MODE: strict
-        
+
 # Deployment configurations
 deployment:
   strategies:
@@ -226,26 +226,26 @@ deployment:
         limits:
           memory: "2Gi"
           cpu: "2000m"
-          
+
     development:
       type: docker-compose
       file: docker-compose.dev.yml
-      
+
     edge:
       type: systemd
       target: raspberry-pi
-      
+
 # CI/CD Integration
 cicd:
   triggers:
     - on: push
       branches: [main, develop]
       action: build
-      
+
     - on: tag
       pattern: "v*"
       action: release
-      
+
   pipelines:
     build:
       steps:
@@ -257,7 +257,7 @@ cicd:
           command: pytest tests/
         - name: package
           command: conan create . --build=missing
-          
+
     release:
       steps:
         - name: build
@@ -266,13 +266,13 @@ cicd:
           command: conan upload "*" -r=artifactory --all
         - name: deploy
           command: python build_orchestrator.py orchestrator-config.yaml --deploy
-          
+
 # Monitoring and observability
 monitoring:
   metrics:
     enabled: true
     endpoint: http://prometheus:9090
-    
+
   logging:
     level: INFO
     format: json
@@ -281,18 +281,18 @@ monitoring:
         path: /var/log/ai-servis/
       - type: elasticsearch
         url: http://elasticsearch:9200
-        
+
   tracing:
     enabled: true
     endpoint: http://jaeger:14268
-    
+
 # Health checks
 health_checks:
   - name: core-orchestrator
     endpoint: http://localhost:8080/health
     interval: 30s
     timeout: 5s
-    
+
   - name: hardware-bridge
     endpoint: http://localhost:5555/health
     interval: 30s

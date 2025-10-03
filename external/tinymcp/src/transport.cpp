@@ -29,33 +29,33 @@ bool StdioTransport::isConnected() const {
 
 void StdioTransport::send(const std::string& data) {
     if (!pImpl->connected) return;
-    
+
     std::cout << "Content-Length: " << data.length() << "\r\n\r\n";
     std::cout << data << std::flush;
 }
 
 std::string StdioTransport::receive() {
     if (!pImpl->connected) return "";
-    
+
     std::string line;
     int contentLength = 0;
-    
+
     // Read headers
     while (std::getline(std::cin, line)) {
         if (line == "\r" || line.empty()) break;
-        
+
         if (line.find("Content-Length:") == 0) {
             contentLength = std::stoi(line.substr(15));
         }
     }
-    
+
     // Read content
     if (contentLength > 0) {
         std::string content(contentLength, '\0');
         std::cin.read(&content[0], contentLength);
         return content;
     }
-    
+
     return "";
 }
 

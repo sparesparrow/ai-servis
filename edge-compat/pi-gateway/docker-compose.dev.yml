@@ -35,6 +35,3 @@ services:
       - RATE_HZ=5
     depends_on: [mqtt-broker]
     networks: [veh_net]
-
-
-

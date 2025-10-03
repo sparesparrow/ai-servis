@@ -1,16 +1,16 @@
 ## 1. Zadání A – WebGrab Client (konzolový nástroj)
 
-Naprogramujte v C++20 konzolovou aplikaci „webgrab-client“, která plní roli front-endového **klienta** pro službu WebGrab.  
+Naprogramujte v C++20 konzolovou aplikaci „webgrab-client“, která plní roli front-endového **klienta** pro službu WebGrab.
 
-Po spuštění čte příkazový řádek, zadané příkazy převádí na binární zprávy podle přiloženého FlatBuffers schématu `webgrab.fbs` a odesílá je na TCP socket (host:port předané parametry CLI).  
+Po spuštění čte příkazový řádek, zadané příkazy převádí na binární zprávy podle přiloženého FlatBuffers schématu `webgrab.fbs` a odesílá je na TCP socket (host:port předané parametry CLI).
 
 Klient uchovává lokální **frontu odchozích požadavků** s možností:
 
-* `download <url>` – zařadí nový DownloadRequest.  
+* `download <url>` – zařadí nový DownloadRequest.
 
-* `status <session-id>` – zařadí DownloadStatusRequest.  
+* `status <session-id>` – zařadí DownloadStatusRequest.
 
-* `abort  <session-id>` – zařadí DownloadAbortRequest.  
+* `abort  <session-id>` – zařadí DownloadAbortRequest.
 
 * `quit` – odešle ShutdownRequest a ukončí aplikaci.
 

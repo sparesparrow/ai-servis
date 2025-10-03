@@ -49,7 +49,7 @@ class MCPMessage:
     params: Optional[Dict] = None
     result: Optional[Dict] = None
     error: Optional[Dict] = None
-    
+
     def __post_init__(self):
         """Validate message structure after initialization"""
         if self.type == MCPMessageType.REQUEST and not self.method:
@@ -72,46 +72,46 @@ class ServiceRegistry:
         self._services: Dict[str, ServiceInfo] = {}
         self._initialization_order: List[str] = []
         self._dependencies: Dict[str, List[str]] = {}
-    
+
     def register_service(self, service_info: ServiceInfo) -> None:
         """Register service with dependency validation"""
         service_id = service_info.id
-        
+
         # Validate dependencies exist
         for dep in service_info.dependencies:
             if dep not in self._services:
                 raise DependencyNotFoundError(f"Dependency {dep} not found for service {service_id}")
-        
+
         # Add to dependency graph
         self._dependencies[service_id] = service_info.dependencies
-        
+
         # Calculate initialization order
         self._initialization_order = self._calculate_init_order()
-        
+
         self._services[service_id] = service_info
-    
+
     def _calculate_init_order(self) -> List[str]:
         """Calculate proper initialization order to prevent cycles"""
         visited = set()
         temp_visited = set()
         order = []
-        
+
         def visit(service_id: str):
             if service_id in temp_visited:
                 raise CircularDependencyError(f"Circular dependency detected involving {service_id}")
             if service_id in visited:
                 return
-            
+
             temp_visited.add(service_id)
             for dep in self._dependencies.get(service_id, []):
                 visit(dep)
             temp_visited.remove(service_id)
             visited.add(service_id)
             order.append(service_id)
-        
+
         for service_id in self._services:
             visit(service_id)
-        
+
         return order
 ```
 
@@ -124,7 +124,7 @@ class AuthenticationManager:
         self._active_sessions: Dict[str, SessionInfo] = {}
         self._user_preferences: Dict[str, UserPreferences] = {}
         self._cleanup_tasks: List[CleanupTask] = []
-    
+
     def authenticate_user(self, credentials: UserCredentials) -> AuthenticationResult:
         """Authenticate user with comprehensive validation"""
         # Validate input data
@@ -134,7 +134,7 @@ class AuthenticationManager:
                 error="Invalid credentials format",
                 error_code=AuthErrorCode.INVALID_FORMAT
             )
-        
+
         # Check for existing sessions
         existing_session = self._find_existing_session(credentials.user_id)
         if existing_session and not existing_session.expired:
@@ -143,11 +143,11 @@ class AuthenticationManager:
                 session_id=existing_session.id,
                 message="Existing session reused"
             )
-        
+
         # Create new session with proper cleanup
         session = self._create_session(credentials)
         self._active_sessions[session.id] = session
-        
+
         # Schedule cleanup task
         cleanup_task = CleanupTask(
             task_type=CleanupType.SESSION_EXPIRY,
@@ -155,22 +155,22 @@ class AuthenticationManager:
             scheduled_time=session.expiry_time
         )
         self._cleanup_tasks.append(cleanup_task)
-        
+
         return AuthenticationResult(
             success=True,
             session_id=session.id,
             message="New session created"
         )
-    
+
     def _validate_credentials(self, credentials: UserCredentials) -> bool:
         """Validate credential structure and content"""
         if not credentials.user_id or not credentials.password_hash:
             return False
-        
+
         # Additional validation logic
         if len(credentials.user_id) < 3 or len(credentials.user_id) > 50:
             return False
-        
+
         return True
 ```
 
@@ -182,7 +182,7 @@ class PrivacyManager:
         self.audit_logger = audit_logger
         self._data_inventory: Dict[str, DataRecord] = {}
         self._consent_records: Dict[str, ConsentRecord] = {}
-    
+
     def anonymize_user_data(self, user_id: str, data_type: DataType) -> AnonymizationResult:
         """Anonymize user data with proper audit logging"""
         # Log the anonymization request
@@ -192,7 +192,7 @@ class PrivacyManager:
             data_type=data_type,
             timestamp=datetime.utcnow()
         )
-        
+
         # Validate user consent
         consent = self._consent_records.get(user_id)
         if not consent or not consent.allows_anonymization:
@@ -206,14 +206,14 @@ class PrivacyManager:
                 success=False,
                 error="User consent required for data anonymization"
             )
-        
+
         # Perform anonymization
         try:
             anonymized_data = self._perform_anonymization(user_id, data_type)
-            
+
             # Update data inventory
             self._update_data_inventory(user_id, data_type, anonymized_data)
-            
+
             # Log successful anonymization
             self.audit_logger.log_action(
                 action=AuditAction.DATA_ANONYMIZED,
@@ -221,12 +221,12 @@ class PrivacyManager:
                 data_type=data_type,
                 timestamp=datetime.utcnow()
             )
-            
+
             return AnonymizationResult(
                 success=True,
                 anonymized_data=anonymized_data
             )
-            
+
         except AnonymizationError as e:
             self.audit_logger.log_action(
                 action=AuditAction.ANONYMIZATION_FAILED,
@@ -249,30 +249,30 @@ class MCPTestSuite:
         self._test_cases: List[TestCase] = []
         self._test_dependencies: Dict[str, List[str]] = {}
         self._execution_order: List[str] = []
-    
+
     def add_test_case(self, test_case: TestCase) -> None:
         """Add test case with dependency validation"""
         # Validate test dependencies
         for dep in test_case.dependencies:
             if dep not in [tc.name for tc in self._test_cases]:
                 raise TestDependencyError(f"Test dependency {dep} not found")
-        
+
         self._test_cases.append(test_case)
         self._test_dependencies[test_case.name] = test_case.dependencies
-        
+
         # Recalculate execution order
         self._execution_order = self._calculate_test_order()
-    
+
     def run_test_suite(self) -> TestSuiteResult:
         """Run test suite with proper sequencing and cleanup"""
         results = []
         cleanup_tasks = []
-        
+
         try:
             # Run tests in dependency order
             for test_name in self._execution_order:
                 test_case = next(tc for tc in self._test_cases if tc.name == test_name)
-                
+
                 # Setup test environment
                 setup_result = self._setup_test_environment(test_case)
                 if not setup_result.success:
@@ -282,17 +282,17 @@ class MCPTestSuite:
                         error=f"Setup failed: {setup_result.error}"
                     ))
                     continue
-                
+
                 # Execute test
                 test_result = self._execute_test(test_case)
                 results.append(test_result)
-                
+
                 # Schedule cleanup
                 cleanup_tasks.append(CleanupTask(
                     test_name=test_name,
                     cleanup_function=test_case.cleanup
                 ))
-                
+
         finally:
             # Ensure cleanup happens even if tests fail
             for cleanup_task in reversed(cleanup_tasks):
@@ -300,7 +300,7 @@ class MCPTestSuite:
                     cleanup_task.cleanup_function()
                 except Exception as e:
                     print(f"Cleanup failed for {cleanup_task.test_name}: {e}")
-        
+
         return TestSuiteResult(
             total_tests=len(self._test_cases),
             passed_tests=sum(1 for r in results if r.success),
@@ -317,31 +317,31 @@ class ArchitectureDocumentation:
         self._architecture_decisions: List[ArchitectureDecision] = []
         self._api_specifications: Dict[str, APISpecification] = {}
         self._deployment_guides: Dict[str, DeploymentGuide] = {}
-    
+
     def document_architecture_decision(self, decision: ArchitectureDecision) -> None:
         """Document architectural decision with rationale and impact"""
         # Validate decision completeness
         if not decision.rationale or not decision.alternatives_considered:
             raise IncompleteDecisionError("Architecture decision must include rationale and alternatives")
-        
+
         # Check for conflicts with existing decisions
         conflicts = self._find_decision_conflicts(decision)
         if conflicts:
             raise DecisionConflictError(f"Decision conflicts with: {', '.join(conflicts)}")
-        
+
         # Add to documentation
         self._architecture_decisions.append(decision)
-        
+
         # Update related documentation
         self._update_related_docs(decision)
-    
+
     def generate_api_documentation(self, service_name: str) -> APIDocumentation:
         """Generate comprehensive API documentation"""
         if service_name not in self._api_specifications:
             raise ServiceNotFoundError(f"API specification not found for {service_name}")
-        
+
         spec = self._api_specifications[service_name]
-        
+
         return APIDocumentation(
             service_name=service_name,
             version=spec.version,
@@ -387,7 +387,7 @@ def validate_and_process_data(data: Dict) -> ProcessingResult:
             error="Input must be a dictionary",
             error_code=ValidationErrorCode.INVALID_TYPE
         )
-    
+
     # Required field validation
     required_fields = ['id', 'type', 'payload']
     for field in required_fields:
@@ -397,7 +397,7 @@ def validate_and_process_data(data: Dict) -> ProcessingResult:
                 error=f"Missing required field: {field}",
                 error_code=ValidationErrorCode.MISSING_FIELD
             )
-    
+
     # Data integrity validation
     if not self._validate_data_integrity(data):
         return ProcessingResult(
@@ -405,7 +405,7 @@ def validate_and_process_data(data: Dict) -> ProcessingResult:
             error="Data integrity validation failed",
             error_code=ValidationErrorCode.INTEGRITY_FAILURE
         )
-    
+
     # Process validated data
     try:
         result = self._process_validated_data(data)

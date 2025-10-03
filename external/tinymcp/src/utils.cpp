@@ -21,11 +21,11 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
     std::vector<std::string> result;
     std::stringstream ss(str);
     std::string item;
-    
+
     while (std::getline(ss, item, delimiter)) {
         result.push_back(item);
     }
-    
+
     return result;
 }
 
@@ -57,10 +57,10 @@ std::string generateUuid() {
     static std::mt19937 gen(rd());
     static std::uniform_int_distribution<> dis(0, 15);
     static std::uniform_int_distribution<> dis2(8, 11);
-    
+
     std::stringstream ss;
     ss << std::hex;
-    
+
     for (int i = 0; i < 8; i++) ss << dis(gen);
     ss << "-";
     for (int i = 0; i < 4; i++) ss << dis(gen);
@@ -71,7 +71,7 @@ std::string generateUuid() {
     for (int i = 0; i < 3; i++) ss << dis(gen);
     ss << "-";
     for (int i = 0; i < 12; i++) ss << dis(gen);
-    
+
     return ss.str();
 }
 
@@ -103,7 +103,7 @@ bool validateJsonSchema(const Json::Value& data, const Json::Value& schema) {
 
 Json::Value mergeJson(const Json::Value& base, const Json::Value& overlay) {
     Json::Value result = base;
-    
+
     for (const auto& key : overlay.getMemberNames()) {
         if (result.isMember(key) && result[key].isObject() && overlay[key].isObject()) {
             result[key] = mergeJson(result[key], overlay[key]);
@@ -111,19 +111,19 @@ Json::Value mergeJson(const Json::Value& base, const Json::Value& overlay) {
             result[key] = overlay[key];
         }
     }
-    
+
     return result;
 }
 
-MCPException::MCPException(const std::string& message) 
+MCPException::MCPException(const std::string& message)
     : std::runtime_error(message) {}
 
-MCPException::MCPException(int code, const std::string& message) 
+MCPException::MCPException(int code, const std::string& message)
     : std::runtime_error(message), code(code) {}
 
 void DefaultLogger::log(Level level, const std::string& message) {
     if (level < minLevel) return;
-    
+
     const char* levelStr = "";
     switch (level) {
         case Level::Debug: levelStr = "DEBUG"; break;
@@ -131,7 +131,7 @@ void DefaultLogger::log(Level level, const std::string& message) {
         case Level::Warning: levelStr = "WARN"; break;
         case Level::Error: levelStr = "ERROR"; break;
     }
-    
+
     std::cerr << "[" << getCurrentTimestamp() << "] [" << levelStr << "] " << message << std::endl;
 }
 

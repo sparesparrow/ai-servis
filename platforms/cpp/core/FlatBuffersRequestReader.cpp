@@ -8,17 +8,31 @@ FlatBuffersRequestReader::FlatBuffersRequestReader()
 bool FlatBuffersRequestReader::next(RequestEnvelope& out) {
     if (!receiveMessage()) return false;
 
-    // Determine type
-    if (webgrab::GetDownloadRequest(buffer_.data())) {
-        current_type_ = RequestType::Download;
-    } else if (webgrab::GetDownloadStatusRequest(buffer_.data())) {
-        current_type_ = RequestType::Status;
-    } else if (webgrab::GetDownloadAbortRequest(buffer_.data())) {
-        current_type_ = RequestType::Abort;
-    } else if (webgrab::GetShutdownRequest(buffer_.data())) {
-        current_type_ = RequestType::Shutdown;
-    } else {
+    // Parse the Message structure
+    auto message = webgrab::GetMessage(buffer_.data());
+    if (!message) {
         current_type_ = RequestType::Unknown;
+        out.type = current_type_;
+        return false;
+    }
+
+    // Determine type based on request_type
+    switch (message->request_type()) {
+    case webgrab::Request_DownloadRequest:
+        current_type_ = RequestType::Download;
+        break;
+    case webgrab::Request_DownloadStatusRequest:
+        current_type_ = RequestType::Status;
+        break;
+    case webgrab::Request_DownloadAbortRequest:
+        current_type_ = RequestType::Abort;
+        break;
+    case webgrab::Request_ShutdownRequest:
+        current_type_ = RequestType::Shutdown;
+        break;
+    default:
+        current_type_ = RequestType::Unknown;
+        break;
     }
 
     out.type = current_type_;
@@ -45,37 +59,38 @@ bool FlatBuffersRequestReader::receiveMessage() {
 
 std::string FlatBuffersRequestReader::getDownloadUrl() const {
     if (current_type_ == RequestType::Download) {
-        auto req = webgrab::GetDownloadRequest(buffer_.data());
-        return req->url()->str();
+        auto message = webgrab::GetMessage(buffer_.data());
+        if (message) {
+            auto req = message->request_as_DownloadRequest();
+            if (req && req->url()) {
+                return req->url()->str();
+            }
+        }
     }
     return "";
 }
 
 uint32_t FlatBuffersRequestReader::getSessionId() const {
+    auto message = webgrab::GetMessage(buffer_.data());
+    if (!message) return 0;
+
     if (current_type_ == RequestType::Status) {
-        auto req = webgrab::GetDownloadStatusRequest(buffer_.data());
-        return req->sessionId();
+        auto req = message->request_as_DownloadStatusRequest();
+        if (req) {
+            return req->sessionId();
+        }
     } else if (current_type_ == RequestType::Abort) {
-        auto req = webgrab::GetDownloadAbortRequest(buffer_.data());
-        return req->sessionId();
+        auto req = message->request_as_DownloadAbortRequest();
+        if (req) {
+            return req->sessionId();
+        }
     }
     return 0;
 }
 
 bool FlatBuffersRequestReader::isValid() const {
     flatbuffers::Verifier verifier(buffer_.data(), buffer_.size());
-    switch (current_type_) {
-    case RequestType::Download:
-        return verifier.VerifyBuffer<webgrab::DownloadRequest>(nullptr);
-    case RequestType::Status:
-        return verifier.VerifyBuffer<webgrab::DownloadStatusRequest>(nullptr);
-    case RequestType::Abort:
-        return verifier.VerifyBuffer<webgrab::DownloadAbortRequest>(nullptr);
-    case RequestType::Shutdown:
-        return verifier.VerifyBuffer<webgrab::ShutdownRequest>(nullptr);
-    default:
-        return false;
-    }
+    return verifier.VerifyBuffer<webgrab::Message>(nullptr);
 }
 
 std::string FlatBuffersRequestReader::getValidationError() const {

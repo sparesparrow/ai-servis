@@ -1,23 +1,71 @@
+# AI Audio Assistant - Development Dockerfile
 FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies for audio
+# Install system dependencies including development tools
 RUN apt-get update && apt-get install -y \
-    curl \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    portaudio19-dev \
+    libasound2-dev \
     alsa-utils \
-    pulseaudio \
+    pulseaudio-utils \
+    espeak \
+    espeak-data \
+    libespeak1 \
+    libespeak-dev \
+    git \
+    curl \
+    vim \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Python dependencies including development tools
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir \
+    pytest \
+    pytest-asyncio \
+    pytest-cov \
+    black \
+    flake8 \
+    mypy \
+    ipython \
+    jupyter
 
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 8082
+# Create audio directories
+RUN mkdir -p audio/cache audio/temp audio/playlists
 
-# Run the application
-CMD ["python", "main.py"]
+# Create non-root user
+RUN useradd -m -u 1000 audioassistant && \
+    chown -R audioassistant:audioassistant /app
+
+# Switch to non-root user
+USER audioassistant
+
+# Expose port
+EXPOSE 8086
+
+# Set environment variables for development
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV LOG_LEVEL=DEBUG
+ENV AUDIO_DEFAULT_VOLUME=0.5
+ENV AUDIO_MAX_VOLUME=1.0
+ENV AUDIO_BUFFER_SIZE=4096
+ENV AUDIO_SAMPLE_RATE=44100
+ENV AUDIO_CHANNELS=2
+ENV AUDIO_BIT_DEPTH=16
+ENV AUDIO_AUTO_PLAY=true
+ENV AUDIO_GAPLESS_PLAYBACK=true
+
+# Start the audio assistant service with hot reloading
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8086", "--reload"]

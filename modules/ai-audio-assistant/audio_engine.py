@@ -1,865 +1,705 @@
-#!/usr/bin/env python3
 """
-AI-SERVIS Universal: Cross-Platform Audio Engine
-Provides unified interface for PipeWire (Linux), WASAPI (Windows), and Core Audio (macOS)
+Cross-Platform Audio Engine
+Supports Linux (PipeWire/ALSA), Windows (WASAPI), and macOS (Core Audio)
 """
-
 import asyncio
 import logging
-import os
 import platform
 import subprocess
 import json
-from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Any, Union, Tuple
-from dataclasses import dataclass
-from enum import Enum
-import threading
-import time
+from typing import Dict, List, Optional, Any, Tuple
+from pathlib import Path
+import psutil
 
-# Setup logging
+from audio_models import AudioEngine, AudioDevice, AudioDeviceType, AudioConfig
+
 logger = logging.getLogger(__name__)
 
 
-class AudioFormat(Enum):
-    """Supported audio formats"""
-    PCM_16 = "pcm_s16le"
-    PCM_24 = "pcm_s24le" 
-    PCM_32 = "pcm_s32le"
-    FLOAT_32 = "pcm_f32le"
-    FLOAT_64 = "pcm_f64le"
-
-
-class DeviceType(Enum):
-    """Audio device types"""
-    PLAYBACK = "playback"
-    CAPTURE = "capture"
-    DUPLEX = "duplex"
-
-
-class DeviceState(Enum):
-    """Audio device states"""
-    ACTIVE = "active"
-    IDLE = "idle"
-    SUSPENDED = "suspended"
-    UNKNOWN = "unknown"
-
-
-@dataclass
-class AudioDeviceInfo:
-    """Comprehensive audio device information"""
-    id: str
-    name: str
-    description: str
-    device_type: DeviceType
-    state: DeviceState
-    is_default: bool = False
-    sample_rates: List[int] = None
-    formats: List[AudioFormat] = None
-    channels: int = 2
-    latency_ms: float = 0.0
-    driver: str = "unknown"
+class CrossPlatformAudioEngine(AudioEngine):
+    """Cross-platform audio engine implementation"""
     
-    def __post_init__(self):
-        if self.sample_rates is None:
-            self.sample_rates = [44100, 48000]
-        if self.formats is None:
-            self.formats = [AudioFormat.PCM_16, AudioFormat.FLOAT_32]
-
-
-@dataclass
-class AudioStreamConfig:
-    """Audio stream configuration"""
-    device_id: str
-    sample_rate: int = 48000
-    format: AudioFormat = AudioFormat.FLOAT_32
-    channels: int = 2
-    buffer_size: int = 1024
-    latency_ms: float = 10.0
-
-
-class AudioEngineInterface(ABC):
-    """Abstract interface for cross-platform audio engines"""
+    def __init__(self, config: AudioConfig):
+        self.config = config
+        self.system = platform.system().lower()
+        self.devices: Dict[str, AudioDevice] = {}
+        self.default_device: Optional[AudioDevice] = None
+        self.is_initialized = False
+        
+        # Platform-specific implementations
+        self.linux_engine = None
+        self.windows_engine = None
+        self.macos_engine = None
+        
+        # Initialize platform-specific engine
+        self._initialize_platform_engine()
     
-    @abstractmethod
+    def _initialize_platform_engine(self):
+        """Initialize platform-specific audio engine"""
+        if self.system == "linux":
+            self.linux_engine = LinuxAudioEngine(self.config)
+        elif self.system == "windows":
+            self.windows_engine = WindowsAudioEngine(self.config)
+        elif self.system == "darwin":  # macOS
+            self.macos_engine = MacOSAudioEngine(self.config)
+        else:
+            logger.warning(f"Unsupported platform: {self.system}")
+    
     async def initialize(self) -> bool:
         """Initialize the audio engine"""
-        pass
+        try:
+            if self.system == "linux":
+                if self.linux_engine:
+                    success = await self.linux_engine.initialize()
+                    if success:
+                        self.devices = await self.linux_engine.get_devices()
+                        self.default_device = await self.linux_engine.get_default_device()
+            elif self.system == "windows":
+                if self.windows_engine:
+                    success = await self.windows_engine.initialize()
+                    if success:
+                        self.devices = await self.windows_engine.get_devices()
+                        self.default_device = await self.windows_engine.get_default_device()
+            elif self.system == "darwin":
+                if self.macos_engine:
+                    success = await self.macos_engine.initialize()
+                    if success:
+                        self.devices = await self.macos_engine.get_devices()
+                        self.default_device = await self.macos_engine.get_default_device()
+            
+            self.is_initialized = True
+            logger.info(f"Audio engine initialized for {self.system}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize audio engine: {e}")
+            return False
     
-    @abstractmethod
-    async def shutdown(self) -> None:
+    async def shutdown(self) -> bool:
         """Shutdown the audio engine"""
-        pass
+        try:
+            if self.system == "linux" and self.linux_engine:
+                await self.linux_engine.shutdown()
+            elif self.system == "windows" and self.windows_engine:
+                await self.windows_engine.shutdown()
+            elif self.system == "darwin" and self.macos_engine:
+                await self.macos_engine.shutdown()
+            
+            self.is_initialized = False
+            logger.info("Audio engine shutdown")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error shutting down audio engine: {e}")
+            return False
     
-    @abstractmethod
-    async def enumerate_devices(self, device_type: Optional[DeviceType] = None) -> List[AudioDeviceInfo]:
-        """Enumerate available audio devices"""
-        pass
+    async def get_devices(self) -> List[AudioDevice]:
+        """Get available audio devices"""
+        if self.system == "linux" and self.linux_engine:
+            return await self.linux_engine.get_devices()
+        elif self.system == "windows" and self.windows_engine:
+            return await self.windows_engine.get_devices()
+        elif self.system == "darwin" and self.macos_engine:
+            return await self.macos_engine.get_devices()
+        
+        return list(self.devices.values())
     
-    @abstractmethod
-    async def get_default_device(self, device_type: DeviceType) -> Optional[AudioDeviceInfo]:
-        """Get default device for specified type"""
-        pass
-    
-    @abstractmethod
     async def set_default_device(self, device_id: str) -> bool:
         """Set default audio device"""
-        pass
+        if device_id in self.devices:
+            self.default_device = self.devices[device_id]
+            
+            if self.system == "linux" and self.linux_engine:
+                return await self.linux_engine.set_default_device(device_id)
+            elif self.system == "windows" and self.windows_engine:
+                return await self.windows_engine.set_default_device(device_id)
+            elif self.system == "darwin" and self.macos_engine:
+                return await self.macos_engine.set_default_device(device_id)
+            
+            return True
+        
+        return False
     
-    @abstractmethod
-    async def set_device_volume(self, device_id: str, volume: float) -> bool:
-        """Set device volume (0.0 to 1.0)"""
-        pass
+    async def get_volume(self, device_id: Optional[str] = None) -> float:
+        """Get device volume"""
+        if self.system == "linux" and self.linux_engine:
+            return await self.linux_engine.get_volume(device_id)
+        elif self.system == "windows" and self.windows_engine:
+            return await self.windows_engine.get_volume(device_id)
+        elif self.system == "darwin" and self.macos_engine:
+            return await self.macos_engine.get_volume(device_id)
+        
+        return 0.5  # Default volume
     
-    @abstractmethod
-    async def get_device_volume(self, device_id: str) -> Optional[float]:
-        """Get device volume (0.0 to 1.0)"""
-        pass
+    async def set_volume(self, volume: float, device_id: Optional[str] = None) -> bool:
+        """Set device volume"""
+        if self.system == "linux" and self.linux_engine:
+            return await self.linux_engine.set_volume(volume, device_id)
+        elif self.system == "windows" and self.windows_engine:
+            return await self.windows_engine.set_volume(volume, device_id)
+        elif self.system == "darwin" and self.macos_engine:
+            return await self.macos_engine.set_volume(volume, device_id)
+        
+        return False
     
-    @abstractmethod
-    async def create_stream(self, config: AudioStreamConfig) -> Optional[str]:
-        """Create audio stream, returns stream ID"""
-        pass
+    async def mute(self, device_id: Optional[str] = None) -> bool:
+        """Mute device"""
+        if self.system == "linux" and self.linux_engine:
+            return await self.linux_engine.mute(device_id)
+        elif self.system == "windows" and self.windows_engine:
+            return await self.windows_engine.mute(device_id)
+        elif self.system == "darwin" and self.macos_engine:
+            return await self.macos_engine.mute(device_id)
+        
+        return False
     
-    @abstractmethod
-    async def destroy_stream(self, stream_id: str) -> bool:
-        """Destroy audio stream"""
-        pass
+    async def unmute(self, device_id: Optional[str] = None) -> bool:
+        """Unmute device"""
+        if self.system == "linux" and self.linux_engine:
+            return await self.linux_engine.unmute(device_id)
+        elif self.system == "windows" and self.windows_engine:
+            return await self.windows_engine.unmute(device_id)
+        elif self.system == "darwin" and self.macos_engine:
+            return await self.macos_engine.unmute(device_id)
+        
+        return False
 
 
-class PipeWireEngine(AudioEngineInterface):
-    """PipeWire audio engine for Linux"""
+class LinuxAudioEngine(AudioEngine):
+    """Linux audio engine using PipeWire/ALSA"""
     
-    def __init__(self):
-        self.initialized = False
-        self.devices: Dict[str, AudioDeviceInfo] = {}
-        self.streams: Dict[str, Any] = {}
-        logger.info("PipeWire audio engine created")
+    def __init__(self, config: AudioConfig):
+        self.config = config
+        self.devices: Dict[str, AudioDevice] = {}
+        self.default_device: Optional[AudioDevice] = None
+        self.is_initialized = False
     
     async def initialize(self) -> bool:
-        """Initialize PipeWire engine"""
-        logger.info("--- Initializing PipeWire Audio Engine ---")
-        
+        """Initialize Linux audio engine"""
         try:
-            # Check if PipeWire is available
+            # Check for PipeWire first, then ALSA
+            if await self._check_pipewire():
+                await self._initialize_pipewire()
+            elif await self._check_alsa():
+                await self._initialize_alsa()
+            else:
+                logger.warning("No audio system found (PipeWire or ALSA)")
+                return False
+            
+            self.is_initialized = True
+            logger.info("Linux audio engine initialized")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize Linux audio engine: {e}")
+            return False
+    
+    async def _check_pipewire(self) -> bool:
+        """Check if PipeWire is available"""
+        try:
             result = await asyncio.create_subprocess_exec(
-                'pw-cli', 'info',
+                "pw-cli", "info", "version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
+    
+    async def _check_alsa(self) -> bool:
+        """Check if ALSA is available"""
+        try:
+            result = await asyncio.create_subprocess_exec(
+                "aplay", "-l",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
+    
+    async def _initialize_pipewire(self):
+        """Initialize PipeWire audio system"""
+        try:
+            # Get PipeWire devices
+            result = await asyncio.create_subprocess_exec(
+                "pw-cli", "list-objects", "Node",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await result.communicate()
             
             if result.returncode == 0:
-                logger.info("PipeWire daemon detected and accessible")
-                self.initialized = True
-                
-                # Initial device enumeration
-                await self.enumerate_devices()
-                logger.info(f"PipeWire engine initialized with {len(self.devices)} devices")
-                return True
-            else:
-                logger.error(f"PipeWire not accessible, return code: {result.returncode}")
-                logger.error(f"stderr: {stderr.decode()}")
-                return False
-                
-        except FileNotFoundError:
-            logger.error("PipeWire tools not found (pw-cli missing)")
-            return False
+                await self._parse_pipewire_devices(stdout.decode())
+            
         except Exception as e:
             logger.error(f"Error initializing PipeWire: {e}")
-            return False
     
-    async def shutdown(self) -> None:
-        """Shutdown PipeWire engine"""
-        logger.info("Shutting down PipeWire audio engine")
-        
-        # Destroy all streams
-        for stream_id in list(self.streams.keys()):
-            await self.destroy_stream(stream_id)
-        
-        self.initialized = False
-        self.devices.clear()
-        logger.info("PipeWire engine shutdown complete")
-    
-    async def enumerate_devices(self, device_type: Optional[DeviceType] = None) -> List[AudioDeviceInfo]:
-        """Enumerate PipeWire devices"""
-        logger.debug("Enumerating PipeWire devices")
-        
+    async def _initialize_alsa(self):
+        """Initialize ALSA audio system"""
         try:
-            # Get device list from PipeWire
+            # Get ALSA devices
             result = await asyncio.create_subprocess_exec(
-                'pw-cli', 'list-objects', 'Node',
+                "aplay", "-l",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await result.communicate()
             
-            if result.returncode != 0:
-                logger.error(f"Failed to enumerate PipeWire devices: {stderr.decode()}")
-                return []
-            
-            # Parse PipeWire output
-            devices = await self._parse_pipewire_devices(stdout.decode())
-            
-            # Filter by device type if specified
-            if device_type:
-                devices = [d for d in devices if d.device_type == device_type]
-            
-            # Update internal device cache
-            self.devices.clear()
-            for device in devices:
-                self.devices[device.id] = device
-            
-            logger.info(f"Found {len(devices)} PipeWire devices")
-            return devices
+            if result.returncode == 0:
+                await self._parse_alsa_devices(stdout.decode())
             
         except Exception as e:
-            logger.error(f"Error enumerating PipeWire devices: {e}")
-            return []
+            logger.error(f"Error initializing ALSA: {e}")
     
-    async def _parse_pipewire_devices(self, output: str) -> List[AudioDeviceInfo]:
-        """Parse PipeWire device list output"""
-        devices = []
-        
+    async def _parse_pipewire_devices(self, output: str):
+        """Parse PipeWire device output"""
         try:
-            # Simplified parsing - in real implementation would parse full PipeWire protocol
+            # Parse PipeWire JSON output
+            import json
+            
+            try:
+                data = json.loads(output)
+                if isinstance(data, dict) and "objects" in data:
+                    objects = data["objects"]
+                else:
+                    objects = [data] if isinstance(data, dict) else data
+            except json.JSONDecodeError:
+                # Fallback to text parsing
+                objects = []
+                lines = output.split('\n')
+                for line in lines:
+                    if "audio" in line.lower() and "sink" in line.lower():
+                        objects.append({"type": "Node", "info": {"props": {"node.name": line.strip()}}})
+            
+            device_id = 0
+            
+            for obj in objects:
+                if obj.get("type") == "Node":
+                    info = obj.get("info", {})
+                    props = info.get("props", {})
+                    
+                    # Extract device information
+                    name = props.get("node.name", f"PipeWire Device {device_id}")
+                    description = props.get("node.description", name)
+                    device_type = self._determine_device_type(name, description)
+                    
+                    # Get audio properties
+                    sample_rate = int(props.get("audio.rate", "44100"))
+                    channels = int(props.get("audio.channels", "2"))
+                    bit_depth = int(props.get("audio.format", "16"))
+                    
+                    device = AudioDevice(
+                        id=f"pipewire_{device_id}",
+                        name=description,
+                        type=device_type,
+                        is_default=device_id == 0,
+                        sample_rate=sample_rate,
+                        channels=channels,
+                        bit_depth=bit_depth,
+                        properties={
+                            "node_name": name,
+                            "node_id": info.get("id"),
+                            "media_class": props.get("media.class"),
+                            "device_class": props.get("device.class"),
+                            "device_name": props.get("device.name"),
+                            "device_description": props.get("device.description")
+                        }
+                    )
+                    self.devices[device.id] = device
+                    device_id += 1
+            
+            if self.devices:
+                self.default_device = list(self.devices.values())[0]
+                
+        except Exception as e:
+            logger.error(f"Error parsing PipeWire devices: {e}")
+            # Fallback to basic device creation
+            device = AudioDevice(
+                id="pipewire_default",
+                name="PipeWire Default Device",
+                type=AudioDeviceType.SPEAKERS,
+                is_default=True,
+                sample_rate=44100,
+                channels=2,
+                bit_depth=16
+            )
+            self.devices[device.id] = device
+            self.default_device = device
+    
+    async def _parse_alsa_devices(self, output: str):
+        """Parse ALSA device output"""
+        try:
             lines = output.split('\n')
-            current_device = None
+            device_id = 0
             
             for line in lines:
-                line = line.strip()
-                
-                # Look for device nodes
-                if 'object.serial' in line and 'Node' in line:
-                    if current_device:
-                        devices.append(current_device)
-                    
-                    # Extract device ID from line
-                    device_id = f"pipewire_node_{len(devices)}"
-                    current_device = AudioDeviceInfo(
-                        id=device_id,
-                        name="PipeWire Audio Device",
-                        description="PipeWire managed audio device",
-                        device_type=DeviceType.PLAYBACK,
-                        state=DeviceState.ACTIVE,
-                        driver="pipewire"
-                    )
-                
-                # Extract device properties
-                elif current_device and 'node.name' in line:
-                    # Extract node name
-                    if '"' in line:
-                        name = line.split('"')[1]
-                        current_device.name = name
-                
-                elif current_device and 'media.class' in line:
-                    # Determine device type from media class
-                    if 'Audio/Sink' in line:
-                        current_device.device_type = DeviceType.PLAYBACK
-                    elif 'Audio/Source' in line:
-                        current_device.device_type = DeviceType.CAPTURE
+                if "card" in line and ":" in line:
+                    # Extract device information
+                    parts = line.split(":")
+                    if len(parts) > 1:
+                        name = parts[1].strip()
+                        device_type = self._determine_device_type(name, name)
+                        
+                        # Try to get more detailed info
+                        card_info = await self._get_alsa_card_info(device_id)
+                        
+                        device = AudioDevice(
+                            id=f"alsa_{device_id}",
+                            name=name,
+                            type=device_type,
+                            is_default=device_id == 0,
+                            sample_rate=card_info.get("sample_rate", 44100),
+                            channels=card_info.get("channels", 2),
+                            bit_depth=card_info.get("bit_depth", 16),
+                            properties={
+                                "card_id": device_id,
+                                "card_name": name,
+                                "driver": card_info.get("driver"),
+                                "mixer_name": card_info.get("mixer_name"),
+                                "components": card_info.get("components", [])
+                            }
+                        )
+                        self.devices[device.id] = device
+                        device_id += 1
             
-            # Add last device
-            if current_device:
-                devices.append(current_device)
-            
-            logger.debug(f"Parsed {len(devices)} devices from PipeWire output")
-            
+            if self.devices:
+                self.default_device = list(self.devices.values())[0]
+                
         except Exception as e:
-            logger.error(f"Error parsing PipeWire device list: {e}")
-        
-        return devices
+            logger.error(f"Error parsing ALSA devices: {e}")
+            # Fallback to basic device creation
+            device = AudioDevice(
+                id="alsa_default",
+                name="ALSA Default Device",
+                type=AudioDeviceType.SPEAKERS,
+                is_default=True,
+                sample_rate=44100,
+                channels=2,
+                bit_depth=16
+            )
+            self.devices[device.id] = device
+            self.default_device = device
     
-    async def get_default_device(self, device_type: DeviceType) -> Optional[AudioDeviceInfo]:
-        """Get default PipeWire device"""
+    def _determine_device_type(self, name: str, description: str) -> AudioDeviceType:
+        """Determine device type from name and description"""
+        name_lower = name.lower()
+        desc_lower = description.lower()
+        
+        # Check for specific device types
+        if any(keyword in name_lower or keyword in desc_lower for keyword in ["headphone", "headset"]):
+            return AudioDeviceType.HEADPHONES
+        elif any(keyword in name_lower or keyword in desc_lower for keyword in ["bluetooth", "bt"]):
+            return AudioDeviceType.BLUETOOTH
+        elif any(keyword in name_lower or keyword in desc_lower for keyword in ["usb"]):
+            return AudioDeviceType.USB
+        elif any(keyword in name_lower or keyword in desc_lower for keyword in ["hdmi"]):
+            return AudioDeviceType.HDMI
+        elif any(keyword in name_lower or keyword in desc_lower for keyword in ["analog", "line"]):
+            return AudioDeviceType.ANALOG
+        elif any(keyword in name_lower or keyword in desc_lower for keyword in ["digital", "spdif"]):
+            return AudioDeviceType.DIGITAL
+        else:
+            return AudioDeviceType.SPEAKERS
+    
+    async def _get_alsa_card_info(self, card_id: int) -> Dict[str, Any]:
+        """Get detailed ALSA card information"""
         try:
-            # Query default sink/source
-            if device_type == DeviceType.PLAYBACK:
-                cmd = ['pw-cli', 'info', '0']
-            else:
-                cmd = ['pw-cli', 'info', '1']
-            
+            # Get card info using aplay
             result = await asyncio.create_subprocess_exec(
-                *cmd,
+                "aplay", "-l", f"card{card_id}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await result.communicate()
             
             if result.returncode == 0:
-                # Parse default device info
-                # Simplified - return first available device of correct type
-                for device in self.devices.values():
-                    if device.device_type == device_type:
-                        logger.debug(f"Default {device_type.value} device: {device.name}")
-                        return device
+                output = stdout.decode()
+                # Parse card information
+                info = {
+                    "sample_rate": 44100,
+                    "channels": 2,
+                    "bit_depth": 16,
+                    "driver": "unknown",
+                    "mixer_name": f"card{card_id}",
+                    "components": []
+                }
+                
+                # Extract driver information
+                for line in output.split('\n'):
+                    if "card" in line and ":" in line:
+                        parts = line.split(":")
+                        if len(parts) > 2:
+                            driver_info = parts[2].strip()
+                            if "[" in driver_info and "]" in driver_info:
+                                driver = driver_info.split("[")[1].split("]")[0]
+                                info["driver"] = driver
+                
+                return info
             
         except Exception as e:
-            logger.error(f"Error getting default PipeWire device: {e}")
+            logger.debug(f"Could not get ALSA card info for card {card_id}: {e}")
         
-        return None
+        # Return default info
+        return {
+            "sample_rate": 44100,
+            "channels": 2,
+            "bit_depth": 16,
+            "driver": "unknown",
+            "mixer_name": f"card{card_id}",
+            "components": []
+        }
+    
+    async def shutdown(self) -> bool:
+        """Shutdown Linux audio engine"""
+        self.is_initialized = False
+        return True
+    
+    async def get_devices(self) -> List[AudioDevice]:
+        """Get available audio devices"""
+        return list(self.devices.values())
+    
+    async def get_default_device(self) -> Optional[AudioDevice]:
+        """Get default audio device"""
+        return self.default_device
     
     async def set_default_device(self, device_id: str) -> bool:
-        """Set default PipeWire device"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return False
-            
-            device = self.devices[device_id]
-            
-            # Use pactl if available for setting default
-            if device.device_type == DeviceType.PLAYBACK:
-                cmd = ['pactl', 'set-default-sink', device.name]
-            else:
-                cmd = ['pactl', 'set-default-source', device.name]
-            
-            result = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            await result.communicate()
-            
-            success = result.returncode == 0
-            if success:
-                logger.info(f"Set default {device.device_type.value} device to {device.name}")
-            else:
-                logger.error(f"Failed to set default device to {device.name}")
-            
-            return success
-            
-        except FileNotFoundError:
-            logger.warning("pactl not available, cannot set default device")
-            return False
-        except Exception as e:
-            logger.error(f"Error setting default PipeWire device: {e}")
-            return False
+        """Set default audio device"""
+        if device_id in self.devices:
+            self.default_device = self.devices[device_id]
+            return True
+        return False
     
-    async def set_device_volume(self, device_id: str, volume: float) -> bool:
-        """Set PipeWire device volume"""
+    async def get_volume(self, device_id: Optional[str] = None) -> float:
+        """Get device volume using amixer"""
         try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return False
+            device = self.devices.get(device_id) if device_id else self.default_device
+            if not device:
+                return 0.5
             
-            device = self.devices[device_id]
-            volume_percent = max(0, min(100, int(volume * 100)))
-            
-            # Use pactl for volume control
-            if device.device_type == DeviceType.PLAYBACK:
-                cmd = ['pactl', 'set-sink-volume', device.name, f'{volume_percent}%']
-            else:
-                cmd = ['pactl', 'set-source-volume', device.name, f'{volume_percent}%']
-            
+            # Use amixer to get volume
             result = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            await result.communicate()
-            
-            success = result.returncode == 0
-            if success:
-                logger.debug(f"Set {device.name} volume to {volume_percent}%")
-            else:
-                logger.error(f"Failed to set volume for {device.name}")
-            
-            return success
-            
-        except FileNotFoundError:
-            logger.warning("pactl not available, cannot set volume")
-            return False
-        except Exception as e:
-            logger.error(f"Error setting PipeWire device volume: {e}")
-            return False
-    
-    async def get_device_volume(self, device_id: str) -> Optional[float]:
-        """Get PipeWire device volume"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return None
-            
-            device = self.devices[device_id]
-            
-            # Use pactl to get volume
-            if device.device_type == DeviceType.PLAYBACK:
-                cmd = ['pactl', 'get-sink-volume', device.name]
-            else:
-                cmd = ['pactl', 'get-source-volume', device.name]
-            
-            result = await asyncio.create_subprocess_exec(
-                *cmd,
+                "amixer", "get", "Master",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await result.communicate()
             
             if result.returncode == 0:
-                # Parse volume from output
                 output = stdout.decode()
-                if '%' in output:
-                    # Extract percentage
-                    for part in output.split():
-                        if '%' in part:
-                            volume_str = part.replace('%', '')
+                # Parse volume percentage from amixer output
+                for line in output.split('\n'):
+                    if '[' in line and '%' in line:
+                        # Extract percentage
+                        start = line.find('[') + 1
+                        end = line.find('%')
+                        if start > 0 and end > start:
+                            volume_str = line[start:end]
                             try:
-                                volume_percent = int(volume_str)
-                                return volume_percent / 100.0
+                                volume = float(volume_str) / 100.0
+                                return max(0.0, min(1.0, volume))
                             except ValueError:
-                                continue
+                                pass
             
-            logger.error(f"Failed to get volume for {device.name}")
-            return None
-            
-        except FileNotFoundError:
-            logger.warning("pactl not available, cannot get volume")
-            return None
-        except Exception as e:
-            logger.error(f"Error getting PipeWire device volume: {e}")
-            return None
-    
-    async def create_stream(self, config: AudioStreamConfig) -> Optional[str]:
-        """Create PipeWire audio stream"""
-        try:
-            stream_id = f"pipewire_stream_{len(self.streams)}"
-            
-            # In a real implementation, would create actual PipeWire stream
-            # For now, just track the configuration
-            self.streams[stream_id] = {
-                'config': config,
-                'created_at': time.time(),
-                'active': True
-            }
-            
-            logger.info(f"Created PipeWire stream {stream_id} for device {config.device_id}")
-            return stream_id
+            return 0.5
             
         except Exception as e:
-            logger.error(f"Error creating PipeWire stream: {e}")
-            return None
+            logger.error(f"Error getting volume: {e}")
+            return 0.5
     
-    async def destroy_stream(self, stream_id: str) -> bool:
-        """Destroy PipeWire audio stream"""
+    async def set_volume(self, volume: float, device_id: Optional[str] = None) -> bool:
+        """Set device volume using amixer"""
         try:
-            if stream_id in self.streams:
-                del self.streams[stream_id]
-                logger.info(f"Destroyed PipeWire stream {stream_id}")
-                return True
-            else:
-                logger.error(f"Stream {stream_id} not found")
+            device = self.devices.get(device_id) if device_id else self.default_device
+            if not device:
                 return False
-                
+            
+            # Convert to percentage
+            volume_percent = int(volume * 100)
+            volume_percent = max(0, min(100, volume_percent))
+            
+            # Use amixer to set volume
+            result = await asyncio.create_subprocess_exec(
+                "amixer", "set", "Master", f"{volume_percent}%",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                device.volume = volume
+                return True
+            
+            return False
+            
         except Exception as e:
-            logger.error(f"Error destroying PipeWire stream: {e}")
+            logger.error(f"Error setting volume: {e}")
+            return False
+    
+    async def mute(self, device_id: Optional[str] = None) -> bool:
+        """Mute device using amixer"""
+        try:
+            device = self.devices.get(device_id) if device_id else self.default_device
+            if not device:
+                return False
+            
+            result = await asyncio.create_subprocess_exec(
+                "amixer", "set", "Master", "mute",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error muting device: {e}")
+            return False
+    
+    async def unmute(self, device_id: Optional[str] = None) -> bool:
+        """Unmute device using amixer"""
+        try:
+            device = self.devices.get(device_id) if device_id else self.default_device
+            if not device:
+                return False
+            
+            result = await asyncio.create_subprocess_exec(
+                "amixer", "set", "Master", "unmute",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error unmuting device: {e}")
             return False
 
 
-class WASAPIEngine(AudioEngineInterface):
-    """WASAPI audio engine for Windows"""
+class WindowsAudioEngine(AudioEngine):
+    """Windows audio engine using WASAPI"""
     
-    def __init__(self):
-        self.initialized = False
-        self.devices: Dict[str, AudioDeviceInfo] = {}
-        self.streams: Dict[str, Any] = {}
-        logger.info("WASAPI audio engine created")
+    def __init__(self, config: AudioConfig):
+        self.config = config
+        self.devices: Dict[str, AudioDevice] = {}
+        self.default_device: Optional[AudioDevice] = None
+        self.is_initialized = False
     
     async def initialize(self) -> bool:
-        """Initialize WASAPI engine"""
-        logger.info("--- Initializing WASAPI Audio Engine ---")
-        
-        try:
-            # Check if we're on Windows
-            if platform.system() != "Windows":
-                logger.error("WASAPI engine can only run on Windows")
-                return False
-            
-            # Try to enumerate devices to test WASAPI availability
-            devices = await self.enumerate_devices()
-            
-            if devices:
-                self.initialized = True
-                logger.info(f"WASAPI engine initialized with {len(devices)} devices")
-                return True
-            else:
-                logger.error("No WASAPI devices found")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error initializing WASAPI: {e}")
-            return False
-    
-    async def shutdown(self) -> None:
-        """Shutdown WASAPI engine"""
-        logger.info("Shutting down WASAPI audio engine")
-        
-        # Destroy all streams
-        for stream_id in list(self.streams.keys()):
-            await self.destroy_stream(stream_id)
-        
-        self.initialized = False
-        self.devices.clear()
-        logger.info("WASAPI engine shutdown complete")
-    
-    async def enumerate_devices(self, device_type: Optional[DeviceType] = None) -> List[AudioDeviceInfo]:
-        """Enumerate WASAPI devices using PowerShell"""
-        logger.debug("Enumerating WASAPI devices")
-        
+        """Initialize Windows audio engine"""
         try:
             # Use PowerShell to get audio devices
+            await self._get_windows_devices()
+            
+            self.is_initialized = True
+            logger.info("Windows audio engine initialized")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize Windows audio engine: {e}")
+            return False
+    
+    async def _get_windows_devices(self):
+        """Get Windows audio devices using PowerShell and WASAPI"""
+        try:
+            # Enhanced PowerShell script to get audio devices with WASAPI info
             ps_script = """
-            Get-WmiObject -Class Win32_SoundDevice | ForEach-Object {
-                [PSCustomObject]@{
-                    Name = $_.Name
-                    DeviceID = $_.DeviceID
-                    Status = $_.Status
-                    Manufacturer = $_.Manufacturer
+            Add-Type -TypeDefinition @"
+            using System;
+            using System.Runtime.InteropServices;
+            using System.Collections.Generic;
+            
+            [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
+            public class MMDeviceEnumerator { }
+            
+            [ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+            public interface IMMDeviceEnumerator {
+                int NotNeeded();
+                int GetDefaultAudioEndpoint(int dataFlow, int role, out IntPtr ppDevice);
+                int EnumAudioEndpoints(int dataFlow, int stateMask, out IntPtr ppDevices);
+                int GetDevice(string pwstrId, out IntPtr ppDevice);
+                int RegisterEndpointNotificationCallback(IntPtr pClient);
+                int UnregisterEndpointNotificationCallback(IntPtr pClient);
+            }
+            
+            [ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+            public interface IMMDevice {
+                int Activate(ref Guid iid, int dwClsCtx, IntPtr pActivationParams, out IntPtr ppInterface);
+                int OpenPropertyStore(int stgmAccess, out IntPtr ppProperties);
+                int GetId(out IntPtr ppstrId);
+                int GetState(out int pdwState);
+            }
+            
+            [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+            public interface IPropertyStore {
+                int GetCount(out int cProps);
+                int GetAt(int iProp, out PropertyKey pkey);
+                int GetValue(ref PropertyKey key, out PropVariant pv);
+                int SetValue(ref PropertyKey key, ref PropVariant propvar);
+                int Commit();
+            }
+            
+            [StructLayout(LayoutKind.Sequential)]
+            public struct PropertyKey {
+                public Guid fmtid;
+                public int pid;
+            }
+            
+            [StructLayout(LayoutKind.Sequential)]
+            public struct PropVariant {
+                public short vt;
+                public short wReserved1;
+                public short wReserved2;
+                public short wReserved3;
+                public IntPtr ptr;
+            }
+            "@
+            
+            $e = New-Object -ComObject MMDeviceEnumerator
+            $devices = $e.EnumAudioEndpoints(0, 1)  # eRender, DEVICE_STATE_ACTIVE
+            
+            $deviceList = @()
+            $deviceCount = 0
+            
+            do {
+                $device = $devices.Item($deviceCount)
+                if ($device -eq $null) { break }
+                
+                $deviceId = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($device.GetId())
+                $deviceState = $device.GetState()
+                
+                $props = $device.OpenPropertyStore(0)  # STGM_READ
+                $deviceName = "Unknown Device"
+                $deviceDesc = "Unknown Description"
+                
+                try {
+                    $nameKey = New-Object -TypeName PropertyKey
+                    $nameKey.fmtid = [Guid]::Parse("A45C254E-DF1C-4EFD-8020-67D146A850E0")
+                    $nameKey.pid = 2  # PKEY_Device_FriendlyName
+                    
+                    $nameVar = New-Object -TypeName PropVariant
+                    $props.GetValue([ref]$nameKey, [ref]$nameVar)
+                    $deviceName = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($nameVar.ptr)
+                } catch { }
+                
+                $deviceList += @{
+                    Id = $deviceId
+                    Name = $deviceName
+                    State = $deviceState
+                    Index = $deviceCount
                 }
-            } | ConvertTo-Json
+                
+                $deviceCount++
+            } while ($true)
+            
+            $deviceList | ConvertTo-Json
             """
             
             result = await asyncio.create_subprocess_exec(
-                'powershell', '-Command', ps_script,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await result.communicate()
-            
-            if result.returncode != 0:
-                logger.error(f"Failed to enumerate WASAPI devices: {stderr.decode()}")
-                return []
-            
-            # Parse PowerShell JSON output
-            devices = await self._parse_wasapi_devices(stdout.decode())
-            
-            # Filter by device type if specified
-            if device_type:
-                devices = [d for d in devices if d.device_type == device_type]
-            
-            # Update internal device cache
-            self.devices.clear()
-            for device in devices:
-                self.devices[device.id] = device
-            
-            logger.info(f"Found {len(devices)} WASAPI devices")
-            return devices
-            
-        except FileNotFoundError:
-            logger.error("PowerShell not available")
-            return []
-        except Exception as e:
-            logger.error(f"Error enumerating WASAPI devices: {e}")
-            return []
-    
-    async def _parse_wasapi_devices(self, json_output: str) -> List[AudioDeviceInfo]:
-        """Parse WASAPI device JSON output"""
-        devices = []
-        
-        try:
-            if json_output.strip():
-                device_data = json.loads(json_output)
-                
-                # Handle single device vs array
-                if not isinstance(device_data, list):
-                    device_data = [device_data]
-                
-                for i, device_info in enumerate(device_data):
-                    device_id = f"wasapi_{i}"
-                    device = AudioDeviceInfo(
-                        id=device_id,
-                        name=device_info.get('Name', f'WASAPI Device {i}'),
-                        description=f"WASAPI device - {device_info.get('Manufacturer', 'Unknown')}",
-                        device_type=DeviceType.PLAYBACK,  # Assume playback for now
-                        state=DeviceState.ACTIVE if device_info.get('Status') == 'OK' else DeviceState.UNKNOWN,
-                        driver="wasapi"
-                    )
-                    devices.append(device)
-            
-            logger.debug(f"Parsed {len(devices)} WASAPI devices")
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Error parsing WASAPI JSON: {e}")
-        except Exception as e:
-            logger.error(f"Error parsing WASAPI devices: {e}")
-        
-        return devices
-    
-    async def get_default_device(self, device_type: DeviceType) -> Optional[AudioDeviceInfo]:
-        """Get default WASAPI device"""
-        # Return first device of specified type
-        for device in self.devices.values():
-            if device.device_type == device_type:
-                logger.debug(f"Default {device_type.value} device: {device.name}")
-                return device
-        return None
-    
-    async def set_default_device(self, device_id: str) -> bool:
-        """Set default WASAPI device"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return False
-            
-            # In a real implementation, would use Windows APIs
-            logger.info(f"Mock: Set default WASAPI device to {device_id}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error setting default WASAPI device: {e}")
-            return False
-    
-    async def set_device_volume(self, device_id: str, volume: float) -> bool:
-        """Set WASAPI device volume"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return False
-            
-            # In a real implementation, would use Windows Volume APIs
-            volume_percent = max(0, min(100, int(volume * 100)))
-            logger.debug(f"Mock: Set WASAPI device {device_id} volume to {volume_percent}%")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error setting WASAPI device volume: {e}")
-            return False
-    
-    async def get_device_volume(self, device_id: str) -> Optional[float]:
-        """Get WASAPI device volume"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return None
-            
-            # In a real implementation, would query Windows Volume APIs
-            # Return mock volume
-            return 0.75  # 75%
-            
-        except Exception as e:
-            logger.error(f"Error getting WASAPI device volume: {e}")
-            return None
-    
-    async def create_stream(self, config: AudioStreamConfig) -> Optional[str]:
-        """Create WASAPI audio stream"""
-        try:
-            stream_id = f"wasapi_stream_{len(self.streams)}"
-            
-            # In a real implementation, would create actual WASAPI stream
-            self.streams[stream_id] = {
-                'config': config,
-                'created_at': time.time(),
-                'active': True
-            }
-            
-            logger.info(f"Created WASAPI stream {stream_id} for device {config.device_id}")
-            return stream_id
-            
-        except Exception as e:
-            logger.error(f"Error creating WASAPI stream: {e}")
-            return None
-    
-    async def destroy_stream(self, stream_id: str) -> bool:
-        """Destroy WASAPI audio stream"""
-        try:
-            if stream_id in self.streams:
-                del self.streams[stream_id]
-                logger.info(f"Destroyed WASAPI stream {stream_id}")
-                return True
-            else:
-                logger.error(f"Stream {stream_id} not found")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error destroying WASAPI stream: {e}")
-            return False
-
-
-class CoreAudioEngine(AudioEngineInterface):
-    """Core Audio engine for macOS"""
-    
-    def __init__(self):
-        self.initialized = False
-        self.devices: Dict[str, AudioDeviceInfo] = {}
-        self.streams: Dict[str, Any] = {}
-        logger.info("Core Audio engine created")
-    
-    async def initialize(self) -> bool:
-        """Initialize Core Audio engine"""
-        logger.info("--- Initializing Core Audio Engine ---")
-        
-        try:
-            # Check if we're on macOS
-            if platform.system() != "Darwin":
-                logger.error("Core Audio engine can only run on macOS")
-                return False
-            
-            # Try to enumerate devices to test Core Audio availability
-            devices = await self.enumerate_devices()
-            
-            if devices:
-                self.initialized = True
-                logger.info(f"Core Audio engine initialized with {len(devices)} devices")
-                return True
-            else:
-                logger.error("No Core Audio devices found")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error initializing Core Audio: {e}")
-            return False
-    
-    async def shutdown(self) -> None:
-        """Shutdown Core Audio engine"""
-        logger.info("Shutting down Core Audio engine")
-        
-        # Destroy all streams
-        for stream_id in list(self.streams.keys()):
-            await self.destroy_stream(stream_id)
-        
-        self.initialized = False
-        self.devices.clear()
-        logger.info("Core Audio engine shutdown complete")
-    
-    async def enumerate_devices(self, device_type: Optional[DeviceType] = None) -> List[AudioDeviceInfo]:
-        """Enumerate Core Audio devices"""
-        logger.debug("Enumerating Core Audio devices")
-        
-        try:
-            # Use system_profiler to get audio device info
-            result = await asyncio.create_subprocess_exec(
-                'system_profiler', 'SPAudioDataType', '-json',
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await result.communicate()
-            
-            if result.returncode != 0:
-                logger.error(f"Failed to enumerate Core Audio devices: {stderr.decode()}")
-                return []
-            
-            # Parse system_profiler JSON output
-            devices = await self._parse_coreaudio_devices(stdout.decode())
-            
-            # Filter by device type if specified
-            if device_type:
-                devices = [d for d in devices if d.device_type == device_type]
-            
-            # Update internal device cache
-            self.devices.clear()
-            for device in devices:
-                self.devices[device.id] = device
-            
-            logger.info(f"Found {len(devices)} Core Audio devices")
-            return devices
-            
-        except FileNotFoundError:
-            logger.error("system_profiler not available")
-            return []
-        except Exception as e:
-            logger.error(f"Error enumerating Core Audio devices: {e}")
-            return []
-    
-    async def _parse_coreaudio_devices(self, json_output: str) -> List[AudioDeviceInfo]:
-        """Parse Core Audio device JSON output"""
-        devices = []
-        
-        try:
-            if json_output.strip():
-                data = json.loads(json_output)
-                
-                # Extract audio devices from system profiler data
-                audio_data = data.get('SPAudioDataType', [])
-                
-                for i, device_info in enumerate(audio_data):
-                    device_id = f"coreaudio_{i}"
-                    device_name = device_info.get('_name', f'Core Audio Device {i}')
-                    
-                    device = AudioDeviceInfo(
-                        id=device_id,
-                        name=device_name,
-                        description=f"Core Audio device: {device_name}",
-                        device_type=DeviceType.PLAYBACK,  # Assume playback for now
-                        state=DeviceState.ACTIVE,
-                        driver="coreaudio"
-                    )
-                    devices.append(device)
-            
-            logger.debug(f"Parsed {len(devices)} Core Audio devices")
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Error parsing Core Audio JSON: {e}")
-        except Exception as e:
-            logger.error(f"Error parsing Core Audio devices: {e}")
-        
-        return devices
-    
-    async def get_default_device(self, device_type: DeviceType) -> Optional[AudioDeviceInfo]:
-        """Get default Core Audio device"""
-        # Return first device of specified type
-        for device in self.devices.values():
-            if device.device_type == device_type:
-                logger.debug(f"Default {device_type.value} device: {device.name}")
-                return device
-        return None
-    
-    async def set_default_device(self, device_id: str) -> bool:
-        """Set default Core Audio device"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return False
-            
-            # In a real implementation, would use Core Audio APIs
-            logger.info(f"Mock: Set default Core Audio device to {device_id}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error setting default Core Audio device: {e}")
-            return False
-    
-    async def set_device_volume(self, device_id: str, volume: float) -> bool:
-        """Set Core Audio device volume"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return False
-            
-            # Use osascript for volume control
-            volume_percent = max(0, min(100, int(volume * 100)))
-            
-            result = await asyncio.create_subprocess_exec(
-                'osascript', '-e', f'set volume output volume {volume_percent}',
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            await result.communicate()
-            
-            success = result.returncode == 0
-            if success:
-                logger.debug(f"Set Core Audio device {device_id} volume to {volume_percent}%")
-            else:
-                logger.error(f"Failed to set Core Audio volume")
-            
-            return success
-            
-        except FileNotFoundError:
-            logger.warning("osascript not available, cannot set volume")
-            return False
-        except Exception as e:
-            logger.error(f"Error setting Core Audio device volume: {e}")
-            return False
-    
-    async def get_device_volume(self, device_id: str) -> Optional[float]:
-        """Get Core Audio device volume"""
-        try:
-            if device_id not in self.devices:
-                logger.error(f"Device {device_id} not found")
-                return None
-            
-            # Use osascript to get volume
-            result = await asyncio.create_subprocess_exec(
-                'osascript', '-e', 'output volume of (get volume settings)',
+                "powershell", "-Command", ps_script,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
@@ -867,234 +707,509 @@ class CoreAudioEngine(AudioEngineInterface):
             
             if result.returncode == 0:
                 try:
-                    volume_percent = int(stdout.decode().strip())
-                    return volume_percent / 100.0
-                except ValueError:
-                    logger.error("Failed to parse volume from osascript output")
-                    return None
+                    devices_data = json.loads(stdout.decode())
+                    if isinstance(devices_data, list):
+                        for device_data in devices_data:
+                            device_type = self._determine_device_type(
+                                device_data.get("Name", ""), 
+                                device_data.get("Name", "")
+                            )
+                            
+                            device = AudioDevice(
+                                id=f"windows_{device_data.get('Index', 0)}",
+                                name=device_data.get("Name", f"Windows Audio Device {device_data.get('Index', 0)}"),
+                                type=device_type,
+                                is_default=device_data.get("Index", 0) == 0,
+                                sample_rate=44100,
+                                channels=2,
+                                bit_depth=16,
+                                properties={
+                                    "device_id": device_data.get("Id"),
+                                    "state": device_data.get("State"),
+                                    "index": device_data.get("Index"),
+                                    "wasapi": True
+                                }
+                            )
+                            self.devices[device.id] = device
+                except json.JSONDecodeError:
+                    # Fallback: create default device
+                    device = AudioDevice(
+                        id="windows_default",
+                        name="Windows Default Audio Device",
+                        type=AudioDeviceType.SPEAKERS,
+                        is_default=True,
+                        sample_rate=44100,
+                        channels=2,
+                        bit_depth=16,
+                        properties={"wasapi": True}
+                    )
+                    self.devices[device.id] = device
             else:
-                logger.error("Failed to get Core Audio volume")
-                return None
+                # Fallback to basic WMI query
+                await self._get_windows_devices_fallback()
             
-        except FileNotFoundError:
-            logger.warning("osascript not available, cannot get volume")
-            return None
+            if self.devices:
+                self.default_device = list(self.devices.values())[0]
+            
         except Exception as e:
-            logger.error(f"Error getting Core Audio device volume: {e}")
-            return None
+            logger.error(f"Error getting Windows devices: {e}")
+            await self._get_windows_devices_fallback()
     
-    async def create_stream(self, config: AudioStreamConfig) -> Optional[str]:
-        """Create Core Audio stream"""
+    async def _get_windows_devices_fallback(self):
+        """Fallback method to get Windows devices using WMI"""
         try:
-            stream_id = f"coreaudio_stream_{len(self.streams)}"
+            ps_script = """
+            Get-WmiObject -Class Win32_SoundDevice | Select-Object Name, DeviceID | ConvertTo-Json
+            """
             
-            # In a real implementation, would create actual Core Audio stream
-            self.streams[stream_id] = {
-                'config': config,
-                'created_at': time.time(),
-                'active': True
-            }
+            result = await asyncio.create_subprocess_exec(
+                "powershell", "-Command", ps_script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
             
-            logger.info(f"Created Core Audio stream {stream_id} for device {config.device_id}")
-            return stream_id
+            if result.returncode == 0:
+                try:
+                    devices_data = json.loads(stdout.decode())
+                    if isinstance(devices_data, list):
+                        for i, device_data in enumerate(devices_data):
+                            device_type = self._determine_device_type(
+                                device_data.get("Name", ""), 
+                                device_data.get("Name", "")
+                            )
+                            
+                            device = AudioDevice(
+                                id=f"windows_{i}",
+                                name=device_data.get("Name", f"Windows Audio Device {i}"),
+                                type=device_type,
+                                is_default=i == 0,
+                                sample_rate=44100,
+                                channels=2,
+                                bit_depth=16,
+                                properties={
+                                    "device_id": device_data.get("DeviceID"),
+                                    "wmi": True
+                                }
+                            )
+                            self.devices[device.id] = device
+                except json.JSONDecodeError:
+                    pass
+            
+            # Always create at least one default device
+            if not self.devices:
+                device = AudioDevice(
+                    id="windows_default",
+                    name="Windows Default Audio Device",
+                    type=AudioDeviceType.SPEAKERS,
+                    is_default=True,
+                    sample_rate=44100,
+                    channels=2,
+                    bit_depth=16,
+                    properties={"fallback": True}
+                )
+                self.devices[device.id] = device
             
         except Exception as e:
-            logger.error(f"Error creating Core Audio stream: {e}")
-            return None
+            logger.error(f"Error in Windows fallback device detection: {e}")
     
-    async def destroy_stream(self, stream_id: str) -> bool:
-        """Destroy Core Audio stream"""
-        try:
-            if stream_id in self.streams:
-                del self.streams[stream_id]
-                logger.info(f"Destroyed Core Audio stream {stream_id}")
-                return True
-            else:
-                logger.error(f"Stream {stream_id} not found")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error destroying Core Audio stream: {e}")
-            return False
-
-
-class CrossPlatformAudioEngine:
-    """Unified cross-platform audio engine that automatically selects the appropriate backend"""
-    
-    def __init__(self):
-        self.platform = platform.system().lower()
-        self.engine: Optional[AudioEngineInterface] = None
-        self.initialized = False
-        
-        logger.info(f"CrossPlatformAudioEngine created for platform: {self.platform}")
-    
-    async def initialize(self) -> bool:
-        """Initialize the appropriate audio engine for the current platform"""
-        logger.info("=== Initializing Cross-Platform Audio Engine ===")
-        
-        try:
-            # Select appropriate engine based on platform
-            if self.platform == "linux":
-                self.engine = PipeWireEngine()
-            elif self.platform == "windows":
-                self.engine = WASAPIEngine()
-            elif self.platform == "darwin":  # macOS
-                self.engine = CoreAudioEngine()
-            else:
-                logger.error(f"Unsupported platform: {self.platform}")
-                return False
-            
-            # Initialize the selected engine
-            success = await self.engine.initialize()
-            
-            if success:
-                self.initialized = True
-                logger.info(f"=== Cross-Platform Audio Engine Initialized Successfully ===")
-                logger.info(f"Active engine: {type(self.engine).__name__}")
-                return True
-            else:
-                logger.error("=== Cross-Platform Audio Engine Initialization Failed ===")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error initializing cross-platform audio engine: {e}")
-            return False
-    
-    async def shutdown(self) -> None:
-        """Shutdown the audio engine"""
-        if self.engine and self.initialized:
-            await self.engine.shutdown()
-        self.initialized = False
-        logger.info("Cross-Platform Audio Engine shutdown complete")
-    
-    def _ensure_initialized(self) -> bool:
-        """Ensure engine is initialized before operations"""
-        if not self.initialized or not self.engine:
-            logger.error("Audio engine not initialized")
-            return False
+    async def shutdown(self) -> bool:
+        """Shutdown Windows audio engine"""
+        self.is_initialized = False
         return True
     
-    async def enumerate_devices(self, device_type: Optional[DeviceType] = None) -> List[AudioDeviceInfo]:
-        """Enumerate available audio devices"""
-        if not self._ensure_initialized():
-            return []
-        return await self.engine.enumerate_devices(device_type)
+    async def get_devices(self) -> List[AudioDevice]:
+        """Get available audio devices"""
+        return list(self.devices.values())
     
-    async def get_default_device(self, device_type: DeviceType) -> Optional[AudioDeviceInfo]:
-        """Get default device for specified type"""
-        if not self._ensure_initialized():
-            return None
-        return await self.engine.get_default_device(device_type)
+    async def get_default_device(self) -> Optional[AudioDevice]:
+        """Get default audio device"""
+        return self.default_device
     
     async def set_default_device(self, device_id: str) -> bool:
         """Set default audio device"""
-        if not self._ensure_initialized():
-            return False
-        return await self.engine.set_default_device(device_id)
+        if device_id in self.devices:
+            self.default_device = self.devices[device_id]
+            return True
+        return False
     
-    async def set_device_volume(self, device_id: str, volume: float) -> bool:
-        """Set device volume (0.0 to 1.0)"""
-        if not self._ensure_initialized():
-            return False
-        return await self.engine.set_device_volume(device_id, volume)
-    
-    async def get_device_volume(self, device_id: str) -> Optional[float]:
-        """Get device volume (0.0 to 1.0)"""
-        if not self._ensure_initialized():
-            return None
-        return await self.engine.get_device_volume(device_id)
-    
-    async def create_stream(self, config: AudioStreamConfig) -> Optional[str]:
-        """Create audio stream, returns stream ID"""
-        if not self._ensure_initialized():
-            return None
-        return await self.engine.create_stream(config)
-    
-    async def destroy_stream(self, stream_id: str) -> bool:
-        """Destroy audio stream"""
-        if not self._ensure_initialized():
-            return False
-        return await self.engine.destroy_stream(stream_id)
-    
-    def get_engine_info(self) -> Dict[str, Any]:
-        """Get information about the current audio engine"""
-        if not self.initialized or not self.engine:
-            return {"status": "not_initialized"}
-        
-        return {
-            "status": "initialized",
-            "platform": self.platform,
-            "engine_type": type(self.engine).__name__,
-            "device_count": len(getattr(self.engine, 'devices', {})),
-            "stream_count": len(getattr(self.engine, 'streams', {}))
-        }
-
-
-# Example usage and testing
-if __name__ == "__main__":
-    async def test_cross_platform_audio():
-        """Test the cross-platform audio engine"""
-        logger.info("=== Starting Cross-Platform Audio Engine Test ===")
-        
-        # Create and initialize engine
-        engine = CrossPlatformAudioEngine()
-        success = await engine.initialize()
-        
-        if not success:
-            logger.error("Failed to initialize audio engine")
-            return
-        
-        # Get engine info
-        info = engine.get_engine_info()
-        logger.info(f"Engine info: {info}")
-        
-        # Enumerate devices
-        devices = await engine.enumerate_devices()
-        logger.info(f"Found {len(devices)} audio devices:")
-        for device in devices:
-            logger.info(f"  {device.name} ({device.id}) - {device.device_type.value} - {device.state.value}")
-        
-        # Test volume control on first device
-        if devices:
-            test_device = devices[0]
-            logger.info(f"Testing volume control on {test_device.name}")
+    async def get_volume(self, device_id: Optional[str] = None) -> float:
+        """Get device volume using PowerShell"""
+        try:
+            # PowerShell script to get volume
+            ps_script = """
+            [audio]::Volume * 100
+            """
             
-            # Get current volume
-            current_volume = await engine.get_device_volume(test_device.id)
-            if current_volume is not None:
-                logger.info(f"Current volume: {current_volume * 100:.1f}%")
-                
-                # Set volume to 75%
-                success = await engine.set_device_volume(test_device.id, 0.75)
-                if success:
-                    logger.info("Volume set to 75%")
-                    
-                    # Get new volume
-                    new_volume = await engine.get_device_volume(test_device.id)
-                    if new_volume is not None:
-                        logger.info(f"New volume: {new_volume * 100:.1f}%")
-        
-        # Test stream creation
-        if devices:
-            config = AudioStreamConfig(
-                device_id=devices[0].id,
-                sample_rate=48000,
-                format=AudioFormat.FLOAT_32,
-                channels=2
+            result = await asyncio.create_subprocess_exec(
+                "powershell", "-Command", ps_script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
             )
+            stdout, stderr = await result.communicate()
             
-            stream_id = await engine.create_stream(config)
-            if stream_id:
-                logger.info(f"Created audio stream: {stream_id}")
-                
-                # Destroy stream
-                success = await engine.destroy_stream(stream_id)
-                if success:
-                    logger.info(f"Destroyed audio stream: {stream_id}")
-        
-        # Shutdown
-        await engine.shutdown()
-        logger.info("=== Cross-Platform Audio Engine Test Complete ===")
+            if result.returncode == 0:
+                try:
+                    volume_percent = float(stdout.decode().strip())
+                    return max(0.0, min(1.0, volume_percent / 100.0))
+                except ValueError:
+                    pass
+            
+            return 0.5
+            
+        except Exception as e:
+            logger.error(f"Error getting volume: {e}")
+            return 0.5
     
-    # Run test
-    asyncio.run(test_cross_platform_audio())
+    async def set_volume(self, volume: float, device_id: Optional[str] = None) -> bool:
+        """Set device volume using PowerShell"""
+        try:
+            volume_percent = int(volume * 100)
+            volume_percent = max(0, min(100, volume_percent))
+            
+            # PowerShell script to set volume
+            ps_script = f"""
+            [audio]::Volume = {volume_percent / 100.0}
+            """
+            
+            result = await asyncio.create_subprocess_exec(
+                "powershell", "-Command", ps_script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error setting volume: {e}")
+            return False
+    
+    async def mute(self, device_id: Optional[str] = None) -> bool:
+        """Mute device using PowerShell"""
+        try:
+            # PowerShell script to mute
+            ps_script = """
+            [audio]::Mute = $true
+            """
+            
+            result = await asyncio.create_subprocess_exec(
+                "powershell", "-Command", ps_script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error muting device: {e}")
+            return False
+    
+    async def unmute(self, device_id: Optional[str] = None) -> bool:
+        """Unmute device using PowerShell"""
+        try:
+            # PowerShell script to unmute
+            ps_script = """
+            [audio]::Mute = $false
+            """
+            
+            result = await asyncio.create_subprocess_exec(
+                "powershell", "-Command", ps_script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error unmuting device: {e}")
+            return False
+
+
+class MacOSAudioEngine(AudioEngine):
+    """macOS audio engine using Core Audio"""
+    
+    def __init__(self, config: AudioConfig):
+        self.config = config
+        self.devices: Dict[str, AudioDevice] = {}
+        self.default_device: Optional[AudioDevice] = None
+        self.is_initialized = False
+    
+    async def initialize(self) -> bool:
+        """Initialize macOS audio engine"""
+        try:
+            # Use system_profiler to get audio devices
+            await self._get_macos_devices()
+            
+            self.is_initialized = True
+            logger.info("macOS audio engine initialized")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize macOS audio engine: {e}")
+            return False
+    
+    async def _get_macos_devices(self):
+        """Get macOS audio devices using Core Audio and system_profiler"""
+        try:
+            # Try Core Audio approach first
+            await self._get_macos_core_audio_devices()
+            
+            # If no devices found, try system_profiler
+            if not self.devices:
+                await self._get_macos_system_profiler_devices()
+            
+            # Always ensure we have at least one device
+            if not self.devices:
+                device = AudioDevice(
+                    id="macos_default",
+                    name="macOS Default Audio Device",
+                    type=AudioDeviceType.SPEAKERS,
+                    is_default=True,
+                    sample_rate=44100,
+                    channels=2,
+                    bit_depth=16,
+                    properties={"fallback": True}
+                )
+                self.devices[device.id] = device
+            
+            if self.devices:
+                self.default_device = list(self.devices.values())[0]
+            
+        except Exception as e:
+            logger.error(f"Error getting macOS devices: {e}")
+    
+    async def _get_macos_core_audio_devices(self):
+        """Get macOS devices using Core Audio via AppleScript"""
+        try:
+            # AppleScript to get Core Audio devices
+            script = """
+            tell application "System Events"
+                set deviceList to {}
+                try
+                    set audioDevices to (do shell script "system_profiler SPAudioDataType -json")
+                    set deviceData to (do shell script "echo '" & audioDevices & "' | python3 -c \"
+import json, sys
+data = json.load(sys.stdin)
+devices = data.get('SPAudioDataType', [])
+for i, device in enumerate(devices):
+    print(f'{i}|{device.get(\\\"_name\\\", \\\"Unknown\\\")}|{device.get(\\\"coreaudio_default_audio_output_device\\\", \\\"false\\\")}')
+\"")
+                    
+                    repeat with line in paragraphs of deviceData
+                        if line is not \"\" then
+                            set AppleScript's text item delimiters to \"|\"
+                            set deviceInfo to text items of line
+                            set deviceIndex to item 1 of deviceInfo
+                            set deviceName to item 2 of deviceInfo
+                            set isDefault to item 3 of deviceInfo
+                            
+                            set deviceInfo to {deviceIndex, deviceName, isDefault}
+                            set end of deviceList to deviceInfo
+                        end if
+                    end repeat
+                end try
+            end tell
+            
+            return deviceList
+            """
+            
+            result = await asyncio.create_subprocess_exec(
+                "osascript", "-e", script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                output = stdout.decode().strip()
+                if output:
+                    lines = output.split('\n')
+                    for line in lines:
+                        if '|' in line:
+                            parts = line.split('|')
+                            if len(parts) >= 3:
+                                device_index = int(parts[0])
+                                device_name = parts[1]
+                                is_default = parts[2].lower() == 'true'
+                                
+                                device_type = self._determine_device_type(device_name, device_name)
+                                
+                                device = AudioDevice(
+                                    id=f"macos_{device_index}",
+                                    name=device_name,
+                                    type=device_type,
+                                    is_default=is_default,
+                                    sample_rate=44100,
+                                    channels=2,
+                                    bit_depth=16,
+                                    properties={
+                                        "core_audio": True,
+                                        "device_index": device_index
+                                    }
+                                )
+                                self.devices[device.id] = device
+                                
+        except Exception as e:
+            logger.debug(f"Core Audio device detection failed: {e}")
+    
+    async def _get_macos_system_profiler_devices(self):
+        """Get macOS devices using system_profiler"""
+        try:
+            result = await asyncio.create_subprocess_exec(
+                "system_profiler", "SPAudioDataType", "-json",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                try:
+                    data = json.loads(stdout.decode())
+                    audio_items = data.get("SPAudioDataType", [])
+                    
+                    for i, item in enumerate(audio_items):
+                        device_name = item.get("_name", f"macOS Audio Device {i}")
+                        device_type = self._determine_device_type(device_name, device_name)
+                        is_default = item.get("coreaudio_default_audio_output_device", "false").lower() == "true"
+                        
+                        device = AudioDevice(
+                            id=f"macos_{i}",
+                            name=device_name,
+                            type=device_type,
+                            is_default=is_default or i == 0,
+                            sample_rate=44100,
+                            channels=2,
+                            bit_depth=16,
+                            properties={
+                                "system_profiler": True,
+                                "device_index": i,
+                                "coreaudio_default": is_default
+                            }
+                        )
+                        self.devices[device.id] = device
+                
+                except json.JSONDecodeError:
+                    # Fallback: create default device
+                    device = AudioDevice(
+                        id="macos_default",
+                        name="macOS Default Audio Device",
+                        type=AudioDeviceType.SPEAKERS,
+                        is_default=True,
+                        sample_rate=44100,
+                        channels=2,
+                        bit_depth=16,
+                        properties={"system_profiler_fallback": True}
+                    )
+                    self.devices[device.id] = device
+            
+        except Exception as e:
+            logger.debug(f"System profiler device detection failed: {e}")
+    
+    async def shutdown(self) -> bool:
+        """Shutdown macOS audio engine"""
+        self.is_initialized = False
+        return True
+    
+    async def get_devices(self) -> List[AudioDevice]:
+        """Get available audio devices"""
+        return list(self.devices.values())
+    
+    async def get_default_device(self) -> Optional[AudioDevice]:
+        """Get default audio device"""
+        return self.default_device
+    
+    async def set_default_device(self, device_id: str) -> bool:
+        """Set default audio device"""
+        if device_id in self.devices:
+            self.default_device = self.devices[device_id]
+            return True
+        return False
+    
+    async def get_volume(self, device_id: Optional[str] = None) -> float:
+        """Get device volume using osascript"""
+        try:
+            # AppleScript to get volume
+            script = "output volume of (get volume settings)"
+            
+            result = await asyncio.create_subprocess_exec(
+                "osascript", "-e", script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            if result.returncode == 0:
+                try:
+                    volume_percent = float(stdout.decode().strip())
+                    return max(0.0, min(1.0, volume_percent / 100.0))
+                except ValueError:
+                    pass
+            
+            return 0.5
+            
+        except Exception as e:
+            logger.error(f"Error getting volume: {e}")
+            return 0.5
+    
+    async def set_volume(self, volume: float, device_id: Optional[str] = None) -> bool:
+        """Set device volume using osascript"""
+        try:
+            volume_percent = int(volume * 100)
+            volume_percent = max(0, min(100, volume_percent))
+            
+            # AppleScript to set volume
+            script = f"set volume output volume {volume_percent}"
+            
+            result = await asyncio.create_subprocess_exec(
+                "osascript", "-e", script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error setting volume: {e}")
+            return False
+    
+    async def mute(self, device_id: Optional[str] = None) -> bool:
+        """Mute device using osascript"""
+        try:
+            # AppleScript to mute
+            script = "set volume with output muted"
+            
+            result = await asyncio.create_subprocess_exec(
+                "osascript", "-e", script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error muting device: {e}")
+            return False
+    
+    async def unmute(self, device_id: Optional[str] = None) -> bool:
+        """Unmute device using osascript"""
+        try:
+            # AppleScript to unmute
+            script = "set volume without output muted"
+            
+            result = await asyncio.create_subprocess_exec(
+                "osascript", "-e", script,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+            
+            return result.returncode == 0
+            
+        except Exception as e:
+            logger.error(f"Error unmuting device: {e}")
+            return False

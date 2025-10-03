@@ -13,5 +13,3 @@ sudo apt-get install -y avahi-daemon
 
 echo "Log out/in to refresh docker group if just installed."
 echo "Then: cd edge-compat/pi-gateway && cp env.example .env && docker compose up -d && bash scripts/smoke.sh"
-
-

@@ -23,5 +23,3 @@ while True:
     }
     c.publish(topic, json.dumps(payload), qos=1, retain=True)
     time.sleep(60)
-
-

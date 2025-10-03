@@ -17,10 +17,10 @@ public:
     bool connected = false;
     std::mutex mutex;
     std::map<std::string, std::promise<Response>> pendingRequests;
-    
+
     NotificationHandler onNotification;
     ErrorHandler onError;
-    
+
     Impl(const ClientConfig& cfg) : config(cfg) {
 #ifdef TINYMCP_ENABLE_LOGGING
         if (config.enableLogging) {
@@ -28,16 +28,16 @@ public:
         }
 #endif
     }
-    
+
     Response waitForResponse(const std::string& id) {
         std::promise<Response> promise;
         auto future = promise.get_future();
-        
+
         {
             std::lock_guard<std::mutex> lock(mutex);
             pendingRequests[id] = std::move(promise);
         }
-        
+
         // Wait with timeout
         if (future.wait_for(std::chrono::milliseconds(config.timeout)) == std::future_status::ready) {
             return future.get();
@@ -82,7 +82,7 @@ Response Client::sendRequest(const Request& request) {
     if (!isConnected()) {
         throw utils::MCPException("Client not connected");
     }
-    
+
     // In a real implementation, this would send over transport
     // For now, return a mock response
     return pImpl->waitForResponse(request.id);
@@ -93,7 +93,7 @@ Response Client::initialize() {
     request.params["clientInfo"]["name"] = pImpl->config.name;
     request.params["clientInfo"]["version"] = pImpl->config.version;
     request.params["protocolVersion"] = PROTOCOL_VERSION;
-    
+
     return sendRequest(request);
 }
 
@@ -148,7 +148,7 @@ void Client::sendNotification(const Notification& notification) {
     if (!isConnected()) {
         throw utils::MCPException("Client not connected");
     }
-    
+
     // In a real implementation, this would send over transport
 #ifdef TINYMCP_ENABLE_LOGGING
     spdlog::debug("Sent notification: {}", notification.method);
@@ -170,7 +170,7 @@ void Client::onNotification(const Notification& notification) {
 
 void Client::onResponse(const Response& response) {
     std::lock_guard<std::mutex> lock(pImpl->mutex);
-    
+
     auto it = pImpl->pendingRequests.find(response.id);
     if (it != pImpl->pendingRequests.end()) {
         it->second.set_value(response);

@@ -158,4 +158,3 @@ Tento projekt je licencován pod MIT licencí - viz [LICENSE](LICENSE) soubor pr
 ---
 
 **AI-SERVIS** - První modulární AI Car Server v ČR 🚗✨
-

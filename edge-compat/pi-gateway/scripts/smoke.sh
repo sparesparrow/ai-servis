@@ -16,5 +16,3 @@ docker run --rm --network host eclipse-mosquitto:2 mosquitto_pub -t "system/heal
 
 wait $SUB_PID || true
 echo "Smoke test completed: check above output shows system/health/smoke"
-
-

@@ -40,32 +40,32 @@ struct UIResponse {
 class IUIAdapter {
 public:
     virtual ~IUIAdapter() = default;
-    
+
     /**
      * @brief Initialize the UI adapter
      */
     virtual bool initialize() = 0;
-    
+
     /**
      * @brief Start the UI adapter
      */
     virtual bool start() = 0;
-    
+
     /**
      * @brief Stop the UI adapter
      */
     virtual void stop() = 0;
-    
+
     /**
      * @brief Process incoming command from UI
      */
     virtual void processCommand(const std::string& command, const UIContext& context) = 0;
-    
+
     /**
      * @brief Send response back to UI
      */
     virtual bool sendResponse(const UIResponse& response, const UIContext& context) = 0;
-    
+
     /**
      * @brief Get adapter type identifier
      */
@@ -73,7 +73,7 @@ public:
 
 protected:
     CoreOrchestrator* orchestrator = nullptr;
-    
+
     void setOrchestrator(CoreOrchestrator* orch) { orchestrator = orch; }
     friend class UIManager;
 };
@@ -85,7 +85,7 @@ class VoiceUIAdapter : public IUIAdapter {
 public:
     VoiceUIAdapter();
     ~VoiceUIAdapter() override = default;
-    
+
     bool initialize() override;
     bool start() override;
     void stop() override;
@@ -97,7 +97,7 @@ private:
     bool running;
     std::string audioInputDevice;
     std::string audioOutputDevice;
-    
+
     void processAudioInput();
     bool convertTextToSpeech(const std::string& text, const std::string& outputFile);
     std::string convertSpeechToText(const std::string& audioFile);
@@ -110,7 +110,7 @@ class TextUIAdapter : public IUIAdapter {
 public:
     TextUIAdapter();
     ~TextUIAdapter() override = default;
-    
+
     bool initialize() override;
     bool start() override;
     void stop() override;
@@ -120,7 +120,7 @@ public:
 
 private:
     bool running;
-    
+
     void inputLoop();
     void displayPrompt();
     void displayResponse(const std::string& response);
@@ -133,7 +133,7 @@ class WebUIAdapter : public IUIAdapter {
 public:
     WebUIAdapter(uint16_t port = 8080);
     ~WebUIAdapter() override = default;
-    
+
     bool initialize() override;
     bool start() override;
     void stop() override;
@@ -146,7 +146,7 @@ private:
     bool running;
     std::unique_ptr<class HTTPServer> httpServer;
     std::unordered_map<std::string, UIContext> activeSessions;
-    
+
     void handleHttpRequest(const std::string& path, const std::string& body, std::string& response);
     void handleWebSocketMessage(const std::string& sessionId, const std::string& message);
     std::string generateSessionId();
@@ -159,7 +159,7 @@ class MobileUIAdapter : public IUIAdapter {
 public:
     MobileUIAdapter();
     ~MobileUIAdapter() override = default;
-    
+
     bool initialize() override;
     bool start() override;
     void stop() override;
@@ -170,7 +170,7 @@ public:
 private:
     bool running;
     uint16_t apiPort;
-    
+
     void handleMobileAPIRequest(const std::string& endpoint, const std::string& payload, std::string& response);
     bool authenticateRequest(const std::string& token);
 };
@@ -182,32 +182,32 @@ class UIManager {
 public:
     UIManager(CoreOrchestrator* orchestrator);
     ~UIManager();
-    
+
     /**
      * @brief Register a UI adapter
      */
     bool registerAdapter(std::unique_ptr<IUIAdapter> adapter);
-    
+
     /**
      * @brief Start all registered adapters
      */
     bool startAll();
-    
+
     /**
      * @brief Stop all adapters
      */
     void stopAll();
-    
+
     /**
      * @brief Get adapter by type
      */
     IUIAdapter* getAdapter(const std::string& type);
-    
+
     /**
      * @brief Process command through appropriate adapter
      */
     void processCommand(const std::string& command, const UIContext& context);
-    
+
     /**
      * @brief Send response through appropriate adapter
      */
@@ -216,7 +216,7 @@ public:
 private:
     CoreOrchestrator* orchestrator;
     std::unordered_map<std::string, std::unique_ptr<IUIAdapter>> adapters;
-    
+
     // Callback for processing commands
     std::function<void(const std::string&, const UIContext&)> commandCallback;
 };

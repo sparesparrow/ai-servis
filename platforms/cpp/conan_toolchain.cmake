@@ -65,7 +65,7 @@ variable_watch(CMAKE_CXX_STANDARD conan_modify_std_watch)
 # Include extra C++, C and linker flags from configuration tools.build:<type>flags
 # and from CMakeToolchain.extra_<type>_flags
 
-# Conan conf flags start: 
+# Conan conf flags start:
 # Conan conf flags end
 
 

@@ -1,14 +1,14 @@
 ## 2. Assignment B – WebGrab Server (multithreaded service)
 
-Program in C++20 a multithreaded service "webgrab-server", which listens on a TCP socket, receives binary messages in `webgrab.fbs` format and puts them into a persistent **task queue** (can be file-based, SQLite or external MQ).  
+Program in C++20 a multithreaded service "webgrab-server", which listens on a TCP socket, receives binary messages in `webgrab.fbs` format and puts them into a persistent **task queue** (can be file-based, SQLite or external MQ).
 
 Worker threads (2-4) read from the queue and process tasks:
 
-* DownloadRequest   → download file to disk (libcurl or wget) and store sessionId→status map.  
+* DownloadRequest   → download file to disk (libcurl or wget) and store sessionId→status map.
 
-* DownloadStatusRequest → return current status (Queued, Downloading, Completed, Failed, Aborted).  
+* DownloadStatusRequest → return current status (Queued, Downloading, Completed, Failed, Aborted).
 
-* DownloadAbortRequest  → cancellation flag; running download must terminate as soon as possible.  
+* DownloadAbortRequest  → cancellation flag; running download must terminate as soon as possible.
 
 * ShutdownRequest   → accept, but process **only when** the queue reaches empty state; then terminate gracefully.
 
@@ -18,7 +18,7 @@ Worker threads (2-4) read from the queue and process tasks:
 
 2. The queue must survive process restart; unfinished jobs are re-queued on start.
 
-3. Each job has a unique `sessionId` (uint32).  
+3. Each job has a unique `sessionId` (uint32).
 
 4. State data and files need to be stored in a separate working directory, specified as a parameter on launch.
 
@@ -26,8 +26,8 @@ Worker threads (2-4) read from the queue and process tasks:
 
 ### Provided Artifacts
 
-* Same `webgrab.fbs` as the client.  
+* Same `webgrab.fbs` as the client.
 
-* Build script `CMakeLists.txt`.  
+* Build script `CMakeLists.txt`.
 
 * README with deployment instructions and example `systemd` service file.

@@ -4,5 +4,3 @@ WORKDIR /app
 COPY publisher.py /app/publisher.py
 ENV PYTHONUNBUFFERED=1
 CMD ["python", "/app/publisher.py"]
-
-

@@ -209,7 +209,7 @@ graph TB
 User: "AI, play jazz music while I cook"
 AI Audio Module → select kitchen speakers → stream jazz playlist
 
-User: "Switch to my Bluetooth headphones" 
+User: "Switch to my Bluetooth headphones"
 AI Audio Module → detect available devices → seamless handover
 
 User: "Set a 15-minute timer for the pasta"
@@ -253,7 +253,7 @@ services:
     environment:
       - MCP_DISCOVERY_PORT=8080
       - AUDIO_ENGINE=pipewire
-    
+
   ai-audio-assistant:
     image: ai-servis/audio:latest
     devices:
@@ -261,20 +261,20 @@ services:
     environment:
       - MCP_SERVER_PORT=8081
       - ELEVENLABS_API_KEY=${ELEVENLABS_KEY}
-    
+
   ai-platform-controller:
     image: ai-servis/platform-linux:latest
     privileged: true
     environment:
       - MCP_SERVER_PORT=8082
       - TARGET_PLATFORM=linux
-    
+
   mqtt-broker:
     image: eclipse-mosquitto:latest
     ports:
       - "1883:1883"
       - "9001:9001"
-    
+
   service-discovery:
     image: ai-servis/discovery:latest
     environment:
@@ -314,7 +314,7 @@ class AudioAssistantMCP(MCPServer):
     def __init__(self):
         super().__init__("ai-audio-assistant", "1.0.0")
         self.setup_tools()
-    
+
     def setup_tools(self):
         # Music control
         self.add_tool(Tool(
@@ -325,7 +325,7 @@ class AudioAssistantMCP(MCPServer):
                 "source": {"type": "string", "enum": ["spotify", "apple", "local"]}
             }
         ))
-        
+
         # Audio output management
         self.add_tool(Tool(
             name="switch_audio_output",
@@ -335,13 +335,13 @@ class AudioAssistantMCP(MCPServer):
                 "zone": {"type": "string", "optional": True}
             }
         ))
-    
+
     async def execute_play_music(self, query: str, source: str = "spotify"):
         # Implementation for music playback
         audio_engine = self.get_audio_engine()
         result = await audio_engine.play(query, source)
         return {"status": "playing", "track": result.current_track}
-    
+
     async def execute_switch_audio_output(self, device: str, zone: str = None):
         # Implementation for audio routing
         audio_manager = self.get_audio_manager()
@@ -356,25 +356,25 @@ class CoreOrchestrator:
     def __init__(self):
         self.mqtt_client = MQTTClient("localhost", 1883)
         self.mcp_clients = {}
-    
+
     async def handle_user_command(self, command: str):
         # Parse natural language command
         intent = await self.nlp_engine.parse(command)
-        
+
         if intent.action == "play_music_and_dim_lights":
             # Multi-module coordination
             audio_result = await self.call_mcp_tool(
-                "ai-audio-assistant", 
-                "play_music", 
+                "ai-audio-assistant",
+                "play_music",
                 {"query": intent.music_query}
             )
-            
+
             lights_result = await self.call_mcp_tool(
-                "ai-home-automation", 
-                "control_lighting", 
+                "ai-home-automation",
+                "control_lighting",
                 {"zone": "kitchen", "brightness": 30}
             )
-            
+
             return {"audio": audio_result, "lights": lights_result}
 ```
 
@@ -399,8 +399,8 @@ scenarios:
       - verify: audio_output_active
       - voice_command: "Switch to headphones"
       - verify: bluetooth_headphones_connected
-    
-  - name: "cross_platform_messaging" 
+
+  - name: "cross_platform_messaging"
     description: "Send message from desktop to mobile platforms"
     modules: [ai-messages, ai-platform-windows, ai-android-controller]
     test_steps:
@@ -482,7 +482,7 @@ RUN ./scripts/run-integration-tests.sh
 
 ### **Market Opportunities**
 1. **Home Automation Market**: $537B by 2030 (25% CAGR)
-2. **Voice Assistant Market**: $50B by 2030 (24.9% CAGR) 
+2. **Voice Assistant Market**: $50B by 2030 (24.9% CAGR)
 3. **Enterprise AI**: $390B by 2025
 4. **Cross-Platform Development**: Reduced development costs by 60-80%
 

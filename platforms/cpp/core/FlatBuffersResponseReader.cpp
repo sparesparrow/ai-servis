@@ -13,7 +13,9 @@ FlatBuffersResponseReader::~FlatBuffersResponseReader() {
 
 bool FlatBuffersResponseReader::recv(DownloadResponse& out) {
     if (!receiveMessage()) return false;
-    auto resp = webgrab::GetDownloadResponse(buffer_.data());
+    auto message = webgrab::GetMessage(buffer_.data());
+    if (!message) return false;
+    auto resp = message->response_as_DownloadResponse();
     if (!resp) return false;
     out.sessionId = resp->sessionId();
     return true;
@@ -21,9 +23,10 @@ bool FlatBuffersResponseReader::recv(DownloadResponse& out) {
 
 bool FlatBuffersResponseReader::recv(StatusResponse& out) {
     if (!receiveMessage()) return false;
-    auto resp = webgrab::GetDownloadStatusResponse(buffer_.data());
+    auto message = webgrab::GetMessage(buffer_.data());
+    if (!message) return false;
+    auto resp = message->response_as_DownloadStatusResponse();
     if (!resp) return false;
-    out.sessionId = resp->sessionId();
     out.status = resp->status()->str();
     return true;
 }
@@ -55,7 +58,12 @@ void FlatBuffersResponseReader::close() {
 }
 
 bool FlatBuffersResponseReader::read(void* buffer, size_t size) {
-    return socket_ && socket_->receive(static_cast<std::vector<uint8_t>&>(*reinterpret_cast<std::vector<uint8_t>*>(buffer)), size);
+    std::vector<uint8_t> temp_buffer(size);
+    bool result = socket_ && socket_->receive(temp_buffer);
+    if (result) {
+        std::memcpy(buffer, temp_buffer.data(), size);
+    }
+    return result;
 }
 
 bool FlatBuffersResponseReader::receiveMessage() {

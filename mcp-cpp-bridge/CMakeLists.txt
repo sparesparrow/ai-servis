@@ -149,20 +149,20 @@ endif()
 
 # Python bindings
 if(MCP_WITH_PYTHON)
-    pybind11_add_module(mcp_cpp_bridge_py 
+    pybind11_add_module(mcp_cpp_bridge_py
         python/mcp_cpp_bridge.cpp
     )
-    
+
     target_link_libraries(mcp_cpp_bridge_py PRIVATE
         mcp-cpp-bridge
         pybind11::module
     )
-    
+
     set_target_properties(mcp_cpp_bridge_py PROPERTIES
         OUTPUT_NAME mcp_cpp_bridge
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python
     )
-    
+
     # Install Python module
     install(TARGETS mcp_cpp_bridge_py
         LIBRARY DESTINATION python

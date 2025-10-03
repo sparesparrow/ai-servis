@@ -1,7 +1,7 @@
 # 📋 Pavel Urbanek - Architecture Reviewer TODO List
 
-**Role**: Architecture Reviewer  
-**Focus**: Code review, architecture validation, bug identification, quality assurance  
+**Role**: Architecture Reviewer
+**Focus**: Code review, architecture validation, bug identification, quality assurance
 **Expertise**: System architecture, data integrity, initialization sequencing, security patterns
 
 ---

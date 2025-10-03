@@ -1,4 +1,5 @@
 #pragma once
+#include "IResponseReader.h"
 #include "IResponseWriter.h"
 #include "IWriter.h"
 #include <memory>

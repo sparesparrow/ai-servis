@@ -33,7 +33,7 @@ bool DownloadTask::execute() {
             if (session_manager_->loadSession(session_id_, session)) {
                 output_path_ = session.output_path;
                 if (session.downloaded_bytes > 0) {
-                    std::cout << "Resuming download from " << session.downloaded_bytes 
+                    std::cout << "Resuming download from " << session.downloaded_bytes
                              << " bytes for session " << session_id_ << std::endl;
                     return http_client_->resumeDownload(url_, output_path_);
                 }
@@ -74,9 +74,9 @@ void DownloadTask::onProgressUpdate(const Utils::DownloadProgress& progress) {
     session_manager_->updateSessionProgress(session_id_, progress.downloaded_bytes);
 
     // Print progress
-    std::cout << "\rProgress: " << std::fixed << std::setprecision(1) 
-              << progress.progress_percent << "% (" 
-              << progress.downloaded_bytes << "/" << progress.total_bytes << " bytes)" 
+    std::cout << "\rProgress: " << std::fixed << std::setprecision(1)
+              << progress.progress_percent << "% ("
+              << progress.downloaded_bytes << "/" << progress.total_bytes << " bytes)"
               << std::flush;
 
     if (progress.is_complete) {

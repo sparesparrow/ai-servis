@@ -512,11 +512,11 @@ async def test_mcp_message_creation():
         method="test/method",
         params={"key": "value"}
     )
-    
+
     assert message.id == "test-1"
     assert message.method == "test/method"
     assert message.params == {"key": "value"}
-    
+
     # Test JSON serialization
     json_str = message.to_json()
     assert "test-1" in json_str
@@ -527,7 +527,7 @@ def test_tool_creation():
     """Test tool creation"""
     def dummy_handler(param1: str) -> str:
         return f"Result: {param1}"
-    
+
     tool = create_tool(
         name="test_tool",
         description="A test tool",
@@ -539,7 +539,7 @@ def test_tool_creation():
         },
         handler=dummy_handler
     )
-    
+
     assert tool.name == "test_tool"
     assert tool.description == "A test tool"
     assert tool.handler == dummy_handler
@@ -549,7 +549,7 @@ def test_tool_creation():
 async def test_mcp_server_initialization():
     """Test MCP server initialization"""
     server = MCPServer("test-server", "1.0.0")
-    
+
     assert server.name == "test-server"
     assert server.version == "1.0.0"
     assert len(server.tools) == 0
@@ -574,7 +574,7 @@ async def test_voice_command_routing():
     assert True
 
 
-@pytest.mark.asyncio 
+@pytest.mark.asyncio
 async def test_audio_device_switching():
     """Test audio device switching functionality"""
     # Integration test placeholder
@@ -679,7 +679,7 @@ log_info "Phase 11: Git Operations"
 
 if git rev-parse --git-dir >/dev/null 2>&1; then
   git add .
-  
+
   if [[ "$NO_COMMIT" == false ]]; then
     git commit -m "feat: implement AI-SERVIS Universal foundation
 

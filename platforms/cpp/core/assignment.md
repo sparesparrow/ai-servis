@@ -18,7 +18,7 @@ přepracuj a připrav toto zadání ve dvou variantách, tak, aby pro jedno zad�
 ně), factory na tvorbu Commandů je pak další modul.
 v ani jednom zadání ale nespecifikuj požadavky na design - jen přesně popiš, co má požadovaná featura dělat, a nech kandidáta zvolit si postup sám.
 Ideální by bylo, kdyby se tato dvě zadání krásně doplňovala - například řešení Visitorem by implementovalo klienta, řešení Message queue procesorem by implementovalo server
-klient i server by měli sdílet stejné API schéma, například ve formě flatbuffers .fbs - DownloadRequest(url), DownloadResponse(sessionId),DownloadStatusRequest(SessionId),DownloadStatusResponse(status) atd. -  klient i server si vygenerují ze schématu vlastní typy objektů, např c++ class header, enum class atd. 
+klient i server by měli sdílet stejné API schéma, například ve formě flatbuffers .fbs - DownloadRequest(url), DownloadResponse(sessionId),DownloadStatusRequest(SessionId),DownloadStatusResponse(status) atd. -  klient i server si vygenerují ze schématu vlastní typy objektů, např c++ class header, enum class atd.
 klient by pak třeba implementoval IRequestWriter + IResponseReader, server by implementoval IRequestReader + IResponseWriter
 
 # Dvě varianty zadání: „WebGrab Client“ × „WebGrab Server“
@@ -34,13 +34,13 @@ Oba programy sdílejí stejné API schéma (FlatBuffers), takže se výborně do
 
 ## 1. Zadání A – WebGrab Client (konzolový nástroj)
 
-Naprogramujte v C++20 konzolovou aplikaci „webgrab-client“, která plní roli front-endového **klienta** pro službu WebGrab.  
-Po spuštění čte příkazový řádek, zadané příkazy převádí na binární zprávy podle přiloženého FlatBuffers schématu `webgrab.fbs` a odesílá je na TCP socket (host:port předané parametry CLI).  
+Naprogramujte v C++20 konzolovou aplikaci „webgrab-client“, která plní roli front-endového **klienta** pro službu WebGrab.
+Po spuštění čte příkazový řádek, zadané příkazy převádí na binární zprávy podle přiloženého FlatBuffers schématu `webgrab.fbs` a odesílá je na TCP socket (host:port předané parametry CLI).
 Klient uchovává lokální **frontu odchozích požadavků** s možností:
 
-* `download <url>` – zařadí nový DownloadRequest.  
-* `status <session-id>` – zařadí DownloadStatusRequest.  
-* `abort  <session-id>` – zařadí DownloadAbortRequest.  
+* `download <url>` – zařadí nový DownloadRequest.
+* `status <session-id>` – zařadí DownloadStatusRequest.
+* `abort  <session-id>` – zařadí DownloadAbortRequest.
 * `quit` – odešle ShutdownRequest a ukončí aplikaci.
 
 Po přijetí odpovědi (DownloadResponse, DownloadStatusResponse, …) klient vytiskne stručné hlášení na stdout.
@@ -71,34 +71,34 @@ Po přijetí odpovědi (DownloadResponse, DownloadStatusResponse, …) klient vy
 
 ## 2. Zadání B – WebGrab Server (vícevláknová služba)
 
-Naprogramujte v C++20 vícevláknovou službu „webgrab-server“, která naslouchá na TCP socketu, přijímá binární zprávy ve formátu `webgrab.fbs` a dává je do vytrvalé **fronty úloh** (může být souborová, SQLite nebo externí MQ).  
+Naprogramujte v C++20 vícevláknovou službu „webgrab-server“, která naslouchá na TCP socketu, přijímá binární zprávy ve formátu `webgrab.fbs` a dává je do vytrvalé **fronty úloh** (může být souborová, SQLite nebo externí MQ).
 Pracovní vlákna (2-4) čtou z fronty a zpracovávají úlohy:
 
-* DownloadRequest   → stáhnout soubor na disk (libcurl nebo wget) a uložit mapu sessionId→stav.  
-* DownloadStatusRequest → vrátit aktuální stav (Queued, Downloading, Completed, Failed, Aborted).  
-* DownloadAbortRequest  → příznak zrušení; běžící download má povinnost co nejdřív skončit.  
+* DownloadRequest   → stáhnout soubor na disk (libcurl nebo wget) a uložit mapu sessionId→stav.
+* DownloadStatusRequest → vrátit aktuální stav (Queued, Downloading, Completed, Failed, Aborted).
+* DownloadAbortRequest  → příznak zrušení; běžící download má povinnost co nejdřív skončit.
 * ShutdownRequest   → přijmout, ale zpracovat **až** fronta dosáhne prázdného stavu; pak korektně ukončit.
 
 ### Funkční požadavky
 
 1. **Asynchronní** zpracování: přijetí zprávy se musí potvrdit klientovi okamžitě, skutečná práce probíhá na pozadí.
 2. Fronta musí přežít restart procesu; nedokončené joby se po startu znovu zařadí.
-3. Každý job má unikátní `sessionId` (uint32).  
+3. Každý job má unikátní `sessionId` (uint32).
 4. Stavová data i soubory je potřeba ukládat do samostatného pracovního adresáře, jenž je zadán parametrem při spuštění.
 5. Limity: paralelně nejvýš 4 downloads; ostatní čekají ve frontě.
 
 ### Dodané artefakty
 
-* Stejné `webgrab.fbs` jako u klienta.  
-* Build skript `CMakeLists.txt`.  
+* Stejné `webgrab.fbs` jako u klienta.
+* Build skript `CMakeLists.txt`.
 * README s pokyny k nasazení a příkladovým `systemd` service filem.
 
 ***
 
 ## Společné poznámky pro kandidáty
 
-* Přiložené schéma FlatBuffers je jediným pevně daným API – implementační detaily, logování, testy a volba knihoven jsou na vás.  
-* U klienta i serveru oceníme čisté oddělení **I/O** (socket, disk) od **doménové logiky**.  
+* Přiložené schéma FlatBuffers je jediným pevně daným API – implementační detaily, logování, testy a volba knihoven jsou na vás.
+* U klienta i serveru oceníme čisté oddělení **I/O** (socket, disk) od **doménové logiky**.
 * Připravte alespoň základní sadu jednotkových testů (GoogleTest nebo Catch2) a jednoduchý skript e2e-testu (`bash` nebo `Python`).
 
 ***

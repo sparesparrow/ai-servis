@@ -25,5 +25,3 @@ class PolicyViewModel @Inject constructor(
 		)
 	)
 }
-
-

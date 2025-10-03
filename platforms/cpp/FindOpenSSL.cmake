@@ -51,4 +51,3 @@ mark_as_advanced(OpenSSL_FOUND OpenSSL_VERSION)
 set(OpenSSL_FOUND 1)
 set(OpenSSL_VERSION "3.0.8")
 mark_as_advanced(OpenSSL_FOUND OpenSSL_VERSION)
-

@@ -13,4 +13,4 @@ from .gpio_controller import GPIOController
 from .mcp_bridge import MCPBridge
 from .mcp_client import MCPClient
 
-__all__ = ['HardwareClient', 'GPIOController', 'MCPBridge', 'MCPClient']
+__all__ = ["HardwareClient", "GPIOController", "MCPBridge", "MCPClient"]

@@ -390,7 +390,7 @@ sudo systemctl restart docker
 Pre-configured VM templates available:
 
 - **VMware Template**: Ubuntu 22.04 with Docker pre-installed
-- **VirtualBox OVA**: Ready-to-use development environment  
+- **VirtualBox OVA**: Ready-to-use development environment
 - **Vagrant Box**: Automated VM provisioning
 - **Cloud Images**: AWS/GCP/Azure marketplace images
 
@@ -433,7 +433,7 @@ curl -O https://raw.githubusercontent.com/ai-servis/ai-servis/main/scripts/vm-qu
 chmod +x vm-quick-test.sh && ./vm-quick-test.sh
 
 # Full validation (20-30 minutes):
-curl -O https://raw.githubusercontent.com/ai-servis/ai-servis/main/scripts/vm-test-setup.sh  
+curl -O https://raw.githubusercontent.com/ai-servis/ai-servis/main/scripts/vm-test-setup.sh
 chmod +x vm-test-setup.sh && ./vm-test-setup.sh
 ```
 

@@ -291,7 +291,7 @@ SLACK_WEBHOOK_URL=your-webhook
    ```bash
    # Check logs
    ./scripts/dev-environment.sh logs dev service-name
-   
+
    # Rebuild container
    ./scripts/dev-environment.sh build dev
    ```
@@ -300,7 +300,7 @@ SLACK_WEBHOOK_URL=your-webhook
    ```bash
    # Check port usage
    netstat -tulpn | grep :8080
-   
+
    # Stop conflicting services
    ./scripts/dev-environment.sh down dev
    ```

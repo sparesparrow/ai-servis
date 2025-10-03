@@ -51,4 +51,3 @@ mark_as_advanced(flatbuffers_FOUND flatbuffers_VERSION)
 set(flatbuffers_FOUND 1)
 set(flatbuffers_VERSION "23.5.26")
 mark_as_advanced(flatbuffers_FOUND flatbuffers_VERSION)
-

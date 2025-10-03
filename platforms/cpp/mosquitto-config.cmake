@@ -37,5 +37,3 @@ foreach(_BUILD_MODULE ${mosquitto_BUILD_MODULES_PATHS_RELEASE} )
     message(${mosquitto_MESSAGE_MODE} "Conan: Including build module from '${_BUILD_MODULE}'")
     include(${_BUILD_MODULE})
 endforeach()
-
-

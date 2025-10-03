@@ -16,15 +16,19 @@ import websockets
 
 # Import our MCP framework
 from mcp_framework import (
-    MCPServer, MCPClient, MCPMessage, MCPTransport,
-    WebSocketTransport, Tool, create_tool
+    MCPServer,
+    MCPClient,
+    MCPMessage,
+    MCPTransport,
+    WebSocketTransport,
+    Tool,
+    create_tool,
 )
 
 
 # Logging setup
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -32,6 +36,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProcessInfo:
     """Process information"""
+
     pid: int
     name: str
     status: str
@@ -55,13 +60,12 @@ class SystemManager:
                 command,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                shell=True
+                shell=True,
             )
 
             try:
                 stdout, stderr = await asyncio.wait_for(
-                    process.communicate(),
-                    timeout=timeout
+                    process.communicate(), timeout=timeout
                 )
 
                 return {
@@ -69,7 +73,7 @@ class SystemManager:
                     "returncode": process.returncode,
                     "stdout": stdout.decode().strip(),
                     "stderr": stderr.decode().strip(),
-                    "command": command
+                    "command": command,
                 }
 
             except asyncio.TimeoutError:
@@ -77,35 +81,47 @@ class SystemManager:
                 return {
                     "success": False,
                     "error": f"Command timed out after {timeout} seconds",
-                    "command": command
+                    "command": command,
                 }
 
         except Exception as e:
             logger.error(f"Error executing command: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "command": command
-            }
+            return {"success": False, "error": str(e), "command": command}
 
     async def get_system_info(self) -> Dict[str, Any]:
         """Get system information"""
         try:
             # Get CPU info
             cpu_result = await self.execute_command("nproc")
-            cpu_count = int(cpu_result.get("stdout", "1")) if cpu_result["success"] else 1
+            cpu_count = (
+                int(cpu_result.get("stdout", "1")) if cpu_result["success"] else 1
+            )
 
             # Get memory info
-            mem_result = await self.execute_command("free -m | grep '^Mem:' | awk '{print $2}'")
-            total_memory = int(mem_result.get("stdout", "1024")) if mem_result["success"] else 1024
+            mem_result = await self.execute_command(
+                "free -m | grep '^Mem:' | awk '{print $2}'"
+            )
+            total_memory = (
+                int(mem_result.get("stdout", "1024")) if mem_result["success"] else 1024
+            )
 
             # Get disk usage
-            disk_result = await self.execute_command("df -h / | tail -1 | awk '{print $5}'")
-            disk_usage = disk_result.get("stdout", "unknown") if disk_result["success"] else "unknown"
+            disk_result = await self.execute_command(
+                "df -h / | tail -1 | awk '{print $5}'"
+            )
+            disk_usage = (
+                disk_result.get("stdout", "unknown")
+                if disk_result["success"]
+                else "unknown"
+            )
 
             # Get uptime
             uptime_result = await self.execute_command("uptime -p")
-            uptime = uptime_result.get("stdout", "unknown") if uptime_result["success"] else "unknown"
+            uptime = (
+                uptime_result.get("stdout", "unknown")
+                if uptime_result["success"]
+                else "unknown"
+            )
 
             return {
                 "platform": self.platform,
@@ -113,14 +129,16 @@ class SystemManager:
                 "total_memory_mb": total_memory,
                 "disk_usage": disk_usage,
                 "uptime": uptime,
-                "hostname": os.uname().nodename
+                "hostname": os.uname().nodename,
             }
 
         except Exception as e:
             logger.error(f"Error getting system info: {e}")
             return {"error": str(e)}
 
-    async def list_processes(self, filter_name: Optional[str] = None) -> List[ProcessInfo]:
+    async def list_processes(
+        self, filter_name: Optional[str] = None
+    ) -> List[ProcessInfo]:
         """List running processes"""
         try:
             # Use ps command to get process info
@@ -134,7 +152,7 @@ class SystemManager:
                 return []
 
             processes = []
-            lines = result["stdout"].split('\n')
+            lines = result["stdout"].split("\n")
 
             for line in lines:
                 if not line.strip():
@@ -146,15 +164,17 @@ class SystemManager:
                         pid = int(parts[1])
                         cpu = float(parts[2])
                         memory = float(parts[3])
-                        name = ' '.join(parts[10:])
+                        name = " ".join(parts[10:])
 
-                        processes.append(ProcessInfo(
-                            pid=pid,
-                            name=name,
-                            status="running",
-                            cpu_percent=cpu,
-                            memory_mb=memory
-                        ))
+                        processes.append(
+                            ProcessInfo(
+                                pid=pid,
+                                name=name,
+                                status="running",
+                                cpu_percent=cpu,
+                                memory_mb=memory,
+                            )
+                        )
                     except (ValueError, IndexError):
                         continue
 
@@ -189,7 +209,11 @@ class SystemManager:
 
             # Check if directory
             ls_result = await self.execute_command(f"ls -la '{path}' | head -1")
-            is_dir = "total" in ls_result.get("stdout", "") if ls_result["success"] else False
+            is_dir = (
+                "total" in ls_result.get("stdout", "")
+                if ls_result["success"]
+                else False
+            )
 
             return {
                 "exists": True,
@@ -197,7 +221,7 @@ class SystemManager:
                 "is_directory": is_dir,
                 "size_bytes": size,
                 "permissions": permissions,
-                "modified_time": datetime.fromtimestamp(mtime).isoformat()
+                "modified_time": datetime.fromtimestamp(mtime).isoformat(),
             }
 
         except Exception as e:
@@ -224,11 +248,15 @@ class LinuxPlatformMCP(MCPServer):
                 "type": "object",
                 "properties": {
                     "command": {"type": "string", "description": "Command to execute"},
-                    "timeout": {"type": "integer", "default": 30, "description": "Command timeout in seconds"}
+                    "timeout": {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "Command timeout in seconds",
+                    },
                 },
-                "required": ["command"]
+                "required": ["command"],
             },
-            handler=self.handle_execute_command
+            handler=self.handle_execute_command,
         )
         self.add_tool(execute_tool)
 
@@ -237,7 +265,7 @@ class LinuxPlatformMCP(MCPServer):
             name="get_system_info",
             description="Get system information and status",
             schema={"type": "object", "properties": {}},
-            handler=self.handle_get_system_info
+            handler=self.handle_get_system_info,
         )
         self.add_tool(sysinfo_tool)
 
@@ -248,10 +276,13 @@ class LinuxPlatformMCP(MCPServer):
             schema={
                 "type": "object",
                 "properties": {
-                    "filter": {"type": "string", "description": "Filter processes by name"}
-                }
+                    "filter": {
+                        "type": "string",
+                        "description": "Filter processes by name",
+                    }
+                },
             },
-            handler=self.handle_list_processes
+            handler=self.handle_list_processes,
         )
         self.add_tool(list_processes_tool)
 
@@ -263,9 +294,9 @@ class LinuxPlatformMCP(MCPServer):
                 "properties": {
                     "pid": {"type": "integer", "description": "Process ID to kill"}
                 },
-                "required": ["pid"]
+                "required": ["pid"],
             },
-            handler=self.handle_kill_process
+            handler=self.handle_kill_process,
         )
         self.add_tool(kill_process_tool)
 
@@ -278,9 +309,9 @@ class LinuxPlatformMCP(MCPServer):
                 "properties": {
                     "path": {"type": "string", "description": "File or directory path"}
                 },
-                "required": ["path"]
+                "required": ["path"],
             },
-            handler=self.handle_get_file_info
+            handler=self.handle_get_file_info,
         )
         self.add_tool(file_info_tool)
 
@@ -316,7 +347,9 @@ class LinuxPlatformMCP(MCPServer):
         except Exception as e:
             return {"error": str(e)}
 
-    async def handle_list_processes(self, filter: Optional[str] = None) -> Dict[str, Any]:
+    async def handle_list_processes(
+        self, filter: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Handle process listing"""
         try:
             processes = await self.system_manager.list_processes(filter)
@@ -327,11 +360,11 @@ class LinuxPlatformMCP(MCPServer):
                         "name": p.name,
                         "status": p.status,
                         "cpu_percent": p.cpu_percent,
-                        "memory_mb": p.memory_mb
+                        "memory_mb": p.memory_mb,
                     }
                     for p in processes
                 ],
-                "count": len(processes)
+                "count": len(processes),
             }
         except Exception as e:
             return {"error": str(e)}
@@ -374,7 +407,7 @@ async def main():
             logger.error(f"Error in WebSocket handler: {e}")
 
     # Start WebSocket server
-    port = int(os.getenv('MCP_SERVER_PORT', 8083))
+    port = int(os.getenv("MCP_SERVER_PORT", 8083))
     start_server = websockets.serve(handle_websocket, "0.0.0.0", port)
 
     logger.info(f"Linux Platform Controller MCP Server listening on port {port}")

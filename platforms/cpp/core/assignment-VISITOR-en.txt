@@ -1,16 +1,16 @@
 ## 1. Assignment A – WebGrab Client (console tool)
 
-Program in C++20 a console application "webgrab-client", which serves as the front-end **client** for the WebGrab service.  
+Program in C++20 a console application "webgrab-client", which serves as the front-end **client** for the WebGrab service.
 
-After launch, it reads the command line, converts entered commands into binary messages according to the attached FlatBuffers schema `webgrab.fbs` and sends them to a TCP socket (host:port passed as CLI parameters).  
+After launch, it reads the command line, converts entered commands into binary messages according to the attached FlatBuffers schema `webgrab.fbs` and sends them to a TCP socket (host:port passed as CLI parameters).
 
 The client maintains a local **queue of outgoing requests** with options:
 
-* `download <url>` – queues a new DownloadRequest.  
+* `download <url>` – queues a new DownloadRequest.
 
-* `status <session-id>` – queues a DownloadStatusRequest.  
+* `status <session-id>` – queues a DownloadStatusRequest.
 
-* `abort  <session-id>` – queues a DownloadAbortRequest.  
+* `abort  <session-id>` – queues a DownloadAbortRequest.
 
 * `quit` – sends ShutdownRequest and terminates the application.
 

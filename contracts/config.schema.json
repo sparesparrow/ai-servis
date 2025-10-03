@@ -280,4 +280,3 @@
   "required": ["device"],
   "additionalProperties": false
 }
-

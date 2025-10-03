@@ -91,7 +91,7 @@ class SystemPolicyManagerImpl @Inject constructor(
 		}
 		context.registerReceiver(receiver, filter)
 		// Emit initial once
-		(context.registerReceiver(null, filter))?.let { 
+		(context.registerReceiver(null, filter))?.let {
 			val level = it.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
 			val scale = it.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
 			if (level >= 0 && scale > 0) trySend((100f * level / scale).toInt())
@@ -173,5 +173,3 @@ private fun Int.toSeverity(): ThermalSeverity {
 		ThermalSeverity.NONE
 	}
 }
-
-

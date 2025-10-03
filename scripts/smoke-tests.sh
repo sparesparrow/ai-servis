@@ -72,13 +72,13 @@ run_smoke_test() {
     local url="$2"
     local expected_status="${3:-200}"
     local timeout="${4:-$TIMEOUT}"
-    
+
     ((TESTS_TOTAL++))
     log "Testing: $test_name"
-    
+
     local http_code
     http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time "$timeout" "$url" || echo "000")
-    
+
     if [ "$http_code" = "$expected_status" ]; then
         success "✓ $test_name (HTTP $http_code)"
         ((TESTS_PASSED++))
@@ -96,26 +96,26 @@ run_json_test() {
     local url="$2"
     local json_path="${3:-}"
     local timeout="${4:-$TIMEOUT}"
-    
+
     ((TESTS_TOTAL++))
     log "Testing: $test_name"
-    
+
     local response
     response=$(curl -s --max-time "$timeout" "$url" || echo "")
-    
+
     if [ -z "$response" ]; then
         error "✗ $test_name (No response)"
         ((TESTS_FAILED++))
         return 1
     fi
-    
+
     # Validate JSON
     if ! echo "$response" | jq . >/dev/null 2>&1; then
         error "✗ $test_name (Invalid JSON response)"
         ((TESTS_FAILED++))
         return 1
     fi
-    
+
     # Validate specific JSON path if provided
     if [ -n "$json_path" ]; then
         if ! echo "$response" | jq -e "$json_path" >/dev/null 2>&1; then
@@ -124,7 +124,7 @@ run_json_test() {
             return 1
         fi
     fi
-    
+
     success "✓ $test_name"
     ((TESTS_PASSED++))
     return 0
@@ -133,19 +133,19 @@ run_json_test() {
 # Test critical service endpoints
 test_critical_endpoints() {
     log "Testing critical service endpoints..."
-    
+
     # Core Orchestrator
     run_smoke_test "Core Orchestrator Health" "$CORE_ORCHESTRATOR_URL/health"
     run_smoke_test "Core Orchestrator Status" "$CORE_ORCHESTRATOR_URL/status"
-    
+
     # Service Discovery
     run_smoke_test "Service Discovery Health" "$SERVICE_DISCOVERY_URL/health"
     run_json_test "Service Discovery Services" "$SERVICE_DISCOVERY_URL/services" ".[] | length >= 0"
-    
+
     # AI Audio Assistant
     run_smoke_test "Audio Assistant Health" "$AUDIO_ASSISTANT_URL/health"
     run_json_test "Audio Assistant Capabilities" "$AUDIO_ASSISTANT_URL/capabilities" ".capabilities | length > 0"
-    
+
     # Platform Controller
     run_smoke_test "Platform Controller Health" "$PLATFORM_CONTROLLER_URL/health"
     run_json_test "Platform Controller System Info" "$PLATFORM_CONTROLLER_URL/system/info" ".platform"
@@ -154,7 +154,7 @@ test_critical_endpoints() {
 # Test MCP functionality
 test_mcp_functionality() {
     log "Testing MCP functionality..."
-    
+
     run_json_test "MCP Status" "$CORE_ORCHESTRATOR_URL/mcp/status" ".servers"
     run_json_test "MCP Capabilities" "$CORE_ORCHESTRATOR_URL/mcp/capabilities" ".tools"
 }
@@ -162,7 +162,7 @@ test_mcp_functionality() {
 # Test service integration
 test_service_integration() {
     log "Testing service integration..."
-    
+
     # Test that services are properly registered in discovery
     run_json_test "Core Service Registration" "$SERVICE_DISCOVERY_URL/services" '.[] | select(.name == "core-orchestrator")'
     run_json_test "Audio Service Registration" "$SERVICE_DISCOVERY_URL/services" '.[] | select(.name == "ai-audio-assistant")'
@@ -172,17 +172,17 @@ test_service_integration() {
 # Test performance (basic)
 test_basic_performance() {
     log "Testing basic performance..."
-    
+
     local start_time
     local end_time
     local duration
-    
+
     # Test response time for health endpoint
     start_time=$(date +%s%N)
     if curl -s --max-time 5 "$CORE_ORCHESTRATOR_URL/health" >/dev/null; then
         end_time=$(date +%s%N)
         duration=$(( (end_time - start_time) / 1000000 ))  # Convert to milliseconds
-        
+
         if [ $duration -lt 1000 ]; then  # Less than 1 second
             success "✓ Response time acceptable: ${duration}ms"
             ((TESTS_PASSED++))
@@ -204,12 +204,12 @@ test_security_headers() {
         log "Skipping security header tests for local environment"
         return
     fi
-    
+
     log "Testing security headers..."
-    
+
     local headers
     headers=$(curl -s -I --max-time "$TIMEOUT" "$CORE_ORCHESTRATOR_URL/health" || echo "")
-    
+
     ((TESTS_TOTAL++))
     if echo "$headers" | grep -qi "x-content-type-options"; then
         success "✓ X-Content-Type-Options header present"
@@ -218,7 +218,7 @@ test_security_headers() {
         warning "⚠ X-Content-Type-Options header missing"
         ((TESTS_FAILED++))
     fi
-    
+
     ((TESTS_TOTAL++))
     if echo "$headers" | grep -qi "x-frame-options"; then
         success "✓ X-Frame-Options header present"
@@ -227,7 +227,7 @@ test_security_headers() {
         warning "⚠ X-Frame-Options header missing"
         ((TESTS_FAILED++))
     fi
-    
+
     ((TESTS_TOTAL++))
     if echo "$headers" | grep -qi "strict-transport-security"; then
         success "✓ Strict-Transport-Security header present"
@@ -241,7 +241,7 @@ test_security_headers() {
 # Generate smoke test report
 generate_report() {
     local report_file="$PROJECT_ROOT/smoke-test-report-$ENVIRONMENT.md"
-    
+
     cat > "$report_file" << EOF
 # AI-Servis Smoke Test Report
 
@@ -271,11 +271,11 @@ EOF
     echo "- Service Discovery: $SERVICE_DISCOVERY_URL" >> "$report_file"
     echo "- AI Audio Assistant: $AUDIO_ASSISTANT_URL" >> "$report_file"
     echo "- Platform Controller: $PLATFORM_CONTROLLER_URL" >> "$report_file"
-    
+
     echo "" >> "$report_file"
     echo "## Recommendations" >> "$report_file"
     echo "" >> "$report_file"
-    
+
     if [ $TESTS_FAILED -eq 0 ]; then
         echo "- Deployment is healthy and ready for use" >> "$report_file"
         echo "- All critical services are responding correctly" >> "$report_file"
@@ -294,23 +294,23 @@ EOF
 main() {
     log "Starting smoke tests for $ENVIRONMENT environment..."
     log "Timeout: ${TIMEOUT}s"
-    
+
     # Run all smoke tests
     test_critical_endpoints
     test_mcp_functionality
     test_service_integration
     test_basic_performance
     test_security_headers
-    
+
     # Generate report
     generate_report
-    
+
     # Print summary
     echo ""
     log "Smoke tests completed for $ENVIRONMENT!"
     log "Total: $TESTS_TOTAL, Passed: $TESTS_PASSED, Failed: $TESTS_FAILED"
     log "Success Rate: $(( (TESTS_PASSED * 100) / TESTS_TOTAL ))%"
-    
+
     if [ $TESTS_FAILED -eq 0 ]; then
         success "🎉 All smoke tests passed! Deployment is healthy."
         exit 0

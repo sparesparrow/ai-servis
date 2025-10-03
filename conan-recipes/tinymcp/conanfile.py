@@ -7,7 +7,7 @@ import os
 
 class TinyMCPConan(ConanFile):
     """TinyMCP - Lightweight C++ implementation of Model Context Protocol"""
-    
+
     name = "tinymcp"
     version = "0.2.0"
     license = "MIT"
@@ -16,7 +16,7 @@ class TinyMCPConan(ConanFile):
     homepage = "https://github.com/sparesparrow/tinymcp"
     description = "A minimalistic, high-performance C++ SDK for implementing MCP servers and clients"
     topics = ("mcp", "model-context-protocol", "json-rpc", "sdk", "lightweight")
-    
+
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "shared": [True, False],
@@ -24,7 +24,7 @@ class TinyMCPConan(ConanFile):
         "with_examples": [True, False],
         "with_tests": [True, False],
         "enable_logging": [True, False],
-        "use_system_json": [True, False]
+        "use_system_json": [True, False],
     }
     default_options = {
         "shared": False,
@@ -32,49 +32,49 @@ class TinyMCPConan(ConanFile):
         "with_examples": False,
         "with_tests": False,
         "enable_logging": True,
-        "use_system_json": False
+        "use_system_json": False,
     }
-    
+
     # generators are created in generate() method
-    
+
     # Git repository configuration
     _git_url = "https://github.com/sparesparrow/tinymcp.git"
     _git_branch = "master"  # Use master branch
     _git_commit = None  # Use specific commit for reproducibility
-    
+
     @property
     def _min_cppstd(self):
         return "17"
-    
+
     def validate(self):
         if self.settings.compiler.get_safe("cppstd"):
             check_min_cppstd(self, self._min_cppstd)
-    
+
     def configure(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-    
+
     def layout(self):
         cmake_layout(self)
-    
+
     def requirements(self):
         # TinyMCP dependencies
         if not self.options.use_system_json:
             self.requires("jsoncpp/1.9.5")
-        
+
         if self.options.enable_logging:
             self.requires("spdlog/1.13.0")
-    
+
     def build_requirements(self):
         self.tool_requires("cmake/3.28.1")
         if self.options.with_tests:
             self.requires("gtest/1.14.0")
-    
+
     def source(self):
         # Copy local TinyMCP implementation
         src_path = "/workspace/external/tinymcp"
         copy(self, "*", src=src_path, dst=self.source_folder, keep_path=True)
-    
+
     def _apply_patches(self):
         """Apply any necessary patches to TinyMCP source"""
         # Create a CMakeLists.txt if it doesn't exist
@@ -198,10 +198,14 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinymcp
 )
 """
-        
+
         if not os.path.exists(os.path.join(self.source_folder, "CMakeLists.txt")):
-            save(self, os.path.join(self.source_folder, "CMakeLists.txt"), cmakelists_content)
-        
+            save(
+                self,
+                os.path.join(self.source_folder, "CMakeLists.txt"),
+                cmakelists_content,
+            )
+
         # Create a basic config template if needed
         config_template = """@PACKAGE_INIT@
 
@@ -212,11 +216,11 @@ check_required_components(tinymcp)
         cmake_dir = os.path.join(self.source_folder, "cmake")
         if not os.path.exists(cmake_dir):
             os.makedirs(cmake_dir)
-        
+
         config_file = os.path.join(cmake_dir, "tinymcp-config.cmake.in")
         if not os.path.exists(config_file):
             save(self, config_file, config_template)
-    
+
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["TINYMCP_SHARED"] = self.options.shared
@@ -226,46 +230,51 @@ check_required_components(tinymcp)
         tc.variables["TINYMCP_USE_SYSTEM_JSON"] = self.options.use_system_json
         tc.variables["CONAN_PACKAGE_VERSION"] = self.version
         tc.generate()
-        
+
         deps = CMakeDeps(self)
         deps.generate()
-    
+
     def build(self):
         cmake = CMake(self)
         cmake.configure(build_script_folder=self.source_folder)
         cmake.build()
-        
+
         if self.options.with_tests:
             cmake.test()
-    
+
     def package(self):
-        copy(self, "LICENSE*", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
+        copy(
+            self,
+            "LICENSE*",
+            src=self.source_folder,
+            dst=os.path.join(self.package_folder, "licenses"),
+        )
         cmake = CMake(self)
         cmake.install()
-        
+
         # Remove CMake files from lib folder
         rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
-    
+
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "tinymcp")
         self.cpp_info.set_property("cmake_target_name", "tinymcp::tinymcp")
-        
+
         # Library name
         self.cpp_info.libs = ["tinymcp"]
-        
+
         # Defines
         if self.options.shared:
             self.cpp_info.defines.append("TINYMCP_SHARED")
-        
+
         if self.options.enable_logging:
             self.cpp_info.defines.append("TINYMCP_ENABLE_LOGGING")
-        
+
         # System libraries
         if self.settings.os in ["Linux", "FreeBSD"]:
             self.cpp_info.system_libs = ["pthread", "m"]
         elif self.settings.os == "Windows":
             self.cpp_info.system_libs = ["ws2_32"]
-        
+
         # Backward compatibility
         self.cpp_info.names["cmake_find_package"] = "tinymcp"
         self.cpp_info.names["cmake_find_package_multi"] = "tinymcp"

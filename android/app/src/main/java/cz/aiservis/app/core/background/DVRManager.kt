@@ -56,12 +56,12 @@ class DVRManagerImpl @Inject constructor(
 
     override fun startRecording() {
         if (isRecordingActive) return
-        
+
         isRecordingActive = true
-        
+
         // Schedule periodic offload work
         scheduleOffloadWork()
-        
+
         coroutineScope.launch {
             _clipEvents.emit(ClipEvent(ClipEventType.RECORDING_STARTED))
         }
@@ -69,9 +69,9 @@ class DVRManagerImpl @Inject constructor(
 
     override fun stopRecording() {
         if (!isRecordingActive) return
-        
+
         isRecordingActive = false
-        
+
         coroutineScope.launch {
             _clipEvents.emit(ClipEvent(ClipEventType.RECORDING_STOPPED))
         }
@@ -79,7 +79,7 @@ class DVRManagerImpl @Inject constructor(
 
     override fun triggerEventClip(reason: String) {
         if (!isRecordingActive) return
-        
+
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 // Create clip entity (placeholder - real implementation would capture video)
@@ -92,9 +92,9 @@ class DVRManagerImpl @Inject constructor(
                     sizeBytes = maxClipSize,
                     offloaded = false
                 )
-                
+
                 clipsDao.insert(clip)
-                
+
                 _clipEvents.emit(
                     ClipEvent(
                         type = ClipEventType.EVENT_CLIP_SAVED,

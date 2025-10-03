@@ -28,6 +28,3 @@ bash scripts/dev-down.sh
 ```
 
 This allows Android (or any client) to subscribe to the same topics on localhost:1883 during development.
-
-
-

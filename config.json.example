@@ -1,0 +1,224 @@
+{
+  "project": {
+    "name": "AI-SERVIS Universal",
+    "version": "1.0.0",
+    "description": "Universal cross-platform AI assistant ecosystem"
+  },
+  "core": {
+    "orchestrator": {
+      "host": "localhost",
+      "port": 8000,
+      "debug": false,
+      "log_level": "INFO"
+    },
+    "mcp": {
+      "transport": "stdio",
+      "timeout": 30,
+      "retry_attempts": 3
+    }
+  },
+  "audio": {
+    "engine": {
+      "default_device": "auto",
+      "sample_rate": 44100,
+      "channels": 2,
+      "buffer_size": 1024
+    },
+    "voice": {
+      "wake_word": "hey ai servis",
+      "language": "en-US",
+      "confidence_threshold": 0.8,
+      "vad_threshold": 0.5
+    },
+    "music": {
+      "default_volume": 0.7,
+      "crossfade_duration": 3.0,
+      "fade_in_duration": 1.0,
+      "fade_out_duration": 2.0
+    },
+    "zones": {
+      "default_zone": "main",
+      "max_zones": 10,
+      "sync_tolerance": 50
+    }
+  },
+  "communications": {
+    "sms": {
+      "twilio": {
+        "account_sid": "your_twilio_account_sid",
+        "auth_token": "your_twilio_auth_token",
+        "from_number": "+1234567890",
+        "status_callback": "https://your-domain.com/webhook/twilio/status"
+      }
+    },
+    "email": {
+      "smtp": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "username": "your_email@gmail.com",
+        "password": "your_app_password",
+        "use_tls": true
+      },
+      "imap": {
+        "host": "imap.gmail.com",
+        "port": 993,
+        "username": "your_email@gmail.com",
+        "password": "your_app_password",
+        "use_ssl": true
+      }
+    },
+    "social_media": {
+      "whatsapp": {
+        "access_token": "your_whatsapp_access_token",
+        "phone_number_id": "your_phone_number_id",
+        "business_account_id": "your_business_account_id",
+        "webhook_verify_token": "your_webhook_verify_token"
+      },
+      "telegram": {
+        "bot_token": "your_telegram_bot_token"
+      },
+      "twitter": {
+        "bearer_token": "your_twitter_bearer_token",
+        "api_key": "your_twitter_api_key",
+        "api_secret": "your_twitter_api_secret",
+        "access_token": "your_twitter_access_token",
+        "access_token_secret": "your_twitter_access_token_secret"
+      },
+      "signal": {
+        "server_url": "http://localhost:8080",
+        "phone_number": "+1234567890",
+        "password": "your_signal_password"
+      },
+      "facebook": {
+        "page_access_token": "your_facebook_page_access_token",
+        "app_secret": "your_facebook_app_secret",
+        "verify_token": "your_facebook_verify_token"
+      }
+    },
+    "queue": {
+      "max_queue_size": 10000,
+      "default_max_retries": 3,
+      "default_retry_strategy": "exponential_backoff",
+      "retry_intervals": [1, 5, 15, 60],
+      "batch_size": 10,
+      "processing_interval": 1.0
+    }
+  },
+  "platforms": {
+    "linux": {
+      "audio_system": "pipewire",
+      "fallback_audio": "alsa",
+      "system_commands": true
+    },
+    "windows": {
+      "audio_system": "wasapi",
+      "system_commands": true
+    },
+    "macos": {
+      "audio_system": "core_audio",
+      "system_commands": true
+    },
+    "android": {
+      "adb_path": "adb",
+      "package_name": "com.aiservis.universal"
+    }
+  },
+  "security": {
+    "jwt": {
+      "secret_key": "your_jwt_secret_key",
+      "algorithm": "HS256",
+      "expiration_hours": 24
+    },
+    "api_keys": {
+      "encryption_key": "your_api_encryption_key"
+    },
+    "rbac": {
+      "default_role": "user",
+      "admin_role": "admin"
+    }
+  },
+  "database": {
+    "postgresql": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "ai_servis_universal",
+      "username": "ai_servis",
+      "password": "your_db_password"
+    },
+    "redis": {
+      "host": "localhost",
+      "port": 6379,
+      "password": "your_redis_password",
+      "db": 0
+    }
+  },
+  "mqtt": {
+    "broker": {
+      "host": "localhost",
+      "port": 1883,
+      "username": "ai_servis",
+      "password": "your_mqtt_password",
+      "keepalive": 60
+    },
+    "topics": {
+      "commands": "ai-servis/commands",
+      "responses": "ai-servis/responses",
+      "status": "ai-servis/status",
+      "discovery": "ai-servis/discovery"
+    }
+  },
+  "monitoring": {
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "metrics_path": "/metrics"
+    },
+    "grafana": {
+      "enabled": true,
+      "port": 3000
+    },
+    "logging": {
+      "level": "INFO",
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+      "file": "logs/ai-servis.log",
+      "max_size": "10MB",
+      "backup_count": 5
+    }
+  },
+  "features": {
+    "audio_assistant": {
+      "enabled": true,
+      "wake_word_detection": true,
+      "voice_commands": true,
+      "music_playback": true,
+      "multi_room_audio": true
+    },
+    "communications": {
+      "enabled": true,
+      "sms": true,
+      "email": true,
+      "social_media": true,
+      "message_queue": true
+    },
+    "platform_control": {
+      "enabled": true,
+      "system_commands": true,
+      "file_operations": true,
+      "process_management": true
+    },
+    "ai_features": {
+      "enabled": true,
+      "nlp_processing": true,
+      "intent_recognition": true,
+      "context_management": true,
+      "learning": true
+    }
+  },
+  "development": {
+    "debug": false,
+    "hot_reload": true,
+    "auto_restart": true,
+    "log_requests": true,
+    "mock_services": false
+  }
+}

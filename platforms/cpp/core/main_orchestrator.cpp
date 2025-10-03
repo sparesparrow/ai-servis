@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
         // Keep running until signal
         while (true) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            
+
             // Periodic health checks could be added here
             // g_orchestrator->checkServiceHealth();
         }

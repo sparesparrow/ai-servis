@@ -39,20 +39,20 @@ Json::Value Response::toJson() const {
     Json::Value json;
     json["jsonrpc"] = jsonrpc;
     json["id"] = id;
-    
+
     if (!error.isNull()) {
         json["error"] = error;
     } else {
         json["result"] = result;
     }
-    
+
     return json;
 }
 
 void Response::fromJson(const Json::Value& json) {
     jsonrpc = json.get("jsonrpc", "2.0").asString();
     id = json.get("id", "").asString();
-    
+
     if (json.isMember("error")) {
         error = json["error"];
     } else {
@@ -92,14 +92,14 @@ std::unique_ptr<Message> ProtocolSerializer::deserialize(const std::string& data
     Json::Value json;
     std::istringstream iss(data);
     std::string errors;
-    
+
     std::unique_ptr<Json::CharReader> reader(readerBuilder.newCharReader());
     if (!reader->parse(data.c_str(), data.c_str() + data.length(), &json, &errors)) {
         throw utils::MCPException("Failed to parse JSON: " + errors);
     }
-    
+
     std::unique_ptr<Message> message;
-    
+
     if (json.isMember("method")) {
         if (json.isMember("id")) {
             auto request = std::make_unique<Request>();
@@ -117,7 +117,7 @@ std::unique_ptr<Message> ProtocolSerializer::deserialize(const std::string& data
     } else {
         throw utils::MCPException("Unknown message type");
     }
-    
+
     return message;
 }
 

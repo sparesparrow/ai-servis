@@ -12,7 +12,7 @@ endif()
 
 ########### VARIABLES #######################################################################
 #############################################################################################
-set(flatbuffers_PACKAGE_FOLDER_RELEASE "/home/ubuntu/.conan2/p/b/flatb8d37c5b4aca92/p")
+set(flatbuffers_PACKAGE_FOLDER_RELEASE "/home/sparrow/.conan2/p/b/flatb32beac612880b/p")
 set(flatbuffers_BUILD_MODULES_PATHS_RELEASE "${flatbuffers_PACKAGE_FOLDER_RELEASE}/lib/cmake/FlatcTargets.cmake"
 			"${flatbuffers_PACKAGE_FOLDER_RELEASE}/lib/cmake/BuildFlatBuffers.cmake")
 

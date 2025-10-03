@@ -1,0 +1,65 @@
+# AI-SERVIS Command Processing Pipeline - Development Dockerfile
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including development tools
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    git \
+    curl \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies including development tools
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir \
+    pytest \
+    pytest-asyncio \
+    pytest-cov \
+    black \
+    flake8 \
+    mypy \
+    ipython \
+    jupyter
+
+# Download NLTK data
+RUN python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
+
+# Download spaCy model
+RUN python -m spacy download en_core_web_sm
+
+# Copy application code
+COPY . .
+
+# Create models and data directories
+RUN mkdir -p models data/training
+
+# Create non-root user
+RUN useradd -m -u 1000 commandprocessor && \
+    chown -R commandprocessor:commandprocessor /app
+
+# Switch to non-root user
+USER commandprocessor
+
+# Expose port
+EXPOSE 8085
+
+# Set environment variables for development
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV LOG_LEVEL=DEBUG
+ENV MAX_CONCURRENT_COMMANDS=5
+ENV COMMAND_TIMEOUT=60
+ENV ENABLE_CACHING=true
+ENV CACHE_TTL=1800
+
+# Start the command processing service with hot reloading
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8085", "--reload"]

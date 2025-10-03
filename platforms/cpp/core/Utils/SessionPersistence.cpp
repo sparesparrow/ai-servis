@@ -9,7 +9,7 @@
 namespace TinyMCP {
 namespace Utils {
 
-SessionPersistence::SessionPersistence(const std::string& sessions_dir) 
+SessionPersistence::SessionPersistence(const std::string& sessions_dir)
     : sessions_dir_(sessions_dir) {
     std::filesystem::create_directories(sessions_dir_);
 }
@@ -32,7 +32,7 @@ std::string SessionPersistence::createSession(const std::string& url, const std:
     DownloadSession session;
     session.session_id = session_id;
     session.url = url;
-    session.output_path = output_path.empty() ? 
+    session.output_path = output_path.empty() ?
         std::filesystem::path(url).filename().string() : output_path;
     session.status = "active";
 
@@ -121,7 +121,7 @@ void SessionPersistence::updateSessionProgress(const std::string& session_id, si
     if (it != active_sessions_.end()) {
         it->second.downloaded_bytes = downloaded_bytes;
         auto now = std::chrono::system_clock::now();
-        it->second.last_modified_timestamp = 
+        it->second.last_modified_timestamp =
             std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
         saveSession(it->second);
     }

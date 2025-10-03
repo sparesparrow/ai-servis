@@ -79,7 +79,7 @@ The Enhanced Core Orchestrator is the central intelligence hub of the AI-SERVIS 
 
 # Example follow-up: "Make it louder"
 {
-    "intent": "control_volume", 
+    "intent": "control_volume",
     "confidence": 0.75,
     "parameters": {
         "action": "up"
@@ -269,20 +269,20 @@ class EnhancedCoreOrchestrator:
 
 int main() {
     WebGrab::CoreOrchestrator orchestrator(8080, "/tmp/ai-servis");
-    
+
     // Register services
-    orchestrator.registerService("ai-audio-assistant", "localhost", 8082, 
+    orchestrator.registerService("ai-audio-assistant", "localhost", 8082,
         {"audio", "music", "voice"});
-    
+
     // Start orchestrator
     orchestrator.start();
-    
+
     // Process commands
     std::string response = orchestrator.processVoiceCommand(
         "Play some jazz music", "user_context");
-    
+
     std::cout << "Response: " << response << std::endl;
-    
+
     return 0;
 }
 ```
@@ -294,14 +294,14 @@ from enhanced_orchestrator import EnhancedCoreOrchestrator
 
 async def main():
     orchestrator = EnhancedCoreOrchestrator()
-    
+
     # Process enhanced command
     result = await orchestrator.handle_enhanced_voice_command(
         text="Play some jazz music by Miles Davis",
         user_id="user123",
         interface_type="voice"
     )
-    
+
     print(f"Response: {result['response']}")
     print(f"Intent: {result['intent']} (confidence: {result['confidence']})")
 
@@ -322,7 +322,7 @@ async function sendCommand(text) {
             interface_type: 'web'
         })
     });
-    
+
     const result = await response.json();
     console.log('Response:', result.response);
     console.log('Intent:', result.intent);
@@ -349,7 +349,7 @@ func sendCommand(_ text: String) async {
         userId: "mobile_user",
         interfaceType: "mobile"
     )
-    
+
     // Send to orchestrator
     let response = try await APIClient.post("/api/command", body: request)
     print("Response: \(response.response)")

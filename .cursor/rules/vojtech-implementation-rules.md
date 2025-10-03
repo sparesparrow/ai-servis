@@ -34,7 +34,7 @@ class AudioAssistantMCP:
     def __init__(self):
         self.audio_engine = None
         self.voice_processor = None
-    
+
     def play_music(self, track_id: str, volume: float = 0.8) -> dict:
         """Play music track with volume control"""
         try:
@@ -42,7 +42,7 @@ class AudioAssistantMCP:
             return {"status": "success", "track_id": track_id, "volume": volume}
         except AudioEngineError as e:
             return {"status": "error", "message": str(e)}
-    
+
     def set_audio_zone(self, zone_id: str, volume: float) -> dict:
         """Set volume for specific audio zone"""
         try:
@@ -62,7 +62,7 @@ class CrossPlatformAudioEngine:
     def __init__(self):
         self.platform = platform.system().lower()
         self.audio_backend = self._initialize_backend()
-    
+
     def _initialize_backend(self):
         """Initialize platform-specific audio backend"""
         if self.platform == "linux":
@@ -73,7 +73,7 @@ class CrossPlatformAudioEngine:
             return CoreAudioBackend()
         else:
             raise UnsupportedPlatformError(f"Platform {self.platform} not supported")
-    
+
     def play_audio(self, file_path: str) -> bool:
         """Play audio file with platform-specific implementation"""
         try:
@@ -91,18 +91,18 @@ class VoiceProcessor:
         self.tts_engine = ElevenLabsTTS()
         self.stt_engine = WhisperSTT()
         self.wake_word_detector = WakeWordDetector()
-    
+
     def process_voice_command(self, audio_data: bytes) -> dict:
         """Process voice command with comprehensive error handling"""
         try:
             # Convert audio to text
             text = self.stt_engine.transcribe(audio_data)
             print(f"Voice command transcribed: '{text}'")
-            
+
             # Process command
             result = self._process_command(text)
             print(f"Command processed successfully: {result}")
-            
+
             return {"status": "success", "command": text, "result": result}
         except STTError as e:
             print(f"Speech-to-text failed: {e}")
@@ -118,7 +118,7 @@ class VoiceProcessor:
 class LinuxPlatformController:
     def __init__(self):
         self.system_commands = SystemCommandExecutor()
-    
+
     def execute_system_command(self, command: str, args: list = None) -> dict:
         """Execute system command with proper error handling"""
         try:
@@ -128,7 +128,7 @@ class LinuxPlatformController:
         except CommandExecutionError as e:
             print(f"Command execution failed: {e}")
             return {"status": "error", "message": str(e)}
-    
+
     def manage_process(self, process_name: str, action: str) -> dict:
         """Manage system processes (start, stop, restart)"""
         try:
@@ -140,7 +140,7 @@ class LinuxPlatformController:
                 result = self.system_commands.restart_service(process_name)
             else:
                 return {"status": "error", "message": f"Unknown action: {action}"}
-            
+
             print(f"Process {action} successful for {process_name}")
             return {"status": "success", "process": process_name, "action": action}
         except ProcessManagementError as e:
@@ -153,7 +153,7 @@ class LinuxPlatformController:
 // You implement Android integration with practical error handling
 class AndroidControllerBridge {
     private val adbExecutor = ADBExecutor()
-    
+
     fun sendIntent(action: String, data: String? = null): Result<String> {
         return try {
             val result = adbExecutor.broadcastIntent(action, data)
@@ -164,7 +164,7 @@ class AndroidControllerBridge {
             Result.failure(e)
         }
     }
-    
+
     fun installApp(apkPath: String): Result<String> {
         return try {
             val result = adbExecutor.installApk(apkPath)
@@ -184,20 +184,20 @@ class AndroidControllerBridge {
 class VoiceWebInterface {
     private mediaRecorder: MediaRecorder | null = null;
     private audioChunks: Blob[] = [];
-    
+
     async startVoiceRecording(): Promise<void> {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             this.mediaRecorder = new MediaRecorder(stream);
-            
+
             this.mediaRecorder.ondataavailable = (event) => {
                 this.audioChunks.push(event.data);
             };
-            
+
             this.mediaRecorder.onstop = () => {
                 this.processAudioRecording();
             };
-            
+
             this.mediaRecorder.start();
             console.log("Voice recording started");
         } catch (error) {
@@ -205,18 +205,18 @@ class VoiceWebInterface {
             throw new Error("Microphone access denied");
         }
     }
-    
+
     private async processAudioRecording(): Promise<void> {
         const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
         const formData = new FormData();
         formData.append('audio', audioBlob);
-        
+
         try {
             const response = await fetch('/api/voice-command', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const result = await response.json();
             console.log("Voice command processed:", result);
             this.displayCommandResult(result);

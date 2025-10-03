@@ -152,7 +152,7 @@ mcp_tool_t vehicle_tools[] = {
         .call = obd_data_callback
     },
     {
-        .name = "anpr_scan", 
+        .name = "anpr_scan",
         .description = "Perform license plate recognition",
         .call = anpr_callback
     }
@@ -198,20 +198,20 @@ mcp_server_run(server);
 // AI-SERVIS ESP32 Architecture
 class AIServISHub {
     TwaiController can_bus;
-    ElevenLabsTTS voice_synthesis;  
+    ElevenLabsTTS voice_synthesis;
     McpServer mcp_server;
     WiFiManager connectivity;
-    
+
     // Core vehicle functions exposed via MCP
     void register_vehicle_tools() {
         mcp_server.register_tool("read_diagnostics", [this]() {
             return can_bus.get_obd_data();
         });
-        
+
         mcp_server.register_tool("voice_alert", [this](String message) {
             voice_synthesis.speak(message);
         });
-        
+
         mcp_server.register_tool("anpr_detect", [this]() {
             return camera.capture_and_recognize();
         });
@@ -228,12 +228,12 @@ import mcp_client
 async def vehicle_assistant():
     # Connect to ESP32 MCP server
     vehicle = await mcp_client.connect("mqtt://ai-servis-vehicle")
-    
+
     # AI agent can now use vehicle capabilities
     diagnostics = await vehicle.call_tool("read_diagnostics")
-    
+
     if diagnostics.coolant_temp > 105:
-        await vehicle.call_tool("voice_alert", 
+        await vehicle.call_tool("voice_alert",
             "Warning: Engine overheating detected!")
 ```
 
@@ -545,4 +545,3 @@ async def vehicle_assistant():
 [^129]: https://www.youtube.com/watch?v=dDBxC39lNQg
 
 [^130]: https://tasmota.github.io/docs/TWAI/
-

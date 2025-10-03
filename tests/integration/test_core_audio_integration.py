@@ -14,7 +14,7 @@ async def test_voice_command_routing():
     assert True
 
 
-@pytest.mark.asyncio 
+@pytest.mark.asyncio
 async def test_audio_device_switching():
     """Test audio device switching functionality"""
     # Integration test placeholder

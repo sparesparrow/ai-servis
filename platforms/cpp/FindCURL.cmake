@@ -51,4 +51,3 @@ mark_as_advanced(CURL_FOUND CURL_VERSION)
 set(CURL_FOUND 1)
 set(CURL_VERSION "8.5.0")
 mark_as_advanced(CURL_FOUND CURL_VERSION)
-

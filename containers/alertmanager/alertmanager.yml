@@ -46,19 +46,19 @@ receivers:
         subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
         body: |
           Critical alert detected:
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Service: {{ .GroupLabels.service }}
           Severity: {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           - {{ .Annotations.summary }}
             {{ .Annotations.description }}
             Started: {{ .StartsAt }}
           {{ end }}
-          
+
           Please investigate immediately.
-    
+
     slack_configs:
       - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#alerts-critical'
@@ -66,11 +66,11 @@ receivers:
         text: |
           *Service:* {{ .GroupLabels.service }}
           *Severity:* {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           • {{ .Annotations.summary }}
           {{ end }}
-        
+
         actions:
           - type: button
             text: 'View in Grafana'
@@ -85,17 +85,17 @@ receivers:
         subject: '⚠️ WARNING: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
         body: |
           Warning alert detected:
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Service: {{ .GroupLabels.service }}
           Severity: {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           - {{ .Annotations.summary }}
             {{ .Annotations.description }}
             Started: {{ .StartsAt }}
           {{ end }}
-          
+
           Please review when convenient.
 
     slack_configs:
@@ -105,7 +105,7 @@ receivers:
         text: |
           *Service:* {{ .GroupLabels.service }}
           *Count:* {{ len .Alerts }} alert(s)
-          
+
           {{ range .Alerts }}
           • {{ .Annotations.summary }}
           {{ end }}
@@ -116,17 +116,17 @@ receivers:
         subject: '🔒 SECURITY ALERT: {{ .GroupLabels.alertname }}'
         body: |
           Security alert detected:
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Component: {{ .GroupLabels.component }}
           Severity: {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           - {{ .Annotations.summary }}
             {{ .Annotations.description }}
             Started: {{ .StartsAt }}
           {{ end }}
-          
+
           Immediate investigation required.
 
     slack_configs:
@@ -136,11 +136,11 @@ receivers:
         text: |
           *Component:* {{ .GroupLabels.component }}
           *Severity:* {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           • {{ .Annotations.summary }}
           {{ end }}
-        
+
         actions:
           - type: button
             text: 'View Security Dashboard'

@@ -64,19 +64,20 @@ async def test_mcp_client():
         logger.info(f"Available tools: {[t.name for t in tools]}")
 
         # Test download tool (will fail without real server, but tests protocol)
-        result = client.execute_tool("download_file", {
-            "url": "http://example.com/test.txt",
-            "output_path": "/tmp/test.txt",
-            "session_id": 12345
-        })
+        result = client.execute_tool(
+            "download_file",
+            {
+                "url": "http://example.com/test.txt",
+                "output_path": "/tmp/test.txt",
+                "session_id": 12345,
+            },
+        )
         logger.info(f"Download result: {result}")
 
         # Test GPIO tool
-        result = client.execute_tool("gpio_task", {
-            "action": "configure",
-            "pin": 17,
-            "direction": "output"
-        })
+        result = client.execute_tool(
+            "gpio_task", {"action": "configure", "pin": 17, "direction": "output"}
+        )
         logger.info(f"GPIO task result: {result}")
 
     except Exception as e:

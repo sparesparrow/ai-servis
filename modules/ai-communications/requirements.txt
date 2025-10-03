@@ -1,0 +1,39 @@
+# Core dependencies
+aiohttp==3.9.1
+asyncio-mqtt==0.16.1
+
+# SMS/MMS services
+twilio==8.10.0
+
+# Email services
+aiosmtplib==3.0.1
+aiosmtpd==1.4.4.post2
+
+# IMAP support
+aioimaplib==1.0.1
+
+# Message processing
+email-validator==2.1.0
+phonenumbers==8.13.25
+
+# Social media APIs
+requests-oauthlib==1.3.1
+tweepy==4.14.0
+python-telegram-bot==20.7
+facebook-sdk==3.1.0
+
+# Data validation
+pydantic==2.5.0
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+
+# Development
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1

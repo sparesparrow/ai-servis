@@ -66,5 +66,3 @@ bash scripts/smoke.sh
 ```
 
 If Android doesn’t auto-discover the broker, ensure mDNS is allowed on your network and the `mdns-advertiser` container runs in host network mode.
-
-

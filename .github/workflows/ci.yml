@@ -17,7 +17,7 @@ env:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -32,7 +32,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -42,7 +42,7 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
-      
+
       mosquitto:
         image: eclipse-mosquitto:2.0
         ports:
@@ -50,12 +50,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: Cache pip dependencies
       uses: actions/cache@v3
       with:
@@ -63,37 +63,37 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
         pip install pytest pytest-cov black flake8 mypy safety bandit
-    
+
     - name: Lint with flake8
       run: |
         # Stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # Treat all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-    
+
     - name: Check code formatting with black
       run: |
         black --check --diff .
-    
+
     - name: Type checking with mypy
       run: |
         mypy modules/ --ignore-missing-imports || true
-    
+
     - name: Security check with bandit
       run: |
         bandit -r modules/ -f json -o bandit-report.json || true
-    
+
     - name: Dependency security check with safety
       run: |
         safety check || true
-    
+
     - name: Run unit tests
       env:
         DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
@@ -101,7 +101,7 @@ jobs:
         MQTT_BROKER: localhost:1883
       run: |
         pytest tests/ -v --cov=modules --cov-report=xml --cov-report=html
-    
+
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
@@ -175,31 +175,31 @@ jobs:
   build-images:
     needs: [lint-and-test, build-cpp]
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         component: [
           'core-orchestrator',
-          'ai-audio-assistant', 
+          'ai-audio-assistant',
           'ai-platform-controllers/linux',
           'service-discovery',
           'hardware-bridge'
         ]
         platform: [linux/amd64, linux/arm64]
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
     - name: Log in to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -210,7 +210,7 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
-    
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       id: build
@@ -222,14 +222,14 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        
+
     - name: Run Trivy vulnerability scanner on image
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: ${{ steps.meta.outputs.tags }}
         format: 'sarif'
         output: 'trivy-image-results-${{ matrix.component }}.sarif'
-        
+
     - name: Upload Trivy image scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
@@ -238,44 +238,44 @@ jobs:
   integration-tests:
     needs: build-images
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
     - name: Log in to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Create test environment
       run: |
         cp .env.example .env
         echo "ELEVENLABS_API_KEY=test-key" >> .env
         echo "SPOTIFY_CLIENT_ID=test-id" >> .env
         echo "SPOTIFY_CLIENT_SECRET=test-secret" >> .env
-    
+
     - name: Start test services
       run: |
         docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
         sleep 30  # Wait for services to start
-    
+
     - name: Check service health
       run: |
         ./scripts/health-check.sh
-    
+
     - name: Run integration tests
       run: |
         docker-compose exec -T ai-servis-core python -m pytest tests/integration/ -v
-    
+
     - name: Run system tests
       run: |
         ./scripts/system-tests.sh
-    
+
     - name: Collect logs
       if: failure()
       run: |
@@ -283,7 +283,7 @@ jobs:
         docker-compose logs > test-logs/docker-compose.log
         docker-compose logs ai-servis-core > test-logs/core.log
         docker-compose logs ai-audio-assistant > test-logs/audio.log
-    
+
     - name: Upload test logs
       if: failure()
       uses: actions/upload-artifact@v3
@@ -297,24 +297,24 @@ jobs:
       security-events: write
       actions: read
       contents: read
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: python, cpp, javascript
         queries: security-extended,security-and-quality
-    
+
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
-    
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
-    
+
     - name: Run Trivy vulnerability scanner (Filesystem)
       uses: aquasecurity/trivy-action@master
       with:
@@ -322,12 +322,12 @@ jobs:
         scan-ref: '.'
         format: 'sarif'
         output: 'trivy-fs-results.sarif'
-    
+
     - name: Upload Trivy FS scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-fs-results.sarif'
-    
+
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/python@master
       continue-on-error: true
@@ -335,13 +335,13 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         args: --severity-threshold=high --sarif-file-output=snyk.sarif
-    
+
     - name: Upload Snyk results
       if: always()
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: snyk.sarif
-    
+
     - name: Run OWASP Dependency Check
       uses: dependency-check/Dependency-Check_Action@main
       with:
@@ -353,7 +353,7 @@ jobs:
           --enableRetired
           --enableExperimental
           --nvdApiKey ${{ secrets.NVD_API_KEY }}
-    
+
     - name: Upload OWASP Dependency Check results
       uses: github/codeql-action/upload-sarif@v3
       with:
@@ -362,22 +362,22 @@ jobs:
   performance-tests:
     needs: integration-tests
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx  
+
+    - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
     - name: Start performance test environment
       run: |
         docker-compose -f docker-compose.yml -f docker-compose.perf.yml up -d
         sleep 30
-    
+
     - name: Run performance tests
       run: |
         ./scripts/performance-tests.sh
-    
+
     - name: Upload performance results
       uses: actions/upload-artifact@v3
       with:
@@ -389,16 +389,16 @@ jobs:
     needs: [integration-tests, security-scan, performance-tests]
     runs-on: ubuntu-latest
     environment: staging
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Deploy to staging
       run: |
         echo "Deploying to staging environment..."
         # In a real implementation, you would deploy to your staging environment
         # This could involve updating Kubernetes deployments, AWS ECS services, etc.
-    
+
     - name: Run smoke tests
       run: |
         ./scripts/smoke-tests.sh staging
@@ -408,19 +408,19 @@ jobs:
     needs: [integration-tests, security-scan, performance-tests]
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Deploy to production
       run: |
         echo "Deploying to production environment..."
         # Production deployment logic here
-    
+
     - name: Run smoke tests
       run: |
         ./scripts/smoke-tests.sh production
-    
+
     - name: Notify deployment success
       if: success()
       run: |
@@ -431,7 +431,7 @@ jobs:
     if: always()
     needs: [deploy-staging, deploy-production]
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Cleanup test artifacts
       run: |

@@ -39,7 +39,7 @@ REQUIRED_DISK_GB=50
 # Test phases
 PHASES=(
     "system_requirements"
-    "docker_setup" 
+    "docker_setup"
     "project_setup"
     "development_environment"
     "pi_simulation"
@@ -51,13 +51,13 @@ PHASES=(
 # Initialize test environment
 init_test_environment() {
     log "Initializing VM test environment..."
-    
+
     # Create test results directory
     mkdir -p "$TEST_RESULTS_DIR"
-    
+
     # Clear previous test log
     > "$VM_TEST_LOG"
-    
+
     # Log system information
     {
         echo "=== VM Test Environment ==="
@@ -78,7 +78,7 @@ init_test_environment() {
 test_system_requirements() {
     log "Testing system requirements..."
     local errors=0
-    
+
     # Check available memory
     local memory_gb=$(free -g | grep '^Mem:' | awk '{print $2}')
     if [ "$memory_gb" -lt $REQUIRED_MEMORY_GB ]; then
@@ -87,7 +87,7 @@ test_system_requirements() {
     else
         success "Memory check passed: ${memory_gb}GB"
     fi
-    
+
     # Check available disk space
     local disk_gb=$(df -BG / | tail -1 | awk '{print $4}' | sed 's/G//')
     if [ "$disk_gb" -lt $REQUIRED_DISK_GB ]; then
@@ -96,7 +96,7 @@ test_system_requirements() {
     else
         success "Disk space check passed: ${disk_gb}GB available"
     fi
-    
+
     # Check required commands
     local required_commands=("curl" "wget" "git" "make" "gcc" "python3" "pip3")
     for cmd in "${required_commands[@]}"; do
@@ -107,7 +107,7 @@ test_system_requirements() {
             success "Command available: $cmd"
         fi
     done
-    
+
     # Check internet connectivity
     if ! curl -s --connect-timeout 10 https://github.com >/dev/null; then
         error "No internet connectivity to GitHub"
@@ -115,21 +115,21 @@ test_system_requirements() {
     else
         success "Internet connectivity verified"
     fi
-    
+
     return $errors
 }
 
 # Setup Docker
 test_docker_setup() {
     log "Testing Docker setup..."
-    
+
     # Check if Docker is installed
     if ! command -v docker >/dev/null 2>&1; then
         log "Installing Docker..."
-        
+
         # Update package index
         sudo apt-get update
-        
+
         # Install prerequisites
         sudo apt-get install -y \
             apt-transport-https \
@@ -137,59 +137,59 @@ test_docker_setup() {
             curl \
             gnupg \
             lsb-release
-        
+
         # Add Docker's official GPG key
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        
+
         # Set up stable repository
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        
+
         # Install Docker Engine
         sudo apt-get update
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        
+
         # Add user to docker group
         sudo usermod -aG docker "$USER"
-        
+
         # Start and enable Docker
         sudo systemctl start docker
         sudo systemctl enable docker
-        
+
         warning "Docker installed. Please log out and log back in, then re-run this script."
         return 1
     fi
-    
+
     # Test Docker functionality
     if ! docker info >/dev/null 2>&1; then
         error "Docker daemon is not running or accessible"
         return 1
     fi
-    
+
     success "Docker is running"
-    
+
     # Test Docker Compose
     if ! docker compose version >/dev/null 2>&1; then
         error "Docker Compose is not available"
         return 1
     fi
-    
+
     success "Docker Compose is available"
-    
+
     # Test Docker Buildx
     if ! docker buildx version >/dev/null 2>&1; then
         error "Docker Buildx is not available"
         return 1
     fi
-    
+
     success "Docker Buildx is available"
-    
+
     # Create buildx builder if needed
     if ! docker buildx ls | grep -q "multiarch"; then
         log "Creating multiarch builder..."
         docker buildx create --name multiarch --driver docker-container --use
         docker buildx inspect --bootstrap
     fi
-    
+
     success "Docker setup completed"
     return 0
 }
@@ -197,12 +197,12 @@ test_docker_setup() {
 # Setup project
 test_project_setup() {
     log "Testing project setup..."
-    
+
     local test_dir="/tmp/ai-servis-test"
-    
+
     # Clean up previous test
     rm -rf "$test_dir"
-    
+
     # Clone or copy project
     if [ -d "$PROJECT_ROOT/.git" ]; then
         log "Copying project from current directory..."
@@ -211,25 +211,25 @@ test_project_setup() {
         log "Cloning project from GitHub..."
         git clone https://github.com/ai-servis/ai-servis.git "$test_dir"
     fi
-    
+
     cd "$test_dir"
-    
+
     # Install Python dependencies
     if [ -f "requirements-dev.txt" ]; then
         log "Installing Python dependencies..."
         pip3 install --user -r requirements-dev.txt
     fi
-    
+
     # Install pre-commit hooks
     if [ -f ".pre-commit-config.yaml" ]; then
         log "Installing pre-commit hooks..."
         pip3 install --user pre-commit
         pre-commit install
     fi
-    
+
     # Make scripts executable
     find . -name "*.sh" -exec chmod +x {} \;
-    
+
     success "Project setup completed"
     return 0
 }
@@ -237,26 +237,26 @@ test_project_setup() {
 # Test development environment
 test_development_environment() {
     log "Testing development environment..."
-    
+
     cd "/tmp/ai-servis-test"
-    
+
     # Create .env file
     if [ -f ".env.example" ]; then
         cp .env.example .env
         log "Created .env file from template"
     fi
-    
+
     # Test environment startup
     log "Starting development environment..."
     timeout 300s ./scripts/dev-environment.sh up dev --build || {
         error "Failed to start development environment"
         return 1
     }
-    
+
     # Wait for services to be ready
     log "Waiting for services to start..."
     sleep 30
-    
+
     # Test service endpoints
     local endpoints=(
         "http://localhost:8080/health"
@@ -264,7 +264,7 @@ test_development_environment() {
         "http://localhost:8082/health"
         "http://localhost:8083/health"
     )
-    
+
     local failed_endpoints=0
     for endpoint in "${endpoints[@]}"; do
         if curl -s -f --connect-timeout 10 "$endpoint" >/dev/null; then
@@ -274,7 +274,7 @@ test_development_environment() {
             ((failed_endpoints++))
         fi
     done
-    
+
     # Test database connectivity
     if timeout 10s bash -c "</dev/tcp/localhost/5432"; then
         success "PostgreSQL is accessible"
@@ -282,7 +282,7 @@ test_development_environment() {
         error "PostgreSQL is not accessible"
         ((failed_endpoints++))
     fi
-    
+
     # Test Redis connectivity
     if timeout 10s bash -c "</dev/tcp/localhost/6379"; then
         success "Redis is accessible"
@@ -290,7 +290,7 @@ test_development_environment() {
         error "Redis is not accessible"
         ((failed_endpoints++))
     fi
-    
+
     # Test MQTT broker
     if timeout 10s bash -c "</dev/tcp/localhost/1883"; then
         success "MQTT broker is accessible"
@@ -298,29 +298,29 @@ test_development_environment() {
         error "MQTT broker is not accessible"
         ((failed_endpoints++))
     fi
-    
+
     # Stop development environment
     ./scripts/dev-environment.sh down dev
-    
+
     return $failed_endpoints
 }
 
 # Test Pi simulation environment
 test_pi_simulation() {
     log "Testing Pi simulation environment..."
-    
+
     cd "/tmp/ai-servis-test"
-    
+
     # Start Pi simulation
     log "Starting Pi simulation environment..."
     timeout 300s ./scripts/dev-environment.sh up pi-sim --build || {
         error "Failed to start Pi simulation environment"
         return 1
     }
-    
+
     # Wait for services to start
     sleep 30
-    
+
     # Test Pi simulation endpoints
     local pi_endpoints=(
         "http://localhost:8084"  # Pi Gateway
@@ -328,7 +328,7 @@ test_pi_simulation() {
         "http://localhost:8087"  # Hardware Monitor
         "http://localhost:8088"  # Simulation Control
     )
-    
+
     local failed_pi_endpoints=0
     for endpoint in "${pi_endpoints[@]}"; do
         if curl -s -f --connect-timeout 10 "$endpoint" >/dev/null; then
@@ -338,29 +338,29 @@ test_pi_simulation() {
             ((failed_pi_endpoints++))
         fi
     done
-    
+
     # Stop Pi simulation
     ./scripts/dev-environment.sh down pi-sim
-    
+
     return $failed_pi_endpoints
 }
 
 # Test monitoring stack
 test_monitoring_stack() {
     log "Testing monitoring stack..."
-    
+
     cd "/tmp/ai-servis-test"
-    
+
     # Start monitoring stack
     log "Starting monitoring stack..."
     timeout 300s ./scripts/dev-environment.sh up monitoring --build || {
         error "Failed to start monitoring stack"
         return 1
     }
-    
+
     # Wait for services to start
     sleep 45
-    
+
     # Test monitoring endpoints
     local monitoring_endpoints=(
         "http://localhost:3000"   # Grafana
@@ -369,7 +369,7 @@ test_monitoring_stack() {
         "http://localhost:16686"  # Jaeger
         "http://localhost:3001"   # Uptime Kuma
     )
-    
+
     local failed_monitoring_endpoints=0
     for endpoint in "${monitoring_endpoints[@]}"; do
         if curl -s -f --connect-timeout 15 "$endpoint" >/dev/null; then
@@ -379,19 +379,19 @@ test_monitoring_stack() {
             ((failed_monitoring_endpoints++))
         fi
     done
-    
+
     # Stop monitoring stack
     ./scripts/dev-environment.sh down monitoring
-    
+
     return $failed_monitoring_endpoints
 }
 
 # Simulate CI pipeline
 test_ci_simulation() {
     log "Testing CI pipeline simulation..."
-    
+
     cd "/tmp/ai-servis-test"
-    
+
     # Test linting
     if [ -f "requirements-dev.txt" ]; then
         log "Running Python linting..."
@@ -401,7 +401,7 @@ test_ci_simulation() {
             warning "Python linting found issues (non-critical for VM test)"
         fi
     fi
-    
+
     # Test Docker builds
     log "Testing Docker build..."
     if [ -f "modules/core-orchestrator/Dockerfile" ]; then
@@ -413,7 +413,7 @@ test_ci_simulation() {
             return 1
         fi
     fi
-    
+
     # Test multi-platform build script
     if [ -f "scripts/docker-build-multiplatform.sh" ]; then
         log "Testing multi-platform build script..."
@@ -424,7 +424,7 @@ test_ci_simulation() {
             return 1
         fi
     fi
-    
+
     success "CI simulation completed"
     return 0
 }
@@ -432,13 +432,13 @@ test_ci_simulation() {
 # Test performance
 test_performance_validation() {
     log "Testing performance validation..."
-    
+
     cd "/tmp/ai-servis-test"
-    
+
     # Start minimal environment for performance testing
     ./scripts/dev-environment.sh up dev >/dev/null 2>&1
     sleep 30
-    
+
     # Run performance tests if available
     if [ -f "scripts/performance-tests.sh" ]; then
         log "Running performance tests..."
@@ -448,18 +448,18 @@ test_performance_validation() {
             warning "Performance tests failed or timed out (non-critical for VM test)"
         fi
     fi
-    
+
     # Test system resource usage
     log "Checking system resource usage..."
     local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
     local memory_usage=$(free | grep Mem | awk '{printf("%.1f", $3/$2 * 100.0)}')
-    
+
     log "Current CPU usage: ${cpu_usage}%"
     log "Current memory usage: ${memory_usage}%"
-    
+
     # Stop environment
     ./scripts/dev-environment.sh down dev >/dev/null 2>&1
-    
+
     success "Performance validation completed"
     return 0
 }
@@ -469,16 +469,16 @@ generate_test_report() {
     local total_tests="$1"
     local passed_tests="$2"
     local failed_tests="$3"
-    
+
     local report_file="$TEST_RESULTS_DIR/vm-test-report.md"
-    
+
     cat > "$report_file" << EOF
 # AI-Servis VM Test Report
 
 **Test Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 **VM Environment:** $(lsb_release -d 2>/dev/null | cut -f2 || echo "Unknown Linux")
 **Total Tests:** $total_tests
-**Passed:** $passed_tests  
+**Passed:** $passed_tests
 **Failed:** $failed_tests
 **Success Rate:** $(( (passed_tests * 100) / total_tests ))%
 
@@ -519,19 +519,19 @@ EOF
 # Main test execution
 main() {
     log "Starting AI-Servis VM Test Suite..."
-    
+
     init_test_environment
-    
+
     local total_tests=0
     local passed_tests=0
     local failed_tests=0
-    
+
     # Run all test phases
     for phase in "${PHASES[@]}"; do
         ((total_tests++))
-        
+
         log "=== Running test phase: $phase ==="
-        
+
         case "$phase" in
             "system_requirements")
                 if test_system_requirements; then
@@ -606,13 +606,13 @@ main() {
                 fi
                 ;;
         esac
-        
+
         echo "" # Add spacing between phases
     done
-    
+
     # Generate test report
     generate_test_report "$total_tests" "$passed_tests" "$failed_tests"
-    
+
     # Print final summary
     echo ""
     log "=== VM Test Suite Complete ==="
@@ -620,7 +620,7 @@ main() {
     log "Passed: $passed_tests"
     log "Failed: $failed_tests"
     log "Success Rate: $(( (passed_tests * 100) / total_tests ))%"
-    
+
     if [ $failed_tests -eq 0 ]; then
         success "🎉 All VM tests passed! AI-Servis is ready for deployment."
         exit 0

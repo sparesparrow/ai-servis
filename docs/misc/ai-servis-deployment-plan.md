@@ -41,7 +41,7 @@
 ┌─ Raspberry Pi 5 Server ─┐
 │ ├── Docker Containers   │
 │ │   ├── lpr-engine      │ <- ANPR detekce
-│ │   ├── camera-server   │ <- RTSP ingest  
+│ │   ├── camera-server   │ <- RTSP ingest
 │ │   ├── ai-agent        │ <- ElevenLabs
 │ │   ├── audio-server    │ <- RTP-MIDI
 │ │   ├── sip-server      │ <- Asterisk
@@ -75,7 +75,7 @@
 
 ### Měsíční Operační Náklady
 - **GitHub Enterprise**: $105 (2.415 Kč)
-- **Docker Hub Pro**: $35 (805 Kč)  
+- **Docker Hub Pro**: $35 (805 Kč)
 - **AWS EKS**: $72 (1.656 Kč)
 - **GitLab CI minutes**: $0 (self-hosted)
 - **Monitoring (Datadog)**: $150 (3.450 Kč)
@@ -94,12 +94,12 @@ services:
         limits:
           cpus: '2'
           memory: 2G
-    
+
   camera-server:
     image: ai-servis/camera:latest
     ports:
       - "8554:8554"  # RTSP
-    
+
   ai-agent:
     image: ai-servis/agent:latest
     environment:
@@ -115,7 +115,7 @@ services:
 
 ### Target Zákazníci
 1. **Autoservisy** (8.253+ v ČR) - instalace pro zákazníky
-2. **Fleet management** - firemní vozidla 
+2. **Fleet management** - firemní vozidla
 3. **Taxi/rideshare** - bezpečnost a monitoring
 4. **Individuální zákazníci** - tech early adopters
 
@@ -146,7 +146,7 @@ services:
 
 ### Rok 2-3 Škálování
 - **Instalace/rok**: 500-1000 systémů
-- **Revenue/rok**: 25-50M Kč  
+- **Revenue/rok**: 25-50M Kč
 - **Expanze**: SK, AT, PL
 - **Team**: 25-40 lidí
 
@@ -169,13 +169,13 @@ services:
 ## 📞 Kontaktní Informace
 
 **AI-SERVIS s.r.o.**
-- 📍 Brno-sever, Jihomoravský kraj  
+- 📍 Brno-sever, Jihomoravský kraj
 - 📞 +420 777 888 999
 - 📧 info@ai-servis.cz
 - 🌐 www.ai-servis.cz
 
 ---
 
-*Dokumentace vytvořena: Srpen 2025*  
-*Verze: 1.0*  
+*Dokumentace vytvořena: Srpen 2025*
+*Verze: 1.0*
 *Autor: AI-SERVIS Development Team*

@@ -6,11 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Find Conan-generated packages
-find_package(jsoncpp REQUIRED)
-find_package(flatbuffers REQUIRED)
-find_package(CURL REQUIRED)
-find_package(libgpiod REQUIRED)
-find_package(mosquitto REQUIRED)
+# Use system jsoncpp via pkg-config
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JSONCPP REQUIRED jsoncpp)
+pkg_check_modules(FLATBUFFERS REQUIRED flatbuffers)
+pkg_check_modules(CURL REQUIRED libcurl)
+pkg_check_modules(LIBGPIOD REQUIRED libgpiod)
+pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
@@ -58,11 +60,13 @@ target_include_directories(webgrab_core PUBLIC
 )
 
 # Link core library
+target_include_directories(webgrab_core PRIVATE ${JSONCPP_INCLUDE_DIRS} ${FLATBUFFERS_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${LIBGPIOD_INCLUDE_DIRS} ${MOSQUITTO_INCLUDE_DIRS})
 target_link_libraries(webgrab_core
-    JsonCpp::JsonCpp
-    flatbuffers::flatbuffers
-    CURL::libcurl
-    mosquitto::mosquitto
+    ${JSONCPP_LIBRARIES}
+    ${FLATBUFFERS_LIBRARIES}
+    ${CURL_LIBRARIES}
+    ${LIBGPIOD_LIBRARIES}
+    ${MOSQUITTO_LIBRARIES}
     Threads::Threads
 )
 
@@ -74,8 +78,8 @@ add_executable(hardware-server
 
 target_link_libraries(hardware-server
     webgrab_core
-    libgpiod::libgpiod
-    mosquitto::mosquitto
+    ${LIBGPIOD_LIBRARIES}
+    ${MOSQUITTO_LIBRARIES}
 )
 
 # MCP Server with FlatBuffers generation
@@ -111,8 +115,8 @@ if(FLATBUFFERS_FLATC_EXECUTABLE)
 
     target_link_libraries(mcp-server
         webgrab_core
-        mosquitto::mosquitto
-        libgpiod::libgpiod
+        ${MOSQUITTO_LIBRARIES}
+        ${LIBGPIOD_LIBRARIES}
     )
 
     # Copy MCP config

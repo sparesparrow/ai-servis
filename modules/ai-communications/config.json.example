@@ -1,0 +1,64 @@
+{
+  "twilio": {
+    "account_sid": "your_twilio_account_sid",
+    "auth_token": "your_twilio_auth_token",
+    "from_number": "+1234567890",
+    "status_callback": "https://your-domain.com/webhook/twilio/status"
+  },
+  "email": {
+    "smtp": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "username": "your_email@gmail.com",
+      "password": "your_app_password",
+      "use_tls": true
+    },
+    "imap": {
+      "host": "imap.gmail.com",
+      "port": 993,
+      "username": "your_email@gmail.com",
+      "password": "your_app_password",
+      "use_ssl": true
+    }
+  },
+  "queue": {
+    "max_queue_size": 10000,
+    "default_max_retries": 3,
+    "default_retry_strategy": "exponential_backoff",
+    "retry_intervals": [1, 5, 15, 60],
+    "batch_size": 10,
+    "processing_interval": 1.0
+  },
+  "social_media": {
+    "whatsapp": {
+      "access_token": "your_whatsapp_access_token",
+      "phone_number_id": "your_phone_number_id",
+      "business_account_id": "your_business_account_id",
+      "webhook_verify_token": "your_webhook_verify_token"
+    },
+    "telegram": {
+      "bot_token": "your_telegram_bot_token"
+    },
+    "twitter": {
+      "bearer_token": "your_twitter_bearer_token",
+      "api_key": "your_twitter_api_key",
+      "api_secret": "your_twitter_api_secret",
+      "access_token": "your_twitter_access_token",
+      "access_token_secret": "your_twitter_access_token_secret"
+    },
+    "signal": {
+      "server_url": "http://localhost:8080",
+      "phone_number": "+1234567890",
+      "password": "your_signal_password"
+    },
+    "facebook": {
+      "page_access_token": "your_facebook_page_access_token",
+      "app_secret": "your_facebook_app_secret",
+      "verify_token": "your_facebook_verify_token"
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

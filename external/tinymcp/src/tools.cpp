@@ -2,18 +2,18 @@
 
 namespace tinymcp {
 
-Tool::Tool(const std::string& name, const std::string& description) 
+Tool::Tool(const std::string& name, const std::string& description)
     : name(name), description(description) {}
 
 Json::Value Tool::toJson() const {
     Json::Value json;
     json["name"] = name;
     json["description"] = description;
-    
+
     if (!inputSchema.isNull()) {
         json["inputSchema"] = inputSchema;
     }
-    
+
     return json;
 }
 
@@ -28,7 +28,7 @@ bool Tool::validate(const Json::Value& arguments) const {
     if (inputSchema.isNull()) {
         return true;
     }
-    
+
     // Check required fields if specified
     if (inputSchema.isMember("required") && inputSchema["required"].isArray()) {
         for (const auto& required : inputSchema["required"]) {
@@ -37,7 +37,7 @@ bool Tool::validate(const Json::Value& arguments) const {
             }
         }
     }
-    
+
     return true;
 }
 

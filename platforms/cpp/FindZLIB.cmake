@@ -51,4 +51,3 @@ mark_as_advanced(ZLIB_FOUND ZLIB_VERSION)
 set(ZLIB_FOUND 1)
 set(ZLIB_VERSION "1.2.13")
 mark_as_advanced(ZLIB_FOUND ZLIB_VERSION)
-

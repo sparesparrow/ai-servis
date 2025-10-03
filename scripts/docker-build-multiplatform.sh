@@ -52,7 +52,7 @@ check_buildx() {
         error "Docker Buildx is not available. Please install Docker Desktop or enable Buildx."
         exit 1
     fi
-    
+
     # Create builder if it doesn't exist
     if ! docker buildx ls | grep -q multiarch; then
         log "Creating multiarch builder..."
@@ -67,19 +67,19 @@ check_buildx() {
 build_component() {
     local component="$1"
     local context_dir="$PROJECT_ROOT/modules/$component"
-    
+
     if [ ! -d "$context_dir" ]; then
         error "Component directory not found: $context_dir"
         return 1
     fi
-    
+
     if [ ! -f "$context_dir/Dockerfile" ]; then
         error "Dockerfile not found: $context_dir/Dockerfile"
         return 1
     fi
-    
+
     log "Building $component for platforms: $PLATFORMS"
-    
+
     local image_name="$REGISTRY/$(echo "$component" | tr '/' '-'):$TAG"
     local build_args=(
         "buildx" "build"
@@ -88,7 +88,7 @@ build_component() {
         "--file" "$context_dir/Dockerfile"
         "$context_dir"
     )
-    
+
     if [ "$PUSH" = "true" ]; then
         build_args+=("--push")
         log "Will push to registry: $image_name"
@@ -96,7 +96,7 @@ build_component() {
         build_args+=("--load")
         warning "Building locally only (use PUSH=true to push to registry)"
     fi
-    
+
     # Add build metadata
     build_args+=(
         "--label" "org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
@@ -105,7 +105,7 @@ build_component() {
         "--label" "org.opencontainers.image.revision=$(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
         "--label" "org.opencontainers.image.title=AI-Servis $component"
     )
-    
+
     if docker "${build_args[@]}"; then
         success "Built $component successfully"
         return 0
@@ -118,13 +118,13 @@ build_component() {
 # Build all components
 build_all() {
     local failed_components=()
-    
+
     log "Starting multi-platform build for ${#COMPONENTS[@]} components..."
     log "Registry: $REGISTRY"
     log "Tag: $TAG"
     log "Platforms: $PLATFORMS"
     log "Push: $PUSH"
-    
+
     for component in "${COMPONENTS[@]}"; do
         log "Building component: $component"
         if ! build_component "$component"; then
@@ -132,7 +132,7 @@ build_all() {
         fi
         echo # Add spacing between builds
     done
-    
+
     # Report results
     if [ ${#failed_components[@]} -eq 0 ]; then
         success "All components built successfully!"
@@ -151,24 +151,24 @@ health_check() {
         log "Skipping health check for pushed images"
         return
     fi
-    
+
     log "Running basic health checks on built images..."
-    
+
     for component in "${COMPONENTS[@]}"; do
         local image_name="$REGISTRY/$(echo "$component" | tr '/' '-'):$TAG"
-        
+
         log "Checking image: $image_name"
-        
+
         # Check if image exists
         if ! docker image inspect "$image_name" >/dev/null 2>&1; then
             error "Image not found: $image_name"
             continue
         fi
-        
+
         # Check image size
         local size=$(docker image inspect "$image_name" --format='{{.Size}}' | numfmt --to=iec)
         log "Image size: $size"
-        
+
         # Try to run the image briefly to check it starts
         if timeout 10s docker run --rm "$image_name" --help >/dev/null 2>&1 || \
            timeout 10s docker run --rm "$image_name" python --version >/dev/null 2>&1; then
@@ -182,7 +182,7 @@ health_check() {
 # Main execution
 main() {
     cd "$PROJECT_ROOT"
-    
+
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -225,11 +225,11 @@ main() {
                 ;;
         esac
     done
-    
+
     check_buildx
     build_all
     health_check
-    
+
     success "Multi-platform build completed!"
 }
 

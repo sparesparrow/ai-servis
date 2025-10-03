@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MCPTool:
     """MCP Tool definition"""
+
     name: str
     description: str
     input_schema: Dict[str, Any]
@@ -26,6 +27,7 @@ class MCPTool:
 @dataclass
 class MCPResult:
     """MCP Tool execution result"""
+
     content: List[Dict[str, Any]]
     is_error: bool = False
 
@@ -47,12 +49,21 @@ class MCPClient:
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "url": {"type": "string", "description": "URL to download from"},
-                        "output_path": {"type": "string", "description": "Local path to save file"},
-                        "session_id": {"type": "integer", "description": "Session ID for tracking"}
+                        "url": {
+                            "type": "string",
+                            "description": "URL to download from",
+                        },
+                        "output_path": {
+                            "type": "string",
+                            "description": "Local path to save file",
+                        },
+                        "session_id": {
+                            "type": "integer",
+                            "description": "Session ID for tracking",
+                        },
                     },
-                    "required": ["url", "output_path", "session_id"]
-                }
+                    "required": ["url", "output_path", "session_id"],
+                },
             ),
             "abort_download": MCPTool(
                 name="abort_download",
@@ -60,10 +71,13 @@ class MCPClient:
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "session_id": {"type": "integer", "description": "Session ID to abort"}
+                        "session_id": {
+                            "type": "integer",
+                            "description": "Session ID to abort",
+                        }
                     },
-                    "required": ["session_id"]
-                }
+                    "required": ["session_id"],
+                },
             ),
             "get_download_status": MCPTool(
                 name="get_download_status",
@@ -71,10 +85,13 @@ class MCPClient:
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "session_id": {"type": "integer", "description": "Session ID to check"}
+                        "session_id": {
+                            "type": "integer",
+                            "description": "Session ID to check",
+                        }
                     },
-                    "required": ["session_id"]
-                }
+                    "required": ["session_id"],
+                },
             ),
             "gpio_task": MCPTool(
                 name="gpio_task",
@@ -82,14 +99,26 @@ class MCPClient:
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "action": {"type": "string", "enum": ["configure", "set", "get"], "description": "GPIO action"},
+                        "action": {
+                            "type": "string",
+                            "enum": ["configure", "set", "get"],
+                            "description": "GPIO action",
+                        },
                         "pin": {"type": "integer", "description": "GPIO pin number"},
-                        "direction": {"type": "string", "enum": ["input", "output"], "description": "Pin direction"},
-                        "value": {"type": "integer", "enum": [0, 1], "description": "Pin value"}
+                        "direction": {
+                            "type": "string",
+                            "enum": ["input", "output"],
+                            "description": "Pin direction",
+                        },
+                        "value": {
+                            "type": "integer",
+                            "enum": [0, 1],
+                            "description": "Pin value",
+                        },
                     },
-                    "required": ["action", "pin"]
-                }
-            )
+                    "required": ["action", "pin"],
+                },
+            ),
         }
 
     def connect(self) -> bool:
@@ -124,7 +153,7 @@ class MCPClient:
         try:
             # Send request as JSON
             message = json.dumps(request) + "\n"
-            self.socket.send(message.encode('utf-8'))
+            self.socket.send(message.encode("utf-8"))
 
             # Receive response
             response_data = self.socket.recv(4096)
@@ -132,7 +161,7 @@ class MCPClient:
                 logger.error("No response from MCP server")
                 return None
 
-            response = json.loads(response_data.decode('utf-8'))
+            response = json.loads(response_data.decode("utf-8"))
             return response
 
         except Exception as e:
@@ -151,27 +180,23 @@ class MCPClient:
                     "jsonrpc": "2.0",
                     "id": 1,
                     "method": "tools/call",
-                    "params": {
-                        "name": "download_file",
-                        "arguments": arguments
-                    }
+                    "params": {"name": "download_file", "arguments": arguments},
                 }
 
                 response = self._send_request(request)
                 if response and "result" in response:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"Download started: {arguments['url']} -> {arguments['output_path']}"
-                        }]
+                        content=[
+                            {
+                                "type": "text",
+                                "text": f"Download started: {arguments['url']} -> {arguments['output_path']}",
+                            }
+                        ]
                     )
                 else:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": "Failed to start download"
-                        }],
-                        is_error=True
+                        content=[{"type": "text", "text": "Failed to start download"}],
+                        is_error=True,
                     )
 
             elif tool_name == "abort_download":
@@ -179,27 +204,23 @@ class MCPClient:
                     "jsonrpc": "2.0",
                     "id": 2,
                     "method": "tools/call",
-                    "params": {
-                        "name": "abort_download",
-                        "arguments": arguments
-                    }
+                    "params": {"name": "abort_download", "arguments": arguments},
                 }
 
                 response = self._send_request(request)
                 if response and "result" in response:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"Download aborted for session {arguments['session_id']}"
-                        }]
+                        content=[
+                            {
+                                "type": "text",
+                                "text": f"Download aborted for session {arguments['session_id']}",
+                            }
+                        ]
                     )
                 else:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": "Failed to abort download"
-                        }],
-                        is_error=True
+                        content=[{"type": "text", "text": "Failed to abort download"}],
+                        is_error=True,
                     )
 
             elif tool_name == "get_download_status":
@@ -207,28 +228,26 @@ class MCPClient:
                     "jsonrpc": "2.0",
                     "id": 3,
                     "method": "tools/call",
-                    "params": {
-                        "name": "get_download_status",
-                        "arguments": arguments
-                    }
+                    "params": {"name": "get_download_status", "arguments": arguments},
                 }
 
                 response = self._send_request(request)
                 if response and "result" in response:
                     status = response["result"]
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"Download status for session {arguments['session_id']}: {status}"
-                        }]
+                        content=[
+                            {
+                                "type": "text",
+                                "text": f"Download status for session {arguments['session_id']}: {status}",
+                            }
+                        ]
                     )
                 else:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": "Failed to get download status"
-                        }],
-                        is_error=True
+                        content=[
+                            {"type": "text", "text": "Failed to get download status"}
+                        ],
+                        is_error=True,
                     )
 
             elif tool_name == "gpio_task":
@@ -236,47 +255,38 @@ class MCPClient:
                     "jsonrpc": "2.0",
                     "id": 4,
                     "method": "tools/call",
-                    "params": {
-                        "name": "gpio_task",
-                        "arguments": arguments
-                    }
+                    "params": {"name": "gpio_task", "arguments": arguments},
                 }
 
                 response = self._send_request(request)
                 if response and "result" in response:
                     result = response["result"]
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"GPIO task completed: {result}"
-                        }]
+                        content=[
+                            {"type": "text", "text": f"GPIO task completed: {result}"}
+                        ]
                     )
                 else:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": "Failed to execute GPIO task"
-                        }],
-                        is_error=True
+                        content=[
+                            {"type": "text", "text": "Failed to execute GPIO task"}
+                        ],
+                        is_error=True,
                     )
 
             else:
                 return MCPResult(
-                    content=[{
-                        "type": "text",
-                        "text": f"Unknown tool: {tool_name}"
-                    }],
-                    is_error=True
+                    content=[{"type": "text", "text": f"Unknown tool: {tool_name}"}],
+                    is_error=True,
                 )
 
         except Exception as e:
             logger.error(f"Error executing tool {tool_name}: {e}")
             return MCPResult(
-                content=[{
-                    "type": "text",
-                    "text": f"Error executing {tool_name}: {str(e)}"
-                }],
-                is_error=True
+                content=[
+                    {"type": "text", "text": f"Error executing {tool_name}: {str(e)}"}
+                ],
+                is_error=True,
             )
 
     async def initialize(self) -> bool:
@@ -292,11 +302,8 @@ class MCPClient:
             "params": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {
-                    "name": "ai-servis-hardware-bridge",
-                    "version": "1.0.0"
-                }
-            }
+                "clientInfo": {"name": "ai-servis-hardware-bridge", "version": "1.0.0"},
+            },
         }
 
         response = self._send_request(init_request)

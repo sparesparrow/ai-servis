@@ -19,7 +19,7 @@ class HttpClient {
 private:
     CURL* curl_handle_;
     static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
-    static int ProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, 
+    static int ProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow,
                                curl_off_t ultotal, curl_off_t ulnow);
 
 public:
@@ -31,7 +31,7 @@ public:
     HttpClient& operator=(const HttpClient&) = delete;
 
     bool downloadFile(const std::string& url, const std::string& output_path);
-    bool downloadChunk(const std::string& url, const std::string& output_path, 
+    bool downloadChunk(const std::string& url, const std::string& output_path,
                       size_t start_byte, size_t chunk_size);
     bool resumeDownload(const std::string& url, const std::string& output_path);
 

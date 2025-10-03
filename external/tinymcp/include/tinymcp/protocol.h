@@ -42,11 +42,11 @@ class Message {
 public:
     Message() = default;
     virtual ~Message() = default;
-    
+
     virtual MessageType getType() const = 0;
     virtual Json::Value toJson() const = 0;
     virtual void fromJson(const Json::Value& json) = 0;
-    
+
     std::string id;
     std::string jsonrpc = "2.0";
 };
@@ -58,11 +58,11 @@ class Request : public Message {
 public:
     Request() = default;
     Request(const std::string& method);
-    
+
     MessageType getType() const override { return MessageType::Request; }
     Json::Value toJson() const override;
     void fromJson(const Json::Value& json) override;
-    
+
     std::string method;
     Json::Value params;
 };
@@ -74,11 +74,11 @@ class Response : public Message {
 public:
     Response() = default;
     Response(const std::string& id);
-    
+
     MessageType getType() const override { return MessageType::Response; }
     Json::Value toJson() const override;
     void fromJson(const Json::Value& json) override;
-    
+
     Json::Value result;
     Json::Value error;
 };
@@ -90,11 +90,11 @@ class Notification : public Message {
 public:
     Notification() = default;
     Notification(const std::string& method);
-    
+
     MessageType getType() const override { return MessageType::Notification; }
     Json::Value toJson() const override;
     void fromJson(const Json::Value& json) override;
-    
+
     std::string method;
     Json::Value params;
 };
@@ -105,7 +105,7 @@ public:
 class IProtocolHandler {
 public:
     virtual ~IProtocolHandler() = default;
-    
+
     virtual void onRequest(const Request& request, Response& response) = 0;
     virtual void onNotification(const Notification& notification) = 0;
     virtual void onResponse(const Response& response) = 0;
@@ -118,7 +118,7 @@ class ProtocolSerializer {
 public:
     static std::string serialize(const Message& message);
     static std::unique_ptr<Message> deserialize(const std::string& data);
-    
+
 private:
     static Json::CharReaderBuilder readerBuilder;
     static Json::StreamWriterBuilder writerBuilder;

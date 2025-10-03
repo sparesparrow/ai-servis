@@ -12,31 +12,38 @@ class AiServisConan(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False],
         "with_hardware": [True, False],
-        "with_mcp": [True, False]
+        "with_mcp": [True, False],
     }
     default_options = {
         "shared": False,
         "fPIC": True,
         "with_hardware": True,
-        "with_mcp": True
+        "with_mcp": True,
     }
 
     def configure(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
+    def layout(self):
+        basic_layout(self, src_folder="platforms/cpp")
+
+    def source(self):
+        # Set source folder to platforms/cpp
+        pass
+
     def requirements(self):
         # Core dependencies - always required
-        self.requires("jsoncpp/1.9.5")       # JSON handling for all components
-        self.requires("flatbuffers/23.5.26") # Serialization for all components
-        self.requires("libcurl/8.5.0")       # HTTP client for downloads and APIs
-        self.requires("openssl/3.0.8")       # SSL/TLS support
-        self.requires("zlib/1.2.13")         # Compression support
+        self.requires("jsoncpp/1.9.5")  # JSON handling for all components
+        self.requires("flatbuffers/23.5.26")  # Serialization for all components
+        self.requires("libcurl/8.5.0")  # HTTP client for downloads and APIs
+        self.requires("openssl/3.0.8")  # SSL/TLS support
+        self.requires("zlib/1.2.13")  # Compression support
 
         # Hardware-specific dependencies
         if self.options.with_hardware:
-            self.requires("libgpiod/1.6.3")      # GPIO control for Raspberry Pi
-            self.requires("mosquitto/2.0.18")    # MQTT communication
+            self.requires("libgpiod/1.6.3")  # GPIO control for Raspberry Pi
+            self.requires("mosquitto/2.0.18")  # MQTT communication
 
         # MCP-specific dependencies
         if self.options.with_mcp:
@@ -73,7 +80,7 @@ class AiServisConan(ConanFile):
 
         # Find flatc executable
         flatc_path = None
-        if hasattr(self, 'deps_cpp_info') and self.deps_cpp_info.has_components:
+        if hasattr(self, "deps_cpp_info") and self.deps_cpp_info.has_components:
             # Try to get flatc from Conan dependencies
             try:
                 flatbuffers_info = self.deps_cpp_info["flatbuffers"]
@@ -84,10 +91,13 @@ class AiServisConan(ConanFile):
         if not flatc_path or not os.path.exists(flatc_path):
             # Try system flatc
             import shutil
+
             flatc_path = shutil.which("flatc")
 
         if not flatc_path:
-            self.output.warning("FlatBuffers compiler (flatc) not found. C++ headers will not be generated.")
+            self.output.warning(
+                "FlatBuffers compiler (flatc) not found. C++ headers will not be generated."
+            )
             return
 
         # Schema and output paths
@@ -101,18 +111,15 @@ class AiServisConan(ConanFile):
 
         # Generate headers
         import subprocess
-        cmd = [
-            flatc_path,
-            "--cpp",
-            "--gen-mutable",
-            "-o", schema_dir,
-            schema_file
-        ]
+
+        cmd = [flatc_path, "--cpp", "--gen-mutable", "-o", schema_dir, schema_file]
 
         try:
             self.output.info(f"Generating FlatBuffers headers: {' '.join(cmd)}")
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-            self.output.info(f"FlatBuffers headers generated successfully: {output_file}")
+            self.output.info(
+                f"FlatBuffers headers generated successfully: {output_file}"
+            )
         except subprocess.CalledProcessError as e:
             self.output.error(f"Failed to generate FlatBuffers headers: {e}")
             self.output.error(f"stdout: {e.stdout}")

@@ -452,7 +452,7 @@ The VM test suite generates comprehensive reports:
 
 # Report includes:
 # - System information
-# - Test results summary  
+# - Test results summary
 # - Performance metrics
 # - Detailed test logs
 # - Recommendations

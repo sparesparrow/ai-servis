@@ -16,11 +16,11 @@ public:
     ResourceRegistry resourceRegistry;
     bool running = false;
     std::mutex mutex;
-    
+
     ConnectionHandler onConnect;
     ConnectionHandler onDisconnect;
     ErrorHandler onError;
-    
+
     Impl(const ServerConfig& cfg) : config(cfg) {
 #ifdef TINYMCP_ENABLE_LOGGING
         if (config.enableLogging) {
@@ -99,7 +99,7 @@ bool Server::isRunning() const {
 
 void Server::onRequest(const Request& request, Response& response) {
     response.id = request.id;
-    
+
     if (request.method == "initialize") {
         handleInitialize(request, response);
     } else if (request.method == "tools/list") {
@@ -142,11 +142,11 @@ void Server::handleInitialize(const Request& request, Response& response) {
 void Server::handleListTools(const Request& request, Response& response) {
     Json::Value result;
     Json::Value tools(Json::arrayValue);
-    
+
     for (const auto& tool : getTools()) {
         tools.append(tool.toJson());
     }
-    
+
     result["tools"] = tools;
     response.result = result;
 }
@@ -154,7 +154,7 @@ void Server::handleListTools(const Request& request, Response& response) {
 void Server::handleCallTool(const Request& request, Response& response) {
     std::string toolName = request.params.get("name", "").asString();
     Json::Value arguments = request.params.get("arguments", Json::Value());
-    
+
     auto* tool = pImpl->toolRegistry.getTool(toolName);
     if (!tool) {
         response.error = Json::Value();
@@ -162,7 +162,7 @@ void Server::handleCallTool(const Request& request, Response& response) {
         response.error["message"] = "Tool not found: " + toolName;
         return;
     }
-    
+
     if (tool->handler) {
         try {
             response.result = tool->handler(arguments);
@@ -181,18 +181,18 @@ void Server::handleCallTool(const Request& request, Response& response) {
 void Server::handleListResources(const Request& request, Response& response) {
     Json::Value result;
     Json::Value resources(Json::arrayValue);
-    
+
     for (const auto& resource : getResources()) {
         resources.append(resource.toJson());
     }
-    
+
     result["resources"] = resources;
     response.result = result;
 }
 
 void Server::handleReadResource(const Request& request, Response& response) {
     std::string uri = request.params.get("uri", "").asString();
-    
+
     auto* resource = pImpl->resourceRegistry.getResource(uri);
     if (!resource) {
         response.error = Json::Value();
@@ -200,16 +200,16 @@ void Server::handleReadResource(const Request& request, Response& response) {
         response.error["message"] = "Resource not found: " + uri;
         return;
     }
-    
+
     Json::Value result;
     result["contents"] = Json::Value();
     result["contents"][0]["uri"] = uri;
     result["contents"][0]["text"] = resource->getContent();
-    
+
     if (!resource->mimeType.empty()) {
         result["contents"][0]["mimeType"] = resource->mimeType;
     }
-    
+
     response.result = result;
 }
 
@@ -268,15 +268,15 @@ ServerBuilder& ServerBuilder::addResource(const Resource& resource) {
 
 std::unique_ptr<Server> ServerBuilder::build() {
     auto server = std::make_unique<Server>(config);
-    
+
     for (const auto& tool : tools) {
         server->registerTool(tool);
     }
-    
+
     for (const auto& resource : resources) {
         server->registerResource(resource);
     }
-    
+
     return server;
 }
 

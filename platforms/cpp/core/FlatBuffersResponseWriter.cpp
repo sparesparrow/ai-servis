@@ -1,5 +1,6 @@
 #include "FlatBuffersResponseWriter.h"
 #include "TcpSocket.h"
+#include "IResponseReader.h"
 #include "webgrab_generated.h"
 #include <cstring>
 #include <arpa/inet.h>
@@ -14,15 +15,17 @@ FlatBuffersResponseWriter::~FlatBuffersResponseWriter() {
 bool FlatBuffersResponseWriter::write(const webgrab::DownloadResponse& resp) {
     builder_.Clear();
     auto fb_resp = webgrab::CreateDownloadResponse(builder_, resp.sessionId());
-    builder_.Finish(fb_resp);
+    auto message = webgrab::CreateMessage(builder_, webgrab::Request_NONE, 0, webgrab::Response_DownloadResponse, fb_resp.Union());
+    builder_.Finish(message);
     return sendResponse();
 }
 
 bool FlatBuffersResponseWriter::write(const webgrab::StatusResponse& resp) {
     builder_.Clear();
-    auto status_str = builder_.CreateString(resp.status()->str());
+    auto status_str = builder_.CreateString(resp.status);
     auto fb_resp = webgrab::CreateDownloadStatusResponse(builder_, status_str);
-    builder_.Finish(fb_resp);
+    auto message = webgrab::CreateMessage(builder_, webgrab::Request_NONE, 0, webgrab::Response_DownloadStatusResponse, fb_resp.Union());
+    builder_.Finish(message);
     return sendResponse();
 }
 

@@ -27,12 +27,12 @@ public:
     Client();
     explicit Client(const ClientConfig& config);
     virtual ~Client();
-    
+
     // Connection management
     void connect(const std::string& endpoint);
     void disconnect();
     bool isConnected() const;
-    
+
     // Synchronous requests
     Response sendRequest(const Request& request);
     Response initialize();
@@ -40,28 +40,28 @@ public:
     Response callTool(const std::string& name, const Json::Value& arguments);
     Response listResources();
     Response readResource(const std::string& uri);
-    
+
     // Asynchronous requests
     std::future<Response> sendRequestAsync(const Request& request);
     std::future<Response> initializeAsync();
     std::future<Response> listToolsAsync();
     std::future<Response> callToolAsync(const std::string& name, const Json::Value& arguments);
-    
+
     // Notifications
     void sendNotification(const Notification& notification);
-    
+
     // Protocol handler implementation
     void onRequest(const Request& request, Response& response) override;
     void onNotification(const Notification& notification) override;
     void onResponse(const Response& response) override;
-    
+
     // Event handlers
     using NotificationHandler = std::function<void(const Notification&)>;
     using ErrorHandler = std::function<void(const std::string&)>;
-    
+
     void setOnNotification(NotificationHandler handler);
     void setOnError(ErrorHandler handler);
-    
+
 private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
@@ -77,9 +77,9 @@ public:
     ClientBuilder& withTimeout(int milliseconds);
     ClientBuilder& withMaxRetries(int retries);
     ClientBuilder& withLogging(bool enable);
-    
+
     std::unique_ptr<Client> build();
-    
+
 private:
     ClientConfig config;
 };

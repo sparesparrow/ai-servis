@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-AWS_REGION="${AWS_REGION:-us-east-1}"
+AWS_REGION="${AWS_REGION:-eu-north-1}"
 PROJECT_NAME="ai-servis-web"
 
 # Customer segments

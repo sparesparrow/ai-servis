@@ -15,21 +15,21 @@ class Resource {
 public:
     Resource() = default;
     Resource(const std::string& uri, const std::string& name);
-    
+
     // Properties
     std::string uri;
     std::string name;
     std::string description;
     std::string mimeType;
-    
+
     // Content provider function
     using ContentProvider = std::function<std::string()>;
     ContentProvider contentProvider;
-    
+
     // Serialization
     Json::Value toJson() const;
     void fromJson(const Json::Value& json);
-    
+
     // Content access
     std::string getContent() const;
 };
@@ -44,7 +44,7 @@ public:
     Resource* getResource(const std::string& uri);
     std::vector<Resource> getAllResources() const;
     bool hasResource(const std::string& uri) const;
-    
+
 private:
     std::map<std::string, Resource> resources;
 };

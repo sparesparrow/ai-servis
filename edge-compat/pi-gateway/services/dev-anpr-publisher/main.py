@@ -9,9 +9,11 @@ topic = f"vehicle/events/{vin}/anpr"
 
 plates = ["1AB2345", "2BC3456", "BRN1234", "CZ123AB", "7XJ9000"]
 
+
 def plate_hash(plate: str) -> str:
     # Dev-only hash
     return hashlib.sha256(plate.encode("utf-8")).hexdigest()
+
 
 def connect_with_retry(client: mqtt.Client, host: str, port: int):
     backoff = [0, 1, 2, 5, 5, 5]
@@ -24,6 +26,7 @@ def connect_with_retry(client: mqtt.Client, host: str, port: int):
             delay = backoff[min(attempt, len(backoff) - 1)]
             attempt += 1
             time.sleep(delay)
+
 
 c = mqtt.Client(client_id="dev-anpr")
 connect_with_retry(c, host, port)
@@ -41,5 +44,3 @@ while True:
     except Exception:
         connect_with_retry(c, host, port)
     time.sleep(max(0.1, interval_ms / 1000.0))
-
-

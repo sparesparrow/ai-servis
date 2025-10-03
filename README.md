@@ -142,7 +142,7 @@ graph TB
 - 🏠 **Home Use Case**: "Where's the nearest grocery store?"
 - 🚗 **Car Use Case**: Turn-by-turn navigation with voice prompts
 
-### 💬 **Communications Hub**  
+### 💬 **Communications Hub**
 **Univerzální komunikace napříč platformami**
 - 📖 [Dokumentace](./docs/modules/ai-communications.md)
 - 🔧 [MCP API Reference](./docs/api/communications.md)
@@ -157,12 +157,12 @@ graph TB
 - 📖 [Dokumentace](./docs/modules/ai-linux-controller.md)
 - 🎯 **Funkce**: Process management, file operations, service control
 
-#### 🪟 Windows Controller  
+#### 🪟 Windows Controller
 - 📖 [Dokumentace](./docs/modules/ai-windows-controller.md)
 - 🎯 **Funkce**: PowerShell integration, application management, registry access
 
 #### 🍎 macOS Controller
-- 📖 [Dokumentace](./docs/modules/ai-macos-controller.md) 
+- 📖 [Dokumentace](./docs/modules/ai-macos-controller.md)
 - 🎯 **Funkce**: AppleScript integration, system preferences, Finder operations
 
 #### 📱 Mobile Controllers (Android/iOS)
@@ -301,7 +301,7 @@ echo "AI, play jazz music in kitchen" | nc localhost 8080
 
 Viz původní automotive dokumentace:
 - [Phone Edition Install](./docs/install/phone.md) - 22k-38k Kč
-- [Hybrid Edition Install](./docs/install/hybrid.md) - 48k-89k Kč  
+- [Hybrid Edition Install](./docs/install/hybrid.md) - 48k-89k Kč
 - [Pro Edition Install](./docs/install/pro.md) - 89k-143k Kč
 
 ## 🔧 **MCP Architecture Deep Dive**
@@ -312,11 +312,11 @@ sequenceDiagram
     participant Core as Core Orchestrator<br/>(MCP Host)
     participant Audio as AI Audio Assistant<br/>(MCP Server)
     participant Platform as Platform Controller<br/>(MCP Server)
-    
+
     User->>Core: "Play music and close social media apps"
-    
+
     Core->>Core: Parse natural language<br/>Extract intents
-    
+
     par Music Playback
         Core->>Audio: MCP Tool Call<br/>play_music(query="jazz")
         Audio-->>Audio: Connect to Spotify API
@@ -327,7 +327,7 @@ sequenceDiagram
         Platform-->>Platform: Execute system commands
         Platform->>Core: Result: 2 apps closed
     end
-    
+
     Core->>User: "Playing jazz music and closed social media apps"
 ```
 
@@ -352,7 +352,7 @@ sequenceDiagram
 {
   "content": [
     {
-      "type": "text", 
+      "type": "text",
       "text": "Now playing: Miles Davis - Kind of Blue in Kitchen zone"
     }
   ],
@@ -378,7 +378,7 @@ sequenceDiagram
 cd modules/ai-audio-assistant
 pytest tests/ -v
 
-# Integration test between modules  
+# Integration test between modules
 pytest tests/integration/test_audio_platform_integration.py
 
 # Full system test with Pi simulation
@@ -409,22 +409,22 @@ gantt
     Docker Environment        :done, docker, after repo, 3d
     CI/CD Pipeline           :active, cicd, after docker, 2d
     MCP Framework            :mcp, after cicd, 5d
-    
-    section Phase 1: Core Architecture  
+
+    section Phase 1: Core Architecture
     Core Orchestrator        :core, after mcp, 8d
     Audio Assistant          :audio, after core, 10d
     Platform Controllers     :platform, after audio, 12d
-    
+
     section Phase 2: Multi-Platform
     Windows/macOS Support    :windows, after platform, 8d
     Mobile Integration       :mobile, after windows, 10d
     Container Optimization   :containers, after mobile, 5d
-    
+
     section Phase 3: Advanced Features
     Home Automation          :home, after containers, 8d
     Security/ANPR           :security, after home, 6d
     Maps/Navigation         :maps, after security, 6d
-    
+
     section Phase 4: Testing & Polish
     Integration Testing      :testing, after maps, 8d
     Documentation           :docs, after testing, 6d
@@ -525,7 +525,7 @@ Tento projekt je licencován pod MIT licencí - viz [LICENSE](LICENSE) soubor pr
 ## 🙏 **Poděkování**
 
 - **Anthropic** za Model Context Protocol standard
-- **ElevenLabs** za high-quality TTS/STT APIs  
+- **ElevenLabs** za high-quality TTS/STT APIs
 - **ESP32 Community** za embedded AI frameworks
 - **Docker** za containerization platform
 - **Open Source Contributors** za různé použité knihovny

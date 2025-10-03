@@ -127,4 +127,3 @@ class AIServisApplication : Application(), Configuration.Provider {
 		const val CHANNEL_ANPR = "anpr"
 	}
 }
-

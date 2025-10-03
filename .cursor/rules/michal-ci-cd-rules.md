@@ -117,7 +117,7 @@ deploy:
       run: |
         docker-compose -f docker-compose.staging.yml up -d
         kubectl apply -f k8s/staging/
-    
+
     - name: Run health checks
       run: |
         ./scripts/health-check.sh staging

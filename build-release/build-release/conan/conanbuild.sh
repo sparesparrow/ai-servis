@@ -1,0 +1,1 @@
+. "/media/sparrow/home1/projects/ai-servis/build-release/build-release/conan/conanbuildenv-release-x86_64.sh"

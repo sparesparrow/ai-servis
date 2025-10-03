@@ -82,14 +82,14 @@ class DrivingService : LifecycleService() {
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 		super.onStartCommand(intent, flags, startId)
-		
+
 		when (intent?.action) {
 			ACTION_START -> startService()
 			ACTION_STOP -> stopService()
 			ACTION_PAUSE -> pauseService()
 			ACTION_RESUME -> resumeService()
 		}
-		
+
 		return START_STICKY
 	}
 
@@ -107,14 +107,14 @@ class DrivingService : LifecycleService() {
 	private fun startService() {
 		_serviceState.value = ServiceState.STARTING
 		startForeground(NOTIFICATION_ID, createNotification())
-		
+
 		connectivityObserver.start(
 			onAvailable = {
 				serviceScope.launch { mqttManager.connect() }
 			},
 			onLost = { /* optional: update state or schedule retry */ }
 		)
-		
+
 		serviceScope.launch {
 			try {
 				// Initialize managers
@@ -123,14 +123,14 @@ class DrivingService : LifecycleService() {
 				obdManager.startMonitoring()
 				anprManager.startDetection()
 				dvrManager.startRecording()
-				
+
 				_serviceState.value = ServiceState.RUNNING
-				
+
 				// Start data collection
 				collectVehicleData()
 				collectAnprEvents()
 				collectPolicy()
-				
+
 			} catch (e: Exception) {
 				_serviceState.value = ServiceState.ERROR
 			}
@@ -139,9 +139,9 @@ class DrivingService : LifecycleService() {
 
 	private fun stopService() {
 		_serviceState.value = ServiceState.STOPPING
-		
+
 		connectivityObserver.stop()
-		
+
 		serviceScope.launch {
 			try {
 				bleManager.disconnect()
@@ -149,10 +149,10 @@ class DrivingService : LifecycleService() {
 				obdManager.stopMonitoring()
 				anprManager.stopDetection()
 				dvrManager.stopRecording()
-				
+
 				_serviceState.value = ServiceState.STOPPED
 				stopSelf()
-				
+
 			} catch (e: Exception) {
 				_serviceState.value = ServiceState.ERROR
 			}
@@ -211,11 +211,11 @@ class DrivingService : LifecycleService() {
 				engineLoad = obdData.engineLoad,
 				dtcCodes = obdData.dtcCodes
 			)
-			
+
 			// Persist & publish
 			serviceScope.launch { events.recordTelemetry(obdData) }
 			mqttManager.publishVehicleTelemetry(obdData)
-			
+
 			// Check for alerts
 			checkAlerts(obdData)
 		}
@@ -244,16 +244,16 @@ class DrivingService : LifecycleService() {
 
 	private fun showAlertNotification(alert: VehicleAlert) {
 		val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-		
+
 		val intent = Intent(this, MainActivity::class.java).apply {
 			flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
 		}
-		
+
 		val pendingIntent = PendingIntent.getActivity(
 			this, 0, intent,
 			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 		)
-		
+
 		val notification = NotificationCompat.Builder(this, CHANNEL_ALERTS)
 			.setContentTitle("AI-SERVIS Alert")
 			.setContentText(alert.message)
@@ -262,7 +262,7 @@ class DrivingService : LifecycleService() {
 			.setContentIntent(pendingIntent)
 			.setAutoCancel(true)
 			.build()
-		
+
 		notificationManager.notify(alert.hashCode(), notification)
 	}
 
@@ -270,12 +270,12 @@ class DrivingService : LifecycleService() {
 		val intent = Intent(this, MainActivity::class.java).apply {
 			flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
 		}
-		
+
 		val pendingIntent = PendingIntent.getActivity(
 			this, 0, intent,
 			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 		)
-		
+
 		return NotificationCompat.Builder(this, CHANNEL_DRIVING_SERVICE)
 			.setContentTitle("AI-SERVIS Active")
 			.setContentText("Driving assistance is running")
@@ -292,7 +292,7 @@ class DrivingService : LifecycleService() {
 	companion object {
 		private const val NOTIFICATION_ID = 1001
 		private const val CHANNEL_ALERTS = "alerts"
-		
+
 		const val ACTION_START = "cz.aiservis.app.START_DRIVING_SERVICE"
 		const val ACTION_STOP = "cz.aiservis.app.STOP_DRIVING_SERVICE"
 		const val ACTION_PAUSE = "cz.aiservis.app.PAUSE_DRIVING_SERVICE"
@@ -332,4 +332,3 @@ data class OBDData(
 	val engineLoad: Int,
 	val dtcCodes: List<String>
 )
-

@@ -95,7 +95,7 @@ void ai_servis_obd_task(void *pvParameters)
             if (ai_servis_obd_read_pid(pid, response, &response_length) == ESP_OK) {
                 if (ai_servis_obd_parse_data(&obd_data, response, response_length) == ESP_OK) {
                     obd_data.timestamp = xTaskGetTickCount();
-                    
+
                     // Check for alerts
                     ai_servis_obd_check_alerts(&obd_data);
 

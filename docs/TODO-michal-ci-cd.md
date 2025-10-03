@@ -1,7 +1,7 @@
 # 📋 Michal Cermak - CI/CD Engineer TODO List
 
-**Role**: Build & DevOps Specialist  
-**Focus**: Build systems, CI/CD, testing infrastructure, dependency management, Python automation  
+**Role**: Build & DevOps Specialist
+**Focus**: Build systems, CI/CD, testing infrastructure, dependency management, Python automation
 **Expertise**: Cross-platform compatibility, automated build processes, infrastructure reliability
 
 ---

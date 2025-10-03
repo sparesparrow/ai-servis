@@ -1,7 +1,7 @@
 # 📋 Vojtech Spacek - Implementation Engineer TODO List
 
-**Role**: Implementation Engineer  
-**Focus**: Code writing, software architecture, bug fixing, practical implementation  
+**Role**: Implementation Engineer
+**Focus**: Code writing, software architecture, bug fixing, practical implementation
 **Expertise**: Feature implementation, cross-component coordination, API design
 
 ---

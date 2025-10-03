@@ -46,9 +46,9 @@ class MCPException : public std::runtime_error {
 public:
     explicit MCPException(const std::string& message);
     MCPException(int code, const std::string& message);
-    
+
     int getCode() const { return code; }
-    
+
 private:
     int code = -1;
 };
@@ -64,7 +64,7 @@ public:
         Warning,
         Error
     };
-    
+
     virtual ~ILogger() = default;
     virtual void log(Level level, const std::string& message) = 0;
 };
@@ -76,7 +76,7 @@ class DefaultLogger : public ILogger {
 public:
     void log(Level level, const std::string& message) override;
     void setLevel(Level level);
-    
+
 private:
     Level minLevel = Level::Info;
 };

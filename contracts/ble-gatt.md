@@ -207,4 +207,3 @@ Bluetooth Low Energy (BLE) GATT services for ESP32 to Android communication in A
 - **Data Corruption**: CRC validation
 - **Timeout**: 30-second command timeout
 - **Retry Logic**: 3 attempts for critical commands
-

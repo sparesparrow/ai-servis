@@ -59,13 +59,13 @@ graph TB
         D --> E[Container Registry]
         E --> F[Deployment]
     end
-    
+
     subgraph "Development Environment"
         G[VS Code Dev Container] --> H[Docker Compose]
         H --> I[Service Mesh]
         I --> J[Monitoring Stack]
     end
-    
+
     subgraph "Multi-Platform Support"
         K[AMD64] --> L[ARM64]
         L --> M[Windows]
@@ -85,7 +85,7 @@ graph TB
 ### ✅ Development Environment
 - **VS Code Dev Container** with full toolchain
 - **Hot reloading** for all services
-- **Debug ports** for remote debugging  
+- **Debug ports** for remote debugging
 - **Docker Compose** environments (dev, prod, monitoring, pi-sim)
 - **Pre-commit hooks** for code quality
 
@@ -133,7 +133,7 @@ graph TB
 ./scripts/dev-environment.sh up dev
 
 # Production-like environment
-./scripts/dev-environment.sh up prod  
+./scripts/dev-environment.sh up prod
 
 # Raspberry Pi simulation environment
 ./scripts/dev-environment.sh up pi-sim
@@ -151,7 +151,7 @@ graph TB
 # Start environment
 ./scripts/dev-environment.sh up <env> [--build] [--pull]
 
-# Stop environment  
+# Stop environment
 ./scripts/dev-environment.sh down <env>
 
 # Restart environment
@@ -196,7 +196,7 @@ graph TB
 
 # Run specific test types
 ./scripts/system-tests.sh          # Integration tests
-./scripts/performance-tests.sh     # Performance tests  
+./scripts/performance-tests.sh     # Performance tests
 ./scripts/smoke-tests.sh local     # Smoke tests
 
 # Run tests in CI
@@ -222,7 +222,7 @@ open http://localhost:3001   # Uptime Kuma
 ### Key Metrics
 
 - **Service Health** - Endpoint availability and response times
-- **Resource Usage** - CPU, memory, disk utilization  
+- **Resource Usage** - CPU, memory, disk utilization
 - **Container Metrics** - Docker container performance
 - **Custom Metrics** - MQTT messages, MCP connections, ESP32 devices
 - **Security Events** - Failed logins, unauthorized access
@@ -230,7 +230,7 @@ open http://localhost:3001   # Uptime Kuma
 ### Alert Channels
 
 - **Email** - Critical and warning alerts
-- **Slack** - Real-time notifications  
+- **Slack** - Real-time notifications
 - **Webhook** - Custom integrations
 - **PagerDuty** - On-call escalation (production)
 
@@ -254,7 +254,7 @@ Cross-platform C++ compilation:
 # Linux (GCC 13)
 conan install . --profile profiles/linux-release
 
-# Linux ARM64 (GCC 11)  
+# Linux ARM64 (GCC 11)
 conan install . --profile profiles/linux-arm64
 
 # macOS (Clang 14)
@@ -291,7 +291,7 @@ The CI pipeline includes comprehensive security scanning:
 ```bash
 # Required GitHub Secrets
 SNYK_TOKEN                 # Snyk API token
-NVD_API_KEY               # NIST NVD API key  
+NVD_API_KEY               # NIST NVD API key
 SLACK_WEBHOOK_URL         # Alert notifications
 ANDROID_KEYSTORE_BASE64   # Android app signing
 PLAY_STORE_CONFIG_JSON    # Play Store deployment
@@ -303,7 +303,7 @@ ESP32_PRIVATE_KEY         # ESP32 firmware signing
 Security findings are reported in SARIF format and integrated with GitHub Security tab:
 
 - **Vulnerability Alerts** - Automated dependency updates
-- **Code Scanning** - Pull request security checks  
+- **Code Scanning** - Pull request security checks
 - **Secret Scanning** - Prevent credential leaks
 - **Compliance Reports** - Security posture tracking
 
@@ -339,7 +339,7 @@ graph LR
 # Manual deployment (staging)
 ./scripts/deploy.sh staging
 
-# Manual deployment (production)  
+# Manual deployment (production)
 ./scripts/deploy.sh production
 
 # Rollback deployment
@@ -413,7 +413,7 @@ kubectl logs -f deployment/ai-servis-core
 ### Available Documentation
 
 - **[CI/CD Setup](docs/ci-cd-setup.md)** - Detailed pipeline documentation
-- **[Development Guide](docs/development.md)** - Developer onboarding  
+- **[Development Guide](docs/development.md)** - Developer onboarding
 - **[API Documentation](docs/api/)** - Service API specifications
 - **[Architecture](docs/architecture/)** - System design documentation
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
@@ -435,7 +435,7 @@ MQTT_BROKER=mqtt-broker:1883
 LOG_LEVEL=INFO
 PYTHONPATH=/app
 
-# Database Configuration  
+# Database Configuration
 POSTGRES_PASSWORD=your-secure-password
 REDIS_URL=redis://localhost:6379
 
@@ -454,7 +454,7 @@ ALERT_WEBHOOK_URL=your-webhook-url
 
 - **`.env`** - Environment-specific variables
 - **`docker-compose.*.yml`** - Service definitions
-- **`prometheus.yml`** - Metrics configuration  
+- **`prometheus.yml`** - Metrics configuration
 - **`alertmanager.yml`** - Alert routing rules
 - **`.devcontainer/devcontainer.json`** - VS Code container setup
 
@@ -525,7 +525,7 @@ open http://localhost:3000  # Grafana dashboard
 ### Getting Help
 
 1. **Check the logs**: `./scripts/dev-environment.sh logs dev --follow`
-2. **Run health checks**: `./scripts/dev-environment.sh health dev`  
+2. **Run health checks**: `./scripts/dev-environment.sh health dev`
 3. **Review documentation**: Browse `docs/` directory
 4. **Search issues**: Check GitHub Issues tab
 5. **Ask for help**: Create new GitHub Issue
@@ -539,7 +539,7 @@ open http://localhost:3000  # Grafana dashboard
 - **Security Scan**: < 2 minutes for all tools
 - **Deployment Time**: < 10 minutes for full stack
 
-### Runtime Performance  
+### Runtime Performance
 
 - **Response Time**: < 100ms for health endpoints
 - **Throughput**: > 100 requests/second per service
@@ -553,7 +553,7 @@ open http://localhost:3000  # Grafana dashboard
 1. **Fork the repository**
 2. **Create feature branch**: `git checkout -b feature/amazing-feature`
 3. **Make changes** and add tests
-4. **Run quality checks**: `pre-commit run --all-files`  
+4. **Run quality checks**: `pre-commit run --all-files`
 5. **Submit pull request** with detailed description
 
 ### Code Quality Standards
@@ -581,7 +581,7 @@ open http://localhost:3000  # Grafana dashboard
 
 ### Phase 2: Enhancement 🚧
 - [ ] Kubernetes deployment
-- [ ] Advanced monitoring dashboards  
+- [ ] Advanced monitoring dashboards
 - [ ] Performance optimization
 - [ ] Security hardening
 - [ ] Documentation improvements

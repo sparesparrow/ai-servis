@@ -7,6 +7,7 @@ vin = os.getenv("VIN", "TESTVIN")
 rate_hz = float(os.getenv("RATE_HZ", "5"))
 topic = f"vehicle/telemetry/{vin}/obd"
 
+
 def connect_with_retry(client: mqtt.Client, host: str, port: int):
     backoff = [0, 1, 2, 5, 5, 5]
     attempt = 0
@@ -19,10 +20,12 @@ def connect_with_retry(client: mqtt.Client, host: str, port: int):
             attempt += 1
             time.sleep(delay)
 
+
 c = mqtt.Client(client_id="obd-sim")
 connect_with_retry(c, host, port)
 
 t0 = time.time()
+
 
 def frame(t):
     rpm = 800 + int(700 * (1 + math.sin(t * 0.8)))
@@ -41,6 +44,7 @@ def frame(t):
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
+
 period = 1.0 / max(0.1, rate_hz)
 while True:
     t = time.time() - t0
@@ -50,5 +54,3 @@ while True:
     except Exception:
         connect_with_retry(c, host, port)
     time.sleep(period)
-
-

@@ -4,5 +4,3 @@ WORKDIR /app
 COPY bridge.py /app/bridge.py
 ENV PYTHONUNBUFFERED=1
 CMD ["python", "/app/bridge.py"]
-
-

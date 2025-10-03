@@ -9,11 +9,11 @@ if docker-compose ps | grep -q "Up"; then
 else
     echo "🚀 Starting development services..."
     docker-compose -f docker-compose.dev.yml up -d
-    
+
     # Wait for services to be ready
     echo "⏳ Waiting for services to be ready..."
     sleep 10
-    
+
     # Run health check
     if [ -f "./scripts/health-check.sh" ]; then
         ./scripts/health-check.sh || echo "⚠️  Some services may not be fully ready yet"

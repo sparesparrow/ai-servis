@@ -10,7 +10,7 @@
 namespace WebGrab {
 
 // VoiceUIAdapter implementation
-VoiceUIAdapter::VoiceUIAdapter() 
+VoiceUIAdapter::VoiceUIAdapter()
     : running(false)
     , audioInputDevice("default")
     , audioOutputDevice("default") {
@@ -18,10 +18,10 @@ VoiceUIAdapter::VoiceUIAdapter()
 
 bool VoiceUIAdapter::initialize() {
     std::cout << "Initializing Voice UI Adapter..." << std::endl;
-    
+
     // In a real implementation, you would initialize audio subsystem
     // For now, we'll simulate voice input/output
-    
+
     std::cout << "Voice UI Adapter initialized (simulated)" << std::endl;
     return true;
 }
@@ -30,13 +30,13 @@ bool VoiceUIAdapter::start() {
     if (running) {
         return true;
     }
-    
+
     running = true;
-    
+
     // Start audio processing thread
     std::thread audioThread(&VoiceUIAdapter::processAudioInput, this);
     audioThread.detach();
-    
+
     std::cout << "Voice UI Adapter started" << std::endl;
     return true;
 }
@@ -51,35 +51,35 @@ void VoiceUIAdapter::processCommand(const std::string& command, const UIContext&
         std::cerr << "No orchestrator available for voice command processing" << std::endl;
         return;
     }
-    
+
     std::cout << "Processing voice command: " << command << std::endl;
-    
+
     // Process command through orchestrator
     std::string result = orchestrator->processVoiceCommand(command, "voice_interface");
-    
+
     // Create response
     UIResponse response;
     response.content = result;
     response.contentType = "audio";
     response.success = true;
     response.metadata["voice_synthesized"] = "true";
-    
+
     // Send response back
     sendResponse(response, context);
 }
 
 bool VoiceUIAdapter::sendResponse(const UIResponse& response, const UIContext& context) {
     std::cout << "Voice response: " << response.content << std::endl;
-    
+
     // In a real implementation, convert text to speech and play
     bool ttsSuccess = convertTextToSpeech(response.content, "/tmp/response.wav");
-    
+
     return ttsSuccess;
 }
 
 void VoiceUIAdapter::processAudioInput() {
     std::cout << "Voice input processing started (simulated)" << std::endl;
-    
+
     // Simulate voice commands for testing
     std::vector<std::string> testCommands = {
         "play some jazz music",
@@ -87,29 +87,29 @@ void VoiceUIAdapter::processAudioInput() {
         "switch to headphones",
         "open firefox browser"
     };
-    
+
     size_t commandIndex = 0;
-    
+
     while (running) {
         std::this_thread::sleep_for(std::chrono::seconds(10));
-        
+
         if (!running) break;
-        
+
         // Simulate voice input
         if (commandIndex < testCommands.size()) {
             std::cout << "Simulated voice input: " << testCommands[commandIndex] << std::endl;
-            
+
             UIContext context;
             context.userId = "voice_user";
             context.sessionId = "voice_session_" + std::to_string(commandIndex);
             context.interfaceType = "voice";
             context.timestamp = std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
-            
+
             processCommand(testCommands[commandIndex], context);
             commandIndex++;
         }
     }
-    
+
     std::cout << "Voice input processing stopped" << std::endl;
 }
 
@@ -138,16 +138,16 @@ bool TextUIAdapter::start() {
     if (running) {
         return true;
     }
-    
+
     running = true;
-    
+
     // Start input loop thread
     std::thread inputThread(&TextUIAdapter::inputLoop, this);
     inputThread.detach();
-    
+
     std::cout << "Text UI Adapter started" << std::endl;
     std::cout << "Type 'help' for available commands, 'quit' to exit" << std::endl;
-    
+
     return true;
 }
 
@@ -161,7 +161,7 @@ void TextUIAdapter::processCommand(const std::string& command, const UIContext& 
         std::cerr << "No orchestrator available for text command processing" << std::endl;
         return;
     }
-    
+
     if (command == "help") {
         displayResponse("Available commands:\n"
                        "  play music [genre/artist] - Play music\n"
@@ -172,21 +172,21 @@ void TextUIAdapter::processCommand(const std::string& command, const UIContext& 
                        "  quit                      - Exit application");
         return;
     }
-    
+
     if (command == "quit") {
         running = false;
         return;
     }
-    
+
     // Process command through orchestrator
     std::string result = orchestrator->processVoiceCommand(command, "text_interface");
-    
+
     // Create and send response
     UIResponse response;
     response.content = result;
     response.contentType = "text";
     response.success = true;
-    
+
     sendResponse(response, context);
 }
 
@@ -198,22 +198,22 @@ bool TextUIAdapter::sendResponse(const UIResponse& response, const UIContext& co
 void TextUIAdapter::inputLoop() {
     while (running) {
         displayPrompt();
-        
+
         std::string input;
         if (!std::getline(std::cin, input)) {
             break;
         }
-        
+
         if (input.empty()) {
             continue;
         }
-        
+
         UIContext context;
         context.userId = "text_user";
         context.sessionId = "text_session";
         context.interfaceType = "text";
         context.timestamp = std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
-        
+
         processCommand(input, context);
     }
 }
@@ -228,17 +228,17 @@ void TextUIAdapter::displayResponse(const std::string& response) {
 }
 
 // WebUIAdapter implementation
-WebUIAdapter::WebUIAdapter(uint16_t port) 
+WebUIAdapter::WebUIAdapter(uint16_t port)
     : httpPort(port)
     , running(false) {
 }
 
 bool WebUIAdapter::initialize() {
     std::cout << "Initializing Web UI Adapter on port " << httpPort << "..." << std::endl;
-    
+
     // Initialize HTTP server (placeholder)
     // httpServer = std::make_unique<HTTPServer>(httpPort);
-    
+
     return true;
 }
 
@@ -246,12 +246,12 @@ bool WebUIAdapter::start() {
     if (running) {
         return true;
     }
-    
+
     running = true;
-    
+
     std::cout << "Web UI Adapter started on port " << httpPort << std::endl;
     std::cout << "Web interface available at: http://localhost:" << httpPort << std::endl;
-    
+
     return true;
 }
 
@@ -265,26 +265,26 @@ void WebUIAdapter::processCommand(const std::string& command, const UIContext& c
         std::cerr << "No orchestrator available for web command processing" << std::endl;
         return;
     }
-    
+
     std::cout << "Processing web command: " << command << std::endl;
-    
+
     // Process command through orchestrator
     std::string result = orchestrator->processVoiceCommand(command, "web_interface");
-    
+
     // Create response
     UIResponse response;
     response.content = result;
     response.contentType = "json";
     response.success = true;
     response.metadata["timestamp"] = context.timestamp;
-    
+
     // Send response back
     sendResponse(response, context);
 }
 
 bool WebUIAdapter::sendResponse(const UIResponse& response, const UIContext& context) {
     std::cout << "Web response to session " << context.sessionId << ": " << response.content << std::endl;
-    
+
     // In a real implementation, send HTTP/WebSocket response
     return true;
 }
@@ -306,7 +306,7 @@ std::string WebUIAdapter::generateSessionId() {
 }
 
 // MobileUIAdapter implementation
-MobileUIAdapter::MobileUIAdapter() 
+MobileUIAdapter::MobileUIAdapter()
     : running(false)
     , apiPort(8081) {
 }
@@ -320,12 +320,12 @@ bool MobileUIAdapter::start() {
     if (running) {
         return true;
     }
-    
+
     running = true;
-    
+
     std::cout << "Mobile UI Adapter started on port " << apiPort << std::endl;
     std::cout << "Mobile API available at: http://localhost:" << apiPort << "/api" << std::endl;
-    
+
     return true;
 }
 
@@ -339,26 +339,26 @@ void MobileUIAdapter::processCommand(const std::string& command, const UIContext
         std::cerr << "No orchestrator available for mobile command processing" << std::endl;
         return;
     }
-    
+
     std::cout << "Processing mobile command: " << command << std::endl;
-    
+
     // Process command through orchestrator
     std::string result = orchestrator->processVoiceCommand(command, "mobile_interface");
-    
+
     // Create response
     UIResponse response;
     response.content = result;
     response.contentType = "json";
     response.success = true;
     response.metadata["mobile_optimized"] = "true";
-    
+
     // Send response back
     sendResponse(response, context);
 }
 
 bool MobileUIAdapter::sendResponse(const UIResponse& response, const UIContext& context) {
     std::cout << "Mobile response: " << response.content << std::endl;
-    
+
     // In a real implementation, send mobile-optimized response
     return true;
 }
@@ -374,7 +374,7 @@ bool MobileUIAdapter::authenticateRequest(const std::string& token) {
 }
 
 // UIManager implementation
-UIManager::UIManager(CoreOrchestrator* orchestrator) 
+UIManager::UIManager(CoreOrchestrator* orchestrator)
     : orchestrator(orchestrator) {
 }
 
@@ -386,35 +386,35 @@ bool UIManager::registerAdapter(std::unique_ptr<IUIAdapter> adapter) {
     if (!adapter) {
         return false;
     }
-    
+
     std::string type = adapter->getType();
     adapter->setOrchestrator(orchestrator);
-    
+
     if (!adapter->initialize()) {
         std::cerr << "Failed to initialize " << type << " adapter" << std::endl;
         return false;
     }
-    
+
     adapters[type] = std::move(adapter);
     std::cout << "Registered " << type << " UI adapter" << std::endl;
-    
+
     return true;
 }
 
 bool UIManager::startAll() {
     bool allStarted = true;
-    
+
     for (auto& [type, adapter] : adapters) {
         if (!adapter->start()) {
             std::cerr << "Failed to start " << type << " adapter" << std::endl;
             allStarted = false;
         }
     }
-    
+
     if (allStarted) {
         std::cout << "All UI adapters started successfully" << std::endl;
     }
-    
+
     return allStarted;
 }
 
@@ -445,7 +445,7 @@ bool UIManager::sendResponse(const UIResponse& response, const UIContext& contex
     if (adapter) {
         return adapter->sendResponse(response, context);
     }
-    
+
     std::cerr << "No adapter found for interface type: " << context.interfaceType << std::endl;
     return false;
 }

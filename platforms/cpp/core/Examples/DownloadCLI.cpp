@@ -55,7 +55,7 @@ private:
             if (task) {
                 std::cout << "Processing download task for session: " << task->getSessionId() << std::endl;
                 bool success = task->execute();
-                std::cout << "Task " << (success ? "completed successfully" : "failed") 
+                std::cout << "Task " << (success ? "completed successfully" : "failed")
                          << " for session: " << task->getSessionId() << std::endl;
             }
         }

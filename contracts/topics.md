@@ -160,4 +160,3 @@ system/health/{device-id}
 - Device-specific topics use device certificates
 - Sensitive data is encrypted in transit
 - Topic access is controlled by device roles
-

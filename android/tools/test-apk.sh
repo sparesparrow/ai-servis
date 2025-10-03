@@ -26,18 +26,18 @@ echo "✅ Android device connected"
 echo "📱 Installing APK..."
 if adb install -r app/build/outputs/apk/debug/app-debug.apk; then
     echo "✅ APK installed successfully"
-    
+
     # Try to launch the app
     echo "🚀 Attempting to launch app..."
     adb shell am start -n cz.aiservis.app.debug/.MainActivity || echo "⚠️  Could not launch app (this is normal for first install)"
-    
+
     # Check if app is installed
     if adb shell pm list packages | grep -q "cz.aiservis.app.debug"; then
         echo "✅ App package found in device"
     else
         echo "⚠️  App package not found in package list (may be normal)"
     fi
-    
+
 else
     echo "❌ APK installation failed"
     exit 1

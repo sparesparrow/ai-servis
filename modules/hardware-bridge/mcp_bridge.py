@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MCPTool:
     """MCP Tool definition"""
+
     name: str
     description: str
     input_schema: Dict[str, Any]
@@ -28,6 +29,7 @@ class MCPTool:
 @dataclass
 class MCPResult:
     """MCP Tool execution result"""
+
     content: List[Dict[str, Any]]
     is_error: bool = False
 
@@ -35,8 +37,13 @@ class MCPResult:
 class MCPBridge:
     """Bridge between Python MCP orchestrator and C++ hardware MCP server"""
 
-    def __init__(self, mqtt_broker: str = "localhost", mqtt_port: int = 1883,
-                 hardware_host: str = "localhost", hardware_port: int = 8081):
+    def __init__(
+        self,
+        mqtt_broker: str = "localhost",
+        mqtt_port: int = 1883,
+        hardware_host: str = "localhost",
+        hardware_port: int = 8081,
+    ):
         self.mqtt_broker = mqtt_broker
         self.mqtt_port = mqtt_port
         self.hardware_host = hardware_host
@@ -54,10 +61,14 @@ class MCPBridge:
                     "type": "object",
                     "properties": {
                         "pin": {"type": "integer", "description": "GPIO pin number"},
-                        "direction": {"type": "string", "enum": ["input", "output"], "description": "Pin direction"}
+                        "direction": {
+                            "type": "string",
+                            "enum": ["input", "output"],
+                            "description": "Pin direction",
+                        },
                     },
-                    "required": ["pin", "direction"]
-                }
+                    "required": ["pin", "direction"],
+                },
             ),
             "gpio_set": MCPTool(
                 name="gpio_set",
@@ -66,10 +77,14 @@ class MCPBridge:
                     "type": "object",
                     "properties": {
                         "pin": {"type": "integer", "description": "GPIO pin number"},
-                        "value": {"type": "integer", "enum": [0, 1], "description": "Pin value (0 or 1)"}
+                        "value": {
+                            "type": "integer",
+                            "enum": [0, 1],
+                            "description": "Pin value (0 or 1)",
+                        },
                     },
-                    "required": ["pin", "value"]
-                }
+                    "required": ["pin", "value"],
+                },
             ),
             "gpio_get": MCPTool(
                 name="gpio_get",
@@ -79,17 +94,14 @@ class MCPBridge:
                     "properties": {
                         "pin": {"type": "integer", "description": "GPIO pin number"}
                     },
-                    "required": ["pin"]
-                }
+                    "required": ["pin"],
+                },
             ),
             "gpio_status": MCPTool(
                 name="gpio_status",
                 description="Get status of all configured GPIO pins",
-                input_schema={
-                    "type": "object",
-                    "properties": {}
-                }
-            )
+                input_schema={"type": "object", "properties": {}},
+            ),
         }
 
     def connect_mqtt(self) -> bool:
@@ -100,7 +112,9 @@ class MCPBridge:
             self.mqtt_client.on_message = self._on_mqtt_message
             self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
             self.mqtt_client.loop_start()
-            logger.info(f"Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}")
+            logger.info(
+                f"Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}"
+            )
             return True
         except Exception as e:
             logger.error(f"Failed to connect to MQTT broker: {e}")
@@ -135,10 +149,15 @@ class MCPBridge:
             if topic.startswith("hardware/gpio/"):
                 pin = int(topic.split("/")[-1])
                 if "configure" in payload:
-                    self.gpio_controller.setup_input_pin(pin) if payload["direction"] == "input" \
-                        else self.gpio_controller.setup_output_pin(pin, payload.get("value", 0))
+                    self.gpio_controller.setup_input_pin(pin) if payload[
+                        "direction"
+                    ] == "input" else self.gpio_controller.setup_output_pin(
+                        pin, payload.get("value", 0)
+                    )
                 elif "set" in payload:
-                    self.gpio_controller.set_pin_high(pin) if payload["value"] else self.gpio_controller.set_pin_low(pin)
+                    self.gpio_controller.set_pin_high(pin) if payload[
+                        "value"
+                    ] else self.gpio_controller.set_pin_low(pin)
                 elif "get" in payload:
                     value = self.gpio_controller.get_pin_value(pin)
                     # Publish response
@@ -158,24 +177,35 @@ class MCPBridge:
             if tool_name == "gpio_configure":
                 pin = arguments["pin"]
                 direction = arguments["direction"]
-                success = self.gpio_controller.setup_input_pin(pin) if direction == "input" \
-                         else self.gpio_controller.setup_output_pin(pin)
+                success = (
+                    self.gpio_controller.setup_input_pin(pin)
+                    if direction == "input"
+                    else self.gpio_controller.setup_output_pin(pin)
+                )
                 return MCPResult(
-                    content=[{
-                        "type": "text",
-                        "text": f"GPIO pin {pin} configured as {direction}: {'Success' if success else 'Failed'}"
-                    }]
+                    content=[
+                        {
+                            "type": "text",
+                            "text": f"GPIO pin {pin} configured as {direction}: {'Success' if success else 'Failed'}",
+                        }
+                    ]
                 )
 
             elif tool_name == "gpio_set":
                 pin = arguments["pin"]
                 value = arguments["value"]
-                success = self.gpio_controller.set_pin_high(pin) if value else self.gpio_controller.set_pin_low(pin)
+                success = (
+                    self.gpio_controller.set_pin_high(pin)
+                    if value
+                    else self.gpio_controller.set_pin_low(pin)
+                )
                 return MCPResult(
-                    content=[{
-                        "type": "text",
-                        "text": f"GPIO pin {pin} set to {value}: {'Success' if success else 'Failed'}"
-                    }]
+                    content=[
+                        {
+                            "type": "text",
+                            "text": f"GPIO pin {pin} set to {value}: {'Success' if success else 'Failed'}",
+                        }
+                    ]
                 )
 
             elif tool_name == "gpio_get":
@@ -183,56 +213,51 @@ class MCPBridge:
                 value = self.gpio_controller.get_pin_value(pin)
                 if value is not None:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"GPIO pin {pin} value: {value}"
-                        }]
+                        content=[
+                            {"type": "text", "text": f"GPIO pin {pin} value: {value}"}
+                        ]
                     )
                 else:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"Failed to read GPIO pin {pin}"
-                        }],
-                        is_error=True
+                        content=[
+                            {"type": "text", "text": f"Failed to read GPIO pin {pin}"}
+                        ],
+                        is_error=True,
                     )
 
             elif tool_name == "gpio_status":
                 status = self.gpio_controller.get_all_pins_status()
                 if status is not None:
-                    status_text = "\n".join([f"Pin {pin}: {s.direction} = {s.value}" for pin, s in status.items()])
+                    status_text = "\n".join(
+                        [
+                            f"Pin {pin}: {s.direction} = {s.value}"
+                            for pin, s in status.items()
+                        ]
+                    )
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": f"GPIO Status:\n{status_text}"
-                        }]
+                        content=[
+                            {"type": "text", "text": f"GPIO Status:\n{status_text}"}
+                        ]
                     )
                 else:
                     return MCPResult(
-                        content=[{
-                            "type": "text",
-                            "text": "Failed to get GPIO status"
-                        }],
-                        is_error=True
+                        content=[{"type": "text", "text": "Failed to get GPIO status"}],
+                        is_error=True,
                     )
 
             else:
                 return MCPResult(
-                    content=[{
-                        "type": "text",
-                        "text": f"Unknown tool: {tool_name}"
-                    }],
-                    is_error=True
+                    content=[{"type": "text", "text": f"Unknown tool: {tool_name}"}],
+                    is_error=True,
                 )
 
         except Exception as e:
             logger.error(f"Error executing tool {tool_name}: {e}")
             return MCPResult(
-                content=[{
-                    "type": "text",
-                    "text": f"Error executing {tool_name}: {str(e)}"
-                }],
-                is_error=True
+                content=[
+                    {"type": "text", "text": f"Error executing {tool_name}: {str(e)}"}
+                ],
+                is_error=True,
             )
 
     async def run(self):

@@ -37,5 +37,3 @@ foreach(_BUILD_MODULE ${zlib_BUILD_MODULES_PATHS_RELEASE} )
     message(${ZLIB_MESSAGE_MODE} "Conan: Including build module from '${_BUILD_MODULE}'")
     include(${_BUILD_MODULE})
 endforeach()
-
-

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GPIOConfig:
     """GPIO pin configuration"""
+
     pin: int
     direction: str  # "input" or "output"
     value: Optional[int] = None
@@ -25,6 +26,7 @@ class GPIOConfig:
 @dataclass
 class GPIOStatus:
     """GPIO pin status"""
+
     pin: int
     direction: str
     value: Optional[int] = None
@@ -71,7 +73,7 @@ class HardwareClient:
         try:
             # Send command as JSON
             message = json.dumps(command) + "\n"
-            self.socket.send(message.encode('utf-8'))
+            self.socket.send(message.encode("utf-8"))
 
             # Receive response
             response_data = self.socket.recv(4096)
@@ -79,7 +81,7 @@ class HardwareClient:
                 logger.error("No response from hardware server")
                 return None
 
-            response = json.loads(response_data.decode('utf-8'))
+            response = json.loads(response_data.decode("utf-8"))
             return response
 
         except Exception as e:
@@ -92,11 +94,7 @@ class HardwareClient:
             logger.error(f"Invalid direction: {direction}")
             return False
 
-        command = {
-            "command": "configure",
-            "pin": pin,
-            "direction": direction
-        }
+        command = {"command": "configure", "pin": pin, "direction": direction}
 
         response = self._send_command(command)
         if response and response.get("status") == "success":
@@ -112,11 +110,7 @@ class HardwareClient:
             logger.error(f"Invalid GPIO value: {value}")
             return False
 
-        command = {
-            "command": "set",
-            "pin": pin,
-            "value": value
-        }
+        command = {"command": "set", "pin": pin, "value": value}
 
         response = self._send_command(command)
         if response and response.get("status") == "success":
@@ -128,10 +122,7 @@ class HardwareClient:
 
     def get_gpio_value(self, pin: int) -> Optional[int]:
         """Get GPIO pin value"""
-        command = {
-            "command": "get",
-            "pin": pin
-        }
+        command = {"command": "get", "pin": pin}
 
         response = self._send_command(command)
         if response and response.get("status") == "success":
@@ -153,7 +144,7 @@ class HardwareClient:
                 pin = GPIOStatus(
                     pin=pin_data["pin"],
                     direction=pin_data["direction"],
-                    value=pin_data.get("value")
+                    value=pin_data.get("value"),
                 )
                 pins[pin.pin] = pin
             return pins

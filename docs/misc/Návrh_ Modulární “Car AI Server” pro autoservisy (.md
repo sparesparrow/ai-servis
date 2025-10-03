@@ -256,7 +256,7 @@ Vytvořena je profesionální webová stránka s moderním tmavým designem obsa
 
 ### 🎯 Konkurenční Výhoda
 - **Tradiční ANPR systémy**: 200.000 - 2.000.000 Kč[^2_1][^2_2]
-- **Naše řešení**: 42.000 - 131.000 Kč 
+- **Naše řešení**: 42.000 - 131.000 Kč
 - **Úspora pro zákazníka**: **70-93%** oproti konkurenci
 
 ## 🏗️ Technická Architektura
@@ -298,20 +298,20 @@ services:
 ### CI/CD Náklady: **$362/měsíc (8.326 Kč)**[^2_6][^2_7]
 - GitHub Enterprise: $105/měsíc (5 vývojářů)
 - Docker Hub Pro: $35/měsíc
-- AWS EKS cluster: $72/měsíc  
+- AWS EKS cluster: $72/měsíc
 - Monitoring: $150/měsíc
 
 ## 📈 Tržní Příležitost
 
 ### Czech Automotive Aftermarket[^2_8][^2_9]
 - **Velikost trhu**: 1.2 miliardy EUR ročně
-- **Růst**: 5-10% ročně 
+- **Růst**: 5-10% ročně
 - **8.253+ autoservisů** v České republice[^2_10]
 - **Dominantní hráči**: LKQ CZ (60%), SAG Group (15%), Inter Cars CZ (15%)
 
 ### Go-to-Market Strategie
 1. **Pilot fáze** - 10 instalací v Brně (měsíce 1-3)
-2. **Regionální expanze** - Morava (měsíce 4-8)  
+2. **Regionální expanze** - Morava (měsíce 4-8)
 3. **Národní škálování** - ČR + SK (měsíce 9-12)
 
 ## 🔒 Compliance & Bezpečnost
@@ -338,7 +338,7 @@ services:
 
 ### Rok 2-3 (500-1000 instalací/rok)
 - **Revenue**: 25-50M Kč/rok
-- **Expanze**: Slovensko, Rakousko, Polsko  
+- **Expanze**: Slovensko, Rakousko, Polsko
 - **Team**: 25-40 lidí
 
 ## 🎯 Klíčové Výhody Řešení
@@ -669,7 +669,7 @@ Raspberry Pi 5 ← CAN HAT (MCP2515) ← OBD-2 Connector
 vehicle_data = {
     "fuel_level": 15,        # % paliva
     "engine_temp": 95,       # °C
-    "speed": 87,             # km/h  
+    "speed": 87,             # km/h
     "rpm": 2100,             # otáčky
     "engine_load": 45,       # %
     "dtc_codes": ["P0420"],  # error kódy
@@ -699,11 +699,11 @@ ai_agent_rules:
   fuel_warning:
     trigger: fuel_level < 20
     action: "Palivo dochází. Nejbližší čerpačka 4km, Benzina Brno-sever."
-  
+
   engine_temp:
     trigger: coolant_temp > 105
     action: "POZOR! Motor přehřívá. Zastavte bezpečně a vypněte motor."
-  
+
   dtc_alert:
     trigger: new_dtc_code
     action: "Detekována chyba {code}. Doporučuji návštěvu servisu."
@@ -741,7 +741,7 @@ services:
     environment:
       - OBD_PROTOCOL=CAN_11BIT
       - SAMPLE_RATE=10Hz
-    
+
   vehicle-ai:
     image: ai-servis/vehicle-agent:latest
     depends_on: [obd-reader, ai-agent]
@@ -763,7 +763,7 @@ connection = obd.OBD("/dev/ttyUSB0")
 # Continuous monitoring
 commands = [
     obd.commands.FUEL_LEVEL,
-    obd.commands.COOLANT_TEMP, 
+    obd.commands.COOLANT_TEMP,
     obd.commands.SPEED,
     obd.commands.RPM,
     obd.commands.GET_DTC
@@ -819,7 +819,7 @@ AI: "Podle kilometrů a času je servis za 3 týdny. Můžu objednat termín u A
 ```
 Průměrný autoservis (100 zákazníků/měsíc):
 - Servisní připomínky: +15% retention = +180.000 Kč/rok
-- Prediktivní diagnostika: +8 extra zakázek/měsíc = +240.000 Kč/rok  
+- Prediktivní diagnostika: +8 extra zakázek/měsíc = +240.000 Kč/rok
 - Fleet monitoring (5 firem): +5.000 Kč/měsíc = +60.000 Kč/rok
 
 ROI na OBD-2 upgrade: 480.000 Kč/rok
@@ -2113,7 +2113,7 @@ Podle modulů na tvé fotce jsem navrhl integraci:
 
 ```
 OBD-2 Pin 6 (CAN_H) → MCP2515 CANH
-OBD-2 Pin 14 (CAN_L) → MCP2515 CANL  
+OBD-2 Pin 14 (CAN_L) → MCP2515 CANL
 OBD-2 Pin 16 (+12V) → Buck converter input
 OBD-2 Pin 4/5 (GND) → Common ground
 ```
@@ -2235,7 +2235,7 @@ USB Hub a SATA úložiště připojení
 
 ```cpp
 ✓ Wi-Fi/BLE komunikace s Android/iOS
-✓ I2S audio input processing  
+✓ I2S audio input processing
 ✓ MQTT event publishing
 ✓ OTA firmware updates
 ✓ Voice activity detection
@@ -2601,7 +2601,7 @@ mcp_tool_t vehicle_tools[] = {
         .call = obd_data_callback
     },
     {
-        .name = "anpr_scan", 
+        .name = "anpr_scan",
         .description = "Perform license plate recognition",
         .call = anpr_callback
     }
@@ -2647,20 +2647,20 @@ mcp_server_run(server);
 // AI-SERVIS ESP32 Architecture
 class AIServISHub {
     TwaiController can_bus;
-    ElevenLabsTTS voice_synthesis;  
+    ElevenLabsTTS voice_synthesis;
     McpServer mcp_server;
     WiFiManager connectivity;
-    
+
     // Core vehicle functions exposed via MCP
     void register_vehicle_tools() {
         mcp_server.register_tool("read_diagnostics", [this]() {
             return can_bus.get_obd_data();
         });
-        
+
         mcp_server.register_tool("voice_alert", [this](String message) {
             voice_synthesis.speak(message);
         });
-        
+
         mcp_server.register_tool("anpr_detect", [this]() {
             return camera.capture_and_recognize();
         });
@@ -2677,12 +2677,12 @@ import mcp_client
 async def vehicle_assistant():
     # Connect to ESP32 MCP server
     vehicle = await mcp_client.connect("mqtt://ai-servis-vehicle")
-    
+
     # AI agent can now use vehicle capabilities
     diagnostics = await vehicle.call_tool("read_diagnostics")
-    
+
     if diagnostics.coolant_temp > 105:
-        await vehicle.call_tool("voice_alert", 
+        await vehicle.call_tool("voice_alert",
             "Warning: Engine overheating detected!")
 ```
 
@@ -3111,4 +3111,3 @@ Celkem: ~16–22 týdnů do GA pro "Phone/Hybrid Edition", s možností rozší�
 - GA: rollout a partnerská síť, SLA a podpora (F6)
 
 Tento plán je kompatibilní s variantami Phone/Hybrid/Pro a lze jej postupně rozšířit na 28týdenní enterprise roadmapu včetně fleet SLA, multi‑cam DVR a dlouhé retence.
-

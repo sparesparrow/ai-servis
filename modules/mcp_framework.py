@@ -6,6 +6,7 @@ Core library for implementing MCP servers and clients
 import asyncio
 import json
 import logging
+import sys
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class MessageType(str, Enum):
     """MCP message types"""
+
     INITIALIZE = "initialize"
     INITIALIZED = "initialized"
     SHUTDOWN = "shutdown"
@@ -40,6 +42,7 @@ class MessageType(str, Enum):
 
 class LogLevel(str, Enum):
     """Log levels for MCP logging"""
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -49,6 +52,7 @@ class LogLevel(str, Enum):
 @dataclass
 class MCPMessage:
     """Base MCP message structure"""
+
     jsonrpc: str = "2.0"
     id: Optional[Union[str, int]] = None
     method: Optional[str] = None
@@ -77,7 +81,7 @@ class MCPMessage:
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MCPMessage':
+    def from_dict(cls, data: Dict[str, Any]) -> "MCPMessage":
         """Create message from dictionary"""
         return cls(
             jsonrpc=data.get("jsonrpc", "2.0"),
@@ -85,11 +89,11 @@ class MCPMessage:
             method=data.get("method"),
             params=data.get("params"),
             result=data.get("result"),
-            error=data.get("error")
+            error=data.get("error"),
         )
 
     @classmethod
-    def from_json(cls, json_str: str) -> 'MCPMessage':
+    def from_json(cls, json_str: str) -> "MCPMessage":
         """Create message from JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -97,6 +101,7 @@ class MCPMessage:
 @dataclass
 class Tool:
     """MCP Tool definition"""
+
     name: str
     description: str
     inputSchema: Dict[str, Any]
@@ -107,13 +112,14 @@ class Tool:
         return {
             "name": self.name,
             "description": self.description,
-            "inputSchema": self.inputSchema
+            "inputSchema": self.inputSchema,
         }
 
 
 @dataclass
 class Resource:
     """MCP Resource definition"""
+
     uri: str
     name: str
     description: str
@@ -121,11 +127,7 @@ class Resource:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert resource to dictionary"""
-        data = {
-            "uri": self.uri,
-            "name": self.name,
-            "description": self.description
-        }
+        data = {"uri": self.uri, "name": self.name, "description": self.description}
         if self.mimeType:
             data["mimeType"] = self.mimeType
         return data
@@ -134,16 +136,14 @@ class Resource:
 @dataclass
 class Prompt:
     """MCP Prompt definition"""
+
     name: str
     description: str
     arguments: Optional[List[Dict[str, Any]]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert prompt to dictionary"""
-        data = {
-            "name": self.name,
-            "description": self.description
-        }
+        data = {"name": self.name, "description": self.description}
         if self.arguments:
             data["arguments"] = self.arguments
         return data
@@ -151,6 +151,7 @@ class Prompt:
 
 class MCPError(Exception):
     """Base MCP error"""
+
     def __init__(self, code: int, message: str, data: Optional[Any] = None):
         self.code = code
         self.message = message
@@ -226,6 +227,77 @@ class HTTPTransport(MCPTransport):
         await self.session.close()
 
 
+class STDIOTransport(MCPTransport):
+    """STDIO transport for MCP (for command-line tools)"""
+
+    def __init__(self):
+        self.stdin = asyncio.get_event_loop().connect_read_pipe(
+            lambda: asyncio.StreamReaderProtocol(asyncio.StreamReader()), 
+            sys.stdin
+        )
+        self.stdout = asyncio.get_event_loop().connect_write_pipe(
+            lambda: asyncio.StreamWriterProtocol(asyncio.StreamWriter()), 
+            sys.stdout
+        )
+
+    async def send(self, message: MCPMessage) -> None:
+        """Send message via stdout"""
+        data = message.to_json() + "\n"
+        self.stdout.write(data.encode())
+        await self.stdout.drain()
+
+    async def receive(self) -> MCPMessage:
+        """Receive message via stdin"""
+        line = await self.stdin.readline()
+        if not line:
+            raise ConnectionError("EOF on stdin")
+        return MCPMessage.from_json(line.decode().strip())
+
+    async def close(self) -> None:
+        """Close STDIO transport"""
+        self.stdin.close()
+        self.stdout.close()
+
+
+class MQTTTransport(MCPTransport):
+    """MQTT transport for MCP"""
+
+    def __init__(self, mqtt_client, request_topic: str, response_topic: str):
+        self.mqtt_client = mqtt_client
+        self.request_topic = request_topic
+        self.response_topic = response_topic
+        self.message_queue = asyncio.Queue()
+        self.client_id = str(uuid.uuid4())
+
+    async def send(self, message: MCPMessage) -> None:
+        """Send message via MQTT"""
+        topic = f"{self.response_topic}/{self.client_id}"
+        payload = message.to_json()
+        await self.mqtt_client.publish(topic, payload)
+
+    async def receive(self) -> MCPMessage:
+        """Receive message from MQTT queue"""
+        return await self.message_queue.get()
+
+    async def _on_message(self, client, userdata, msg):
+        """Handle incoming MQTT message"""
+        try:
+            message = MCPMessage.from_json(msg.payload.decode())
+            await self.message_queue.put(message)
+        except Exception as e:
+            logger.error(f"Error processing MQTT message: {e}")
+
+    async def start(self) -> None:
+        """Start MQTT transport"""
+        await self.mqtt_client.subscribe(f"{self.request_topic}/{self.client_id}")
+        self.mqtt_client.on_message = self._on_message
+
+    async def close(self) -> None:
+        """Close MQTT transport"""
+        await self.mqtt_client.unsubscribe(f"{self.request_topic}/{self.client_id}")
+        await self.mqtt_client.disconnect()
+
+
 class MCPServer:
     """MCP Server implementation"""
 
@@ -278,13 +350,15 @@ class MCPServer:
             else:
                 return MCPMessage(
                     id=message.id,
-                    error=MCPError(-32601, f"Method not found: {message.method}").to_dict()
+                    error=MCPError(
+                        -32601, f"Method not found: {message.method}"
+                    ).to_dict(),
                 )
         except Exception as e:
             logger.error(f"Error handling message: {e}")
             return MCPMessage(
                 id=message.id,
-                error=MCPError(-32603, f"Internal error: {str(e)}").to_dict()
+                error=MCPError(-32603, f"Internal error: {str(e)}").to_dict(),
             )
 
     async def _handle_initialize(self, message: MCPMessage) -> MCPMessage:
@@ -298,29 +372,22 @@ class MCPServer:
                     "tools": {"listChanged": True},
                     "resources": {"subscribe": True, "listChanged": True},
                     "prompts": {"listChanged": True},
-                    "logging": {}
+                    "logging": {},
                 },
-                "serverInfo": {
-                    "name": self.name,
-                    "version": self.version
-                }
-            }
+                "serverInfo": {"name": self.name, "version": self.version},
+            },
         )
 
     async def _handle_tools_list(self, message: MCPMessage) -> MCPMessage:
         """Handle tools/list request"""
         tools_list = [tool.to_dict() for tool in self.tools.values()]
-        return MCPMessage(
-            id=message.id,
-            result={"tools": tools_list}
-        )
+        return MCPMessage(id=message.id, result={"tools": tools_list})
 
     async def _handle_tools_call(self, message: MCPMessage) -> MCPMessage:
         """Handle tools/call request"""
         if not message.params:
             return MCPMessage(
-                id=message.id,
-                error=MCPError(-32602, "Missing parameters").to_dict()
+                id=message.id, error=MCPError(-32602, "Missing parameters").to_dict()
             )
 
         tool_name = message.params.get("name")
@@ -329,14 +396,16 @@ class MCPServer:
         if tool_name not in self.tools:
             return MCPMessage(
                 id=message.id,
-                error=MCPError(-32602, f"Tool not found: {tool_name}").to_dict()
+                error=MCPError(-32602, f"Tool not found: {tool_name}").to_dict(),
             )
 
         tool = self.tools[tool_name]
         if not tool.handler:
             return MCPMessage(
                 id=message.id,
-                error=MCPError(-32603, f"Tool handler not implemented: {tool_name}").to_dict()
+                error=MCPError(
+                    -32603, f"Tool handler not implemented: {tool_name}"
+                ).to_dict(),
             )
 
         try:
@@ -348,42 +417,31 @@ class MCPServer:
 
             return MCPMessage(
                 id=message.id,
-                result={
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": str(result)
-                        }
-                    ]
-                }
+                result={"content": [{"type": "text", "text": str(result)}]},
             )
         except Exception as e:
             return MCPMessage(
                 id=message.id,
-                error=MCPError(-32603, f"Tool execution error: {str(e)}").to_dict()
+                error=MCPError(-32603, f"Tool execution error: {str(e)}").to_dict(),
             )
 
     async def _handle_resources_list(self, message: MCPMessage) -> MCPMessage:
         """Handle resources/list request"""
         resources_list = [resource.to_dict() for resource in self.resources.values()]
-        return MCPMessage(
-            id=message.id,
-            result={"resources": resources_list}
-        )
+        return MCPMessage(id=message.id, result={"resources": resources_list})
 
     async def _handle_resources_read(self, message: MCPMessage) -> MCPMessage:
         """Handle resources/read request"""
         if not message.params:
             return MCPMessage(
-                id=message.id,
-                error=MCPError(-32602, "Missing parameters").to_dict()
+                id=message.id, error=MCPError(-32602, "Missing parameters").to_dict()
             )
 
         uri = message.params.get("uri")
         if uri not in self.resources:
             return MCPMessage(
                 id=message.id,
-                error=MCPError(-32602, f"Resource not found: {uri}").to_dict()
+                error=MCPError(-32602, f"Resource not found: {uri}").to_dict(),
             )
 
         # In a real implementation, you would read the actual resource content
@@ -394,33 +452,29 @@ class MCPServer:
                     {
                         "uri": uri,
                         "mimeType": self.resources[uri].mimeType or "text/plain",
-                        "text": f"Resource content for {uri}"
+                        "text": f"Resource content for {uri}",
                     }
                 ]
-            }
+            },
         )
 
     async def _handle_prompts_list(self, message: MCPMessage) -> MCPMessage:
         """Handle prompts/list request"""
         prompts_list = [prompt.to_dict() for prompt in self.prompts.values()]
-        return MCPMessage(
-            id=message.id,
-            result={"prompts": prompts_list}
-        )
+        return MCPMessage(id=message.id, result={"prompts": prompts_list})
 
     async def _handle_prompts_get(self, message: MCPMessage) -> MCPMessage:
         """Handle prompts/get request"""
         if not message.params:
             return MCPMessage(
-                id=message.id,
-                error=MCPError(-32602, "Missing parameters").to_dict()
+                id=message.id, error=MCPError(-32602, "Missing parameters").to_dict()
             )
 
         name = message.params.get("name")
         if name not in self.prompts:
             return MCPMessage(
                 id=message.id,
-                error=MCPError(-32602, f"Prompt not found: {name}").to_dict()
+                error=MCPError(-32602, f"Prompt not found: {name}").to_dict(),
             )
 
         return MCPMessage(
@@ -430,29 +484,20 @@ class MCPServer:
                 "messages": [
                     {
                         "role": "user",
-                        "content": {
-                            "type": "text",
-                            "text": f"Prompt: {name}"
-                        }
+                        "content": {"type": "text", "text": f"Prompt: {name}"},
                     }
-                ]
-            }
+                ],
+            },
         )
 
     async def _handle_ping(self, message: MCPMessage) -> MCPMessage:
         """Handle ping request"""
-        return MCPMessage(
-            id=message.id,
-            result={}
-        )
+        return MCPMessage(id=message.id, result={})
 
     async def _handle_shutdown(self, message: MCPMessage) -> MCPMessage:
         """Handle shutdown request"""
         self.running = False
-        return MCPMessage(
-            id=message.id,
-            result={}
-        )
+        return MCPMessage(id=message.id, result={})
 
     async def serve(self, transport: MCPTransport) -> None:
         """Serve MCP requests using the provided transport"""
@@ -506,16 +551,9 @@ class MCPClient:
             method=MessageType.INITIALIZE,
             params={
                 "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {},
-                    "resources": {},
-                    "prompts": {}
-                },
-                "clientInfo": {
-                    "name": "ai-servis-client",
-                    "version": "1.0.0"
-                }
-            }
+                "capabilities": {"tools": {}, "resources": {}, "prompts": {}},
+                "clientInfo": {"name": "ai-servis-client", "version": "1.0.0"},
+            },
         )
 
         response = await self._send_request(request)
@@ -523,10 +561,7 @@ class MCPClient:
 
     async def list_tools(self) -> List[Dict[str, Any]]:
         """List available tools"""
-        request = MCPMessage(
-            id=self._next_id(),
-            method=MessageType.TOOLS_LIST
-        )
+        request = MCPMessage(id=self._next_id(), method=MessageType.TOOLS_LIST)
         response = await self._send_request(request)
         return response.result.get("tools", [])
 
@@ -535,10 +570,7 @@ class MCPClient:
         request = MCPMessage(
             id=self._next_id(),
             method=MessageType.TOOLS_CALL,
-            params={
-                "name": name,
-                "arguments": arguments
-            }
+            params={"name": name, "arguments": arguments},
         )
         response = await self._send_request(request)
         return response.result
@@ -558,7 +590,7 @@ class MCPClient:
             raise MCPError(
                 response.error.get("code", -32603),
                 response.error.get("message", "Unknown error"),
-                response.error.get("data")
+                response.error.get("data"),
             )
 
         return response
@@ -576,47 +608,37 @@ class MCPClient:
 
 
 # Utility functions
-def create_tool(name: str, description: str, schema: Dict[str, Any], 
-                handler: Callable) -> Tool:
+def create_tool(
+    name: str, description: str, schema: Dict[str, Any], handler: Callable
+) -> Tool:
     """Helper function to create a tool"""
-    return Tool(
-        name=name,
-        description=description,
-        inputSchema=schema,
-        handler=handler
-    )
+    return Tool(name=name, description=description, inputSchema=schema, handler=handler)
 
 
-def create_resource(uri: str, name: str, description: str, 
-                   mime_type: Optional[str] = None) -> Resource:
+def create_resource(
+    uri: str, name: str, description: str, mime_type: Optional[str] = None
+) -> Resource:
     """Helper function to create a resource"""
-    return Resource(
-        uri=uri,
-        name=name,
-        description=description,
-        mimeType=mime_type
-    )
+    return Resource(uri=uri, name=name, description=description, mimeType=mime_type)
 
 
-def create_prompt(name: str, description: str, 
-                 arguments: Optional[List[Dict[str, Any]]] = None) -> Prompt:
+def create_prompt(
+    name: str, description: str, arguments: Optional[List[Dict[str, Any]]] = None
+) -> Prompt:
     """Helper function to create a prompt"""
-    return Prompt(
-        name=name,
-        description=description,
-        arguments=arguments
-    )
+    return Prompt(name=name, description=description, arguments=arguments)
 
 
 # Example usage and testing
 if __name__ == "__main__":
+
     async def example_tool_handler(query: str, max_results: int = 10) -> str:
         """Example tool handler"""
         return f"Processed query '{query}' with max_results={max_results}"
 
     # Create server
     server = MCPServer("example-server", "1.0.0")
-    
+
     # Add example tool
     tool = create_tool(
         name="search",
@@ -625,11 +647,15 @@ if __name__ == "__main__":
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "Search query"},
-                "max_results": {"type": "integer", "description": "Maximum results", "default": 10}
+                "max_results": {
+                    "type": "integer",
+                    "description": "Maximum results",
+                    "default": 10,
+                },
             },
-            "required": ["query"]
+            "required": ["query"],
         },
-        handler=example_tool_handler
+        handler=example_tool_handler,
     )
     server.add_tool(tool)
 

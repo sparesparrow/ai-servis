@@ -4,7 +4,7 @@
 
 - [x] Verify gradle wrapper exists and is executable
 - [x] Build debug APK locally
-- [x] Build release APK locally  
+- [x] Build release APK locally
 - [x] Create Android build Dockerfile with JDK21 and SDK tools
 - [x] Add helper script to build image and run assembleDebug
 - [x] Build the image and test assembleDebug run
