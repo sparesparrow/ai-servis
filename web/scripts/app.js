@@ -1,4 +1,4 @@
-// AI-SERVIS Business Professional Landing Page JavaScript
+// Universal AI-SERVIS Web Page JavaScript
 // Professional, clean interactions with smooth animations
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -17,7 +17,6 @@ function initializePage() {
 // Language Switching
 function setupLanguageSwitcher() {
     const langButtons = document.querySelectorAll('.lang-btn');
-    const elements = document.querySelectorAll('[data-en][data-cs]');
 
     langButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -27,31 +26,12 @@ function setupLanguageSwitcher() {
             langButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
 
-            // Update content
-            elements.forEach(element => {
-                const text = element.getAttribute(`data-${lang}`);
-                if (text) {
-                    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                        element.placeholder = text;
-                    } else if (element.tagName === 'IMG') {
-                        element.alt = text;
-                    } else {
-                        element.textContent = text;
-                    }
-                }
-            });
-
-            // Store language preference
-            localStorage.setItem('preferred-language', lang);
+            // Use the i18n system to switch language
+            if (window.i18n) {
+                window.i18n.switchLanguage(lang);
+            }
         });
     });
-
-    // Load saved language preference
-    const savedLang = localStorage.getItem('preferred-language') || 'cs';
-    const savedButton = document.querySelector(`[data-lang="${savedLang}"]`);
-    if (savedButton) {
-        savedButton.click();
-    }
 }
 
 // Navigation
@@ -136,7 +116,7 @@ function setupScrollAnimations() {
 // Form Validation and Interactions
 function setupFormValidation() {
     // Demo request buttons
-    const demoButtons = document.querySelectorAll('button[data-en*="Demo"], button[data-cs*="demo"]');
+    const demoButtons = document.querySelectorAll('button[data-i18n*="demo"], button[data-i18n*="Demo"]');
     demoButtons.forEach(button => {
         button.addEventListener('click', function() {
             showDemoModal();
@@ -161,41 +141,41 @@ function showDemoModal() {
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
-                <h3 data-en="Schedule Your Demo" data-cs="Naplánujte si demo">Naplánujte si demo</h3>
+                <h3 data-i18n="schedule-demo" data-i18n-ns="common">Schedule Your Demo</h3>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <form class="demo-form">
                     <div class="form-group">
-                        <label data-en="Company Name" data-cs="Název společnosti">Název společnosti</label>
+                        <label data-i18n="company-name" data-i18n-ns="common">Company Name</label>
                         <input type="text" name="company" required>
                     </div>
                     <div class="form-group">
-                        <label data-en="Contact Person" data-cs="Kontaktní osoba">Kontaktní osoba</label>
+                        <label data-i18n="contact-person" data-i18n-ns="common">Contact Person</label>
                         <input type="text" name="contact" required>
                     </div>
                     <div class="form-group">
-                        <label data-en="Email" data-cs="E-mail">E-mail</label>
+                        <label data-i18n="email" data-i18n-ns="common">Email</label>
                         <input type="email" name="email" required>
                     </div>
                     <div class="form-group">
-                        <label data-en="Phone" data-cs="Telefon">Telefon</label>
+                        <label data-i18n="phone" data-i18n-ns="common">Phone</label>
                         <input type="tel" name="phone">
                     </div>
                     <div class="form-group">
-                        <label data-en="Fleet Size" data-cs="Velikost vozového parku">Velikost vozového parku</label>
+                        <label data-i18n="fleet-size" data-i18n-ns="common">Fleet Size</label>
                         <select name="fleet_size">
-                            <option value="1-5" data-en="1-5 vehicles" data-cs="1-5 vozidel">1-5 vozidel</option>
-                            <option value="6-20" data-en="6-20 vehicles" data-cs="6-20 vozidel">6-20 vozidel</option>
-                            <option value="21-100" data-en="21-100 vehicles" data-cs="21-100 vozidel">21-100 vozidel</option>
-                            <option value="100+" data-en="100+ vehicles" data-cs="100+ vozidel">100+ vozidel</option>
+                            <option value="1-5" data-i18n="1-5-vehicles" data-i18n-ns="common">1-5 vehicles</option>
+                            <option value="6-20" data-i18n="6-20-vehicles" data-i18n-ns="common">6-20 vehicles</option>
+                            <option value="21-100" data-i18n="21-100-vehicles" data-i18n-ns="common">21-100 vehicles</option>
+                            <option value="100+" data-i18n="100-vehicles" data-i18n-ns="common">100+ vehicles</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label data-en="Preferred Demo Date" data-cs="Preferované datum demo">Preferované datum demo</label>
+                        <label data-i18n="preferred-demo-date" data-i18n-ns="common">Preferred Demo Date</label>
                         <input type="date" name="demo_date">
                     </div>
-                    <button type="submit" class="btn btn-primary" data-en="Request Demo" data-cs="Požádat o demo">Požádat o demo</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="request-demo" data-i18n-ns="common">Request Demo</button>
                 </form>
             </div>
         </div>
@@ -224,15 +204,19 @@ function showDemoModal() {
 
 function updateModalLanguage(modal) {
     const currentLang = document.querySelector('.lang-btn.active').getAttribute('data-lang');
-    const elements = modal.querySelectorAll('[data-en][data-cs]');
+    const elements = modal.querySelectorAll('[data-i18n]');
 
     elements.forEach(element => {
-        const text = element.getAttribute(`data-${currentLang}`);
-        if (text) {
+        const key = element.getAttribute('data-i18n');
+        const namespace = element.getAttribute('data-i18n-ns') || 'common';
+        
+        if (key && window.i18n) {
+            const translation = window.i18n.t(key, namespace);
+            
             if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                element.placeholder = text;
+                element.placeholder = translation;
             } else {
-                element.textContent = text;
+                element.textContent = translation;
             }
         }
     });
