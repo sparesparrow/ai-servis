@@ -24,8 +24,14 @@ business:
       en: Technology
       cs: Technologie
     get_demo:
-      en: Get Demo
-      cs: Získat ukázku
+      en: I want to TRY IT for free
+      cs: Můžeš to dokonce zadarmo vyzkoušet
+    map_location:
+      en: Find us on the map
+      cs: Najdi nás na mapě
+    highlighted_map_link:
+      en: 🗺️ Click here for directions
+      cs: 🗺️ Klikni zde pro navigaci
   hero:
     aipowered_business_vehicle_intelligence:
       en: AI-Powered Business Vehicle Intelligence
@@ -221,6 +227,12 @@ business:
     schedule_enterprise_demo:
       en: Schedule Enterprise Demo
       cs: Naplánovat podnikovou ukázku
+    try_free_now:
+      en: Try it FREE now!
+      cs: Vyzkoušej to ZADARMO hned!
+    visit_our_office:
+      en: Visit our office for a live demo
+      cs: Navštiv naši kancelář pro živou ukázku
     download_case_studies:
       en: Download Case Studies
       cs: Stáhnout případové studie
@@ -255,6 +267,15 @@ business:
     contact:
       en: Contact
       cs: Kontakt
+    visit_us:
+      en: Visit us at our location
+      cs: Navštiv nás na naší adrese
+    map_link:
+      en: View on Map
+      cs: Zobrazit na mapě
+    address:
+      en: Business District, Prague
+      cs: Obchodní čtvrť, Praha
     copyright:
       en: © 2025 AI-SERVIS Business Solutions. All rights reserved.
       cs: © 2025 AI-SERVIS Business Solutions. Všechna práva vyhrazena.
