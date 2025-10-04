@@ -1,0 +1,104 @@
+name: Build & Deploy AI-SERVIS Variants
+
+on:
+  push:
+    branches: [main, feature/journalists-audio-autoplay]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: eu-north-1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        variant: [business, family, musicians, journalists]
+        include:
+          - variant: business
+            domain: business.ai-servis.cz
+            s3_bucket: ai-servis-business-web
+            cloudfront_id: E1234567BUSINESS
+            theme: corporate
+          - variant: family
+            domain: family.ai-servis.cz
+            s3_bucket: ai-servis-family-web
+            cloudfront_id: E1234567FAMILY
+            theme: family
+          - variant: musicians
+            domain: musicians.ai-servis.cz
+            s3_bucket: ai-servis-musicians-web
+            cloudfront_id: E1234567MUSICIANS
+            theme: creative
+          - variant: journalists
+            domain: journalists.ai-servis.cz
+            s3_bucket: ai-servis-journalists-web
+            cloudfront_id: E1234567GONZO
+            theme: gonzo
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Python (for i18n processing)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install pyyaml jinja2
+
+      - name: Build variant: ${{ matrix.variant }}
+        run: |
+          # Vytvoří build pro konkrétní variantu
+          python scripts/build_variant.py ${{ matrix.variant }}
+        env:
+          VARIANT: ${{ matrix.variant }}
+          THEME: ${{ matrix.theme }}
+          DOMAIN: ${{ matrix.domain }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./dist/${{ matrix.variant }} s3://${{ matrix.s3_bucket }} --delete --exclude "*.DS_Store"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ matrix.cloudfront_id }} \
+            --paths "/*"
+
+      - name: Update ACM certificate if needed
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Pouze pro main branch - kontrola a update certifikátů
+          python scripts/check_and_update_certificates.py ${{ matrix.domain }}
+
+  notification:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify deployment status
+        run: |
+          echo "Deployment completed for all variants"
+          # Můžeš přidat notifikace (Slack, Discord, etc.)
